@@ -1,0 +1,179 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  sessions        Session[]
+  providers       Provider[]
+  documents       Document[]
+  historyEvents   HistoryEvent[]
+  customModes     CustomMode[]
+  userPreferences UserPreferences?
+
+  @@map("users")
+}
+
+model Session {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  refreshTokenHash String   @map("refresh_token_hash")
+  expiresAt        DateTime @map("expires_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Provider {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  name               String
+  type               String
+  protocol           String
+  baseUrl            String?  @map("base_url")
+  authenticationType String   @map("authentication_type")
+  modelId            String?  @map("model_id")
+  isDefault          Boolean  @default(false) @map("is_default")
+  connectionStatus   String   @default("not-configured") @map("connection_status")
+  lastTested         DateTime? @map("last_tested")
+  options            Json?
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentials        ProviderCredentials?
+  historyEvents      HistoryEvent[]
+  documentVersions   DocumentVersion[]
+
+  @@index([userId])
+  @@index([userId, isDefault])
+  @@map("providers")
+}
+
+model ProviderCredentials {
+  id              String   @id @default(uuid())
+  providerId      String   @unique @map("provider_id")
+  encryptedApiKey String?  @map("encrypted_api_key")
+  encryptionIv    String?  @map("encryption_iv")
+  encryptionTag   String?  @map("encryption_tag")
+  additionalConfig Json?   @map("additional_config")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@map("provider_credentials")
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  title      String
+  content    String   @db.Text
+  isFavorite Boolean  @default(false) @map("is_favorite")
+  isArchived Boolean  @default(false) @map("is_archived")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versions DocumentVersion[]
+
+  @@index([userId])
+  @@index([userId, isFavorite])
+  @@index([userId, isArchived])
+  @@index([userId, createdAt])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id           String   @id @default(uuid())
+  documentId   String   @map("document_id")
+  input        String   @db.Text
+  output       String   @db.Text
+  mode         String
+  providerId   String   @map("provider_id")
+  modelId      String   @map("model_id")
+  synonymLevel Int      @map("synonym_level")
+  frozenTerms  String[] @map("frozen_terms")
+  language     String
+  statistics   Json
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Restrict)
+
+  @@index([documentId])
+  @@index([documentId, createdAt])
+  @@map("document_versions")
+}
+
+model HistoryEvent {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  documentId   String?  @map("document_id")
+  operation    String
+  mode         String
+  providerId   String   @map("provider_id")
+  modelId      String   @map("model_id")
+  input        String   @db.Text
+  output       String   @db.Text
+  statistics   Json
+  latency      Int
+  success      Boolean
+  errorMessage String?  @map("error_message") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([userId, operation])
+  @@map("history_events")
+}
+
+model CustomMode {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  instruction String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("custom_modes")
+}
+
+model UserPreferences {
+  userId              String   @id @map("user_id")
+  defaultMode         String   @default("standard") @map("default_mode")
+  defaultLanguage     String   @default("en") @map("default_language")
+  defaultSynonymLevel Int      @default(2) @map("default_synonym_level")
+  defaultProviderId   String?  @map("default_provider_id")
+  defaultModelId      String?  @map("default_model_id")
+  autoSave            Boolean  @default(true) @map("auto_save")
+  theme               String   @default("light")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
