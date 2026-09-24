@@ -272,6 +272,62 @@ export class ProvidersService {
   }
 
   /**
+   * Test provider with actual text generation
+   * This validates that the provider can generate AI responses
+   */
+  async testGeneration(providerId: string, userId: string): Promise<{
+    success: boolean;
+    generatedText?: string;
+    latency?: number;
+    error?: string;
+  }> {
+    // Check ownership
+    const provider = await this.getProvider(providerId, userId);
+
+    try {
+      // Get or create provider instance
+      const providerInstance = await this.getOrCreateProviderInstance(provider);
+
+      // Test with a simple generation request
+      const testRequest = {
+        text: 'Hello, world!',
+        mode: 'standard' as const,
+        language: 'en',
+        synonymLevel: 2,
+        frozenTerms: [],
+        providerId: provider.id,
+        modelId: provider.modelId || '',
+        userId,
+      };
+
+      const startTime = Date.now();
+      const response = await providerInstance.generate(testRequest);
+      const latency = Date.now() - startTime;
+
+      // Validate response
+      if (!response.text || response.text.trim().length === 0) {
+        throw new Error('Provider returned empty response');
+      }
+
+      logger.info(`Test generation successful for provider ${providerId}: ${latency}ms`);
+
+      return {
+        success: true,
+        generatedText: response.text,
+        latency,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Generation test failed';
+      logger.error(`Test generation failed for provider ${providerId}:`, error);
+
+      return {
+        success: false,
+        error: message,
+      };
+    }
+  }
+
+  /**
    * Get or create a provider instance in the registry
    */
   private async getOrCreateProviderInstance(provider: Provider) {

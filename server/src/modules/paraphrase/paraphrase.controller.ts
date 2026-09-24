@@ -47,8 +47,9 @@ export class ParaphraseController {
       'X-Accel-Buffering': 'no', // Disable buffering in nginx
     });
 
-    // Create AI request
+    // Create AI request with userId for security validation
     const aiRequest = {
+      userId, // SECURITY: Validate provider ownership
       documentId: input.documentId,
       text: input.text,
       mode: input.mode,

@@ -36,6 +36,7 @@ export interface Model {
 }
 
 export interface AIRequest {
+  userId?: string; // Added for security - validate provider ownership
   documentId?: string;
   text: string;
   mode: ParaphraseMode;

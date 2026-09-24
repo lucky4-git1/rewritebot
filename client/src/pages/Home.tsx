@@ -35,9 +35,10 @@ export function Home() {
     try {
       const data = await apiClient.get<any[]>('/providers');
       setProviders(data);
-      // Auto-select first provider
+      // Auto-select default provider, or first provider if no default
       if (data.length > 0) {
-        setSelectedProviderId(data[0].id);
+        const defaultProvider = data.find(p => p.isDefault);
+        setSelectedProviderId(defaultProvider ? defaultProvider.id : data[0].id);
       }
     } catch (err) {
       console.error('Failed to load providers:', err);
@@ -79,7 +80,8 @@ export function Home() {
       console.log('Paraphrase completed successfully!');
     } catch (err: any) {
       console.error('Paraphrase error:', err);
-      alert('Paraphrase failed: ' + (err.message || 'Unknown error. Check console for details.'));
+      const errorMessage = apiClient.handleError(err);
+      alert('Paraphrase failed: ' + errorMessage);
     }
   };
 

@@ -62,6 +62,13 @@ export async function providersRoutes(fastify: FastifyInstance) {
     return controller.testConnection(request, reply);
   });
 
+  // Test provider with actual generation
+  fastify.post('/:id/test-generation', {
+    preHandler: [providerTestRateLimit],
+  }, async (request, reply) => {
+    return controller.testGeneration(request, reply);
+  });
+
   // Get provider models
   fastify.get('/:id/models', {
     preHandler: [apiRateLimit],

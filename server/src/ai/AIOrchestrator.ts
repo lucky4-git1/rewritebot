@@ -27,8 +27,8 @@ export class AIOrchestrator {
     // Validate request
     this.validateRequest(request);
 
-    // Get provider (from registry or database)
-    const provider = await this.getOrCreateProvider(request.providerId);
+    // Get provider (from registry or database) with ownership validation
+    const provider = await this.getOrCreateProvider(request.providerId, request.userId);
 
     // Check capability
     if (!provider.supportsCapability('chat')) {
@@ -37,19 +37,32 @@ export class AIOrchestrator {
       );
     }
 
-    // Build prompt
+    // Build prompt from original text
+    // DO NOT replace request.text - that's the user's input
     const prompt = this.promptEngine.buildPrompt(request);
-    const enhancedRequest = { ...request, text: prompt };
 
     logger.info(`Generating with provider: ${provider.name}, model: ${request.modelId}`);
 
     try {
       // Measure latency
       const startTime = Date.now();
-      const response = await provider.generate(enhancedRequest);
+      
+      // Create a new request with the full prompt as text
+      // The provider will receive the complete prompt, not the raw user text
+      const providerRequest: AIRequest = {
+        ...request,
+        text: prompt, // Send the full prompt to the provider
+      };
+      
+      const response = await provider.generate(providerRequest);
       const latency = Date.now() - startTime;
 
-      logger.info(`Generation completed in ${latency}ms`);
+      // Validate response
+      if (!response.text || response.text.trim().length === 0) {
+        throw new ValidationError('Provider returned empty response');
+      }
+
+      logger.info(`Generation completed in ${latency}ms, output length: ${response.text.length}`);
 
       return {
         ...response,
@@ -68,8 +81,8 @@ export class AIOrchestrator {
     // Validate request
     this.validateRequest(request);
 
-    // Get provider (from registry or database)
-    const provider = await this.getOrCreateProvider(request.providerId);
+    // Get provider (from registry or database) with ownership validation
+    const provider = await this.getOrCreateProvider(request.providerId, request.userId);
 
     // Check capability
     if (!provider.supportsCapability('streaming')) {
@@ -78,9 +91,8 @@ export class AIOrchestrator {
       );
     }
 
-    // Build prompt
+    // Build prompt from original text
     const prompt = this.promptEngine.buildPrompt(request);
-    const enhancedRequest = { ...request, text: prompt };
 
     logger.info(`Streaming with provider: ${provider.name}, model: ${request.modelId}`);
 
@@ -90,8 +102,14 @@ export class AIOrchestrator {
       // Emit start event
       yield responseNormalizer.createStartChunk();
 
+      // Create a new request with the full prompt as text
+      const providerRequest: AIRequest = {
+        ...request,
+        text: prompt,
+      };
+
       // Stream from provider
-      for await (const chunk of provider.stream(enhancedRequest)) {
+      for await (const chunk of provider.stream(providerRequest)) {
         yield chunk;
       }
 
@@ -274,13 +292,16 @@ export class AIOrchestrator {
       throw new ValidationError('Text exceeds maximum length of 50,000 characters');
     }
 
-    if (!request.providerId) {
+    if (!request.providerId || request.providerId.trim().length === 0) {
       throw new ValidationError('Provider ID is required');
     }
 
-    if (!request.modelId) {
-      throw new ValidationError('Model ID is required');
+    if (!request.modelId || request.modelId.trim().length === 0) {
+      throw new ValidationError('Model ID is required. Please select or enter a model in Settings → AI Providers');
     }
+
+    // Trim model ID to remove whitespace
+    request.modelId = request.modelId.trim();
 
     if (request.synonymLevel < 1 || request.synonymLevel > 4) {
       throw new ValidationError('Synonym level must be between 1 and 4');
@@ -289,13 +310,9 @@ export class AIOrchestrator {
 
   /**
    * Get or create a provider instance from database
+   * SECURITY: Validates user ownership of provider
    */
-  private async getOrCreateProvider(providerId: string): Promise<IAIProvider> {
-    // Check if already in registry
-    if (providerRegistry.hasProvider(providerId)) {
-      return providerRegistry.getProvider(providerId);
-    }
-
+  private async getOrCreateProvider(providerId: string, userId?: string): Promise<IAIProvider> {
     // Get provider from database
     const provider = await prisma.provider.findUnique({
       where: { id: providerId },
@@ -303,6 +320,17 @@ export class AIOrchestrator {
 
     if (!provider) {
       throw new NotFoundError(`Provider ${providerId}`);
+    }
+
+    // SECURITY: Validate user ownership
+    if (userId && provider.userId !== userId) {
+      logger.warn(`User ${userId} attempted to access provider ${providerId} owned by ${provider.userId}`);
+      throw new NotFoundError(`Provider ${providerId}`); // Don't reveal it exists
+    }
+
+    // Check if already in registry
+    if (providerRegistry.hasProvider(providerId)) {
+      return providerRegistry.getProvider(providerId);
     }
 
     // Get credentials

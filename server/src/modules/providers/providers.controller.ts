@@ -162,4 +162,20 @@ export class ProvidersController {
 
     successResponse(reply, types);
   }
+
+  /**
+   * Test provider with actual text generation
+   * POST /api/v1/providers/:id/test-generation
+   */
+  async testGeneration(
+    request: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ): Promise<void> {
+    const userId = request.user!.id;
+    const providerId = request.params.id;
+
+    const result = await this.providersService.testGeneration(providerId, userId);
+
+    successResponse(reply, result);
+  }
 }

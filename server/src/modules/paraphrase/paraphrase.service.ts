@@ -13,8 +13,9 @@ export class ParaphraseService {
     const startTime = Date.now();
 
     try {
-      // Create AI request
+      // Create AI request with userId for security validation
       const aiRequest: AIRequest = {
+        userId, // SECURITY: Validate provider ownership
         documentId: input.documentId,
         text: input.text,
         mode: input.mode,
