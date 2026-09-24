@@ -104,8 +104,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { inputText, mode, language, synonymLevel, frozenTerms, customInstruction } = get();
     
     if (!inputText.trim()) {
-      set({ error: 'Please enter some text to paraphrase' });
-      return;
+      const error = 'Please enter some text to paraphrase';
+      set({ error });
+      throw new Error(error);
     }
 
     set({ isGenerating: true, error: null, outputText: '' });
@@ -122,16 +123,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         modelId,
       });
 
+      // Validate response has actual content
+      if (!response.text || response.text.trim().length === 0) {
+        throw new Error('Provider returned empty response');
+      }
+
       set({
         outputText: response.text,
         outputWordCount: countWords(response.text),
         isGenerating: false,
       });
+      
+      return response;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Paraphrasing failed';
       set({
-        error: error instanceof Error ? error.message : 'Paraphrasing failed',
+        error: errorMessage,
         isGenerating: false,
       });
+      // CRITICAL: Rethrow so caller knows it failed
+      throw error;
     }
   },
 

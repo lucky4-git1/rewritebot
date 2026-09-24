@@ -8,6 +8,7 @@ import { calculateStatistics } from '../utils/statistics';
 import { prisma } from '../database/prisma';
 import { decrypt } from '../security/crypto';
 import { IAIProvider } from './types';
+import { DiagnosticLogger } from '../utils/diagnostics';
 
 /**
  * Main orchestrator for AI operations
@@ -23,12 +24,32 @@ export class AIOrchestrator {
   /**
    * Generate AI completion
    */
-  async generate(request: AIRequest): Promise<AIResponse> {
+  async generate(request: AIRequest, requestId?: string): Promise<AIResponse> {
+    const diag = requestId ? new DiagnosticLogger(requestId) : null;
+    
+    diag?.log('AI_ORCHESTRATOR_START', {
+      providerId: request.providerId,
+      modelId: request.modelId,
+      mode: request.mode,
+    });
+
     // Validate request
     this.validateRequest(request);
+    
+    diag?.log('REQUEST_VALIDATED', {
+      providerId: request.providerId,
+      modelId: request.modelId,
+      textLength: request.text.length,
+    });
 
     // Get provider (from registry or database) with ownership validation
     const provider = await this.getOrCreateProvider(request.providerId, request.userId);
+    
+    diag?.log('PROVIDER_RESOLVED', {
+      providerId: provider.getId(),
+      providerType: provider.type,
+      providerName: provider.name,
+    });
 
     // Check capability
     if (!provider.supportsCapability('chat')) {
@@ -40,6 +61,12 @@ export class AIOrchestrator {
     // Build prompt from original text
     // DO NOT replace request.text - that's the user's input
     const prompt = this.promptEngine.buildPrompt(request);
+    
+    diag?.log('PROMPT_BUILT', {
+      promptLength: prompt.length,
+      mode: request.mode,
+      synonymLevel: request.synonymLevel,
+    });
 
     logger.info(`Generating with provider: ${provider.name}, model: ${request.modelId}`);
 
@@ -54,13 +81,27 @@ export class AIOrchestrator {
         text: prompt, // Send the full prompt to the provider
       };
       
+      diag?.log('PROVIDER_REQUEST_START', {
+        providerId: provider.getId(),
+        modelId: request.modelId,
+      });
+      
       const response = await provider.generate(providerRequest);
       const latency = Date.now() - startTime;
+
+      diag?.log('PROVIDER_RESPONSE_RECEIVED', {
+        outputLength: response.text.length,
+        latency,
+      });
 
       // Validate response
       if (!response.text || response.text.trim().length === 0) {
         throw new ValidationError('Provider returned empty response');
       }
+
+      diag?.log('RESPONSE_VALIDATED', {
+        outputLength: response.text.length,
+      });
 
       logger.info(`Generation completed in ${latency}ms, output length: ${response.text.length}`);
 
@@ -69,6 +110,10 @@ export class AIOrchestrator {
         latency,
       };
     } catch (error) {
+      diag?.error('GENERATION_FAILED', error, {
+        providerId: provider.getId(),
+        modelId: request.modelId,
+      });
       logger.error(`Generation failed: ${error}`);
       throw error;
     }

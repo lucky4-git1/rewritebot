@@ -69,6 +69,13 @@ export async function providersRoutes(fastify: FastifyInstance) {
     return controller.testGeneration(request, reply);
   });
 
+  // Test provider with full paraphrase pipeline
+  fastify.post('/:id/test-paraphrase', {
+    preHandler: [providerTestRateLimit],
+  }, async (request, reply) => {
+    return controller.testParaphrase(request, reply);
+  });
+
   // Get provider models
   fastify.get('/:id/models', {
     preHandler: [apiRateLimit],

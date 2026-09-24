@@ -4,6 +4,7 @@ import { validateSchema } from '../../utils/validation';
 import { successResponse } from '../../utils/response';
 import { paraphraseSchema, ParaphraseInput } from '@rewritebot/shared';
 import { aiOrchestrator } from '../../ai/AIOrchestrator';
+import { generateRequestId, DiagnosticLogger } from '../../utils/diagnostics';
 
 export class ParaphraseController {
   private paraphraseService: ParaphraseService;
@@ -20,10 +21,37 @@ export class ParaphraseController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
+    const requestId = generateRequestId();
+    const diag = new DiagnosticLogger(requestId);
+
+    diag.log('PARAPHRASE_REQUEST_RECEIVED', {
+      hasBody: !!request.body,
+      hasUser: !!request.user,
+    });
+
     const userId = request.user!.id;
+    
+    diag.log('AUTHENTICATION_PASSED', { userId });
+
     const input = validateSchema(paraphraseSchema, request.body);
 
-    const response = await this.paraphraseService.paraphrase(userId, input);
+    diag.log('REQUEST_VALIDATED', {
+      providerId: input.providerId,
+      modelId: input.modelId,
+      mode: input.mode,
+      language: input.language,
+      synonymLevel: input.synonymLevel,
+      textLength: input.text.length,
+    });
+
+    const response = await this.paraphraseService.paraphrase(userId, input, requestId);
+
+    diag.log('PARAPHRASE_SUCCESS', {
+      outputLength: response.text.length,
+      latency: response.latency,
+      provider: response.provider,
+      model: response.model,
+    });
 
     successResponse(reply, response);
   }

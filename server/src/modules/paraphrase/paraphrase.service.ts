@@ -4,15 +4,23 @@ import { prisma } from '../../database/prisma';
 import { calculateStatistics } from '../../utils/statistics';
 import { providerHealthManager } from '../../ai/ProviderHealthManager';
 import { logger } from '../../config/logger';
+import { DiagnosticLogger } from '../../utils/diagnostics';
 
 export class ParaphraseService {
   /**
    * Paraphrase text
    */
-  async paraphrase(userId: string, input: ParaphraseInput): Promise<AIResponse> {
+  async paraphrase(userId: string, input: ParaphraseInput, requestId: string): Promise<AIResponse> {
+    const diag = new DiagnosticLogger(requestId);
     const startTime = Date.now();
 
     try {
+      diag.log('PARAPHRASE_SERVICE_START', {
+        userId,
+        providerId: input.providerId,
+        modelId: input.modelId,
+      });
+
       // Create AI request with userId for security validation
       const aiRequest: AIRequest = {
         userId, // SECURITY: Validate provider ownership
@@ -28,8 +36,22 @@ export class ParaphraseService {
         options: input.options,
       };
 
+      diag.log('AI_REQUEST_CREATED', {
+        mode: aiRequest.mode,
+        language: aiRequest.language,
+        synonymLevel: aiRequest.synonymLevel,
+        frozenTermsCount: aiRequest.frozenTerms.length,
+      });
+
       // Generate response
-      const response = await aiOrchestrator.generate(aiRequest);
+      const response = await aiOrchestrator.generate(aiRequest, requestId);
+
+      diag.log('AI_RESPONSE_RECEIVED', {
+        outputLength: response.text.length,
+        provider: response.provider,
+        model: response.model,
+        latency: response.latency,
+      });
 
       // Calculate statistics
       const statistics = calculateStatistics(input.text, response.text);
@@ -45,6 +67,13 @@ export class ParaphraseService {
       return response;
     } catch (error) {
       const latency = Date.now() - startTime;
+
+      diag.error('PARAPHRASE_SERVICE_FAILED', error, {
+        userId,
+        providerId: input.providerId,
+        modelId: input.modelId,
+        latency,
+      });
 
       // Record failure in history
       const statistics = calculateStatistics(input.text, '');

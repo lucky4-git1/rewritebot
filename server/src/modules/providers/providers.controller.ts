@@ -178,4 +178,20 @@ export class ProvidersController {
 
     successResponse(reply, result);
   }
+
+  /**
+   * Test provider with actual paraphrase pipeline
+   * POST /api/v1/providers/:id/test-paraphrase
+   */
+  async testParaphrase(
+    request: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ): Promise<void> {
+    const userId = request.user!.id;
+    const providerId = request.params.id;
+
+    const result = await this.providersService.testParaphrase(providerId, userId);
+
+    successResponse(reply, result);
+  }
 }

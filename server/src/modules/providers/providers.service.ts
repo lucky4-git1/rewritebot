@@ -6,6 +6,7 @@ import { providerHealthManager } from '../../ai/ProviderHealthManager';
 import { AddProviderInput, UpdateProviderInput } from '@rewritebot/shared';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../utils/errors';
 import { logger } from '../../config/logger';
+import { DiagnosticLogger } from '../../utils/diagnostics';
 
 export class ProvidersService {
   /**
@@ -323,6 +324,77 @@ export class ProvidersService {
       return {
         success: false,
         error: message,
+      };
+    }
+  }
+
+  /**
+   * Test provider with actual paraphrase flow
+   * This tests the FULL paraphrase pipeline including PromptEngine
+   */
+  async testParaphrase(providerId: string, userId: string): Promise<{
+    success: boolean;
+    provider?: string;
+    model?: string;
+    latency?: number;
+    outputLength?: number;
+    error?: string;
+    requestId?: string;
+  }> {
+    const requestId = require('crypto').randomUUID();
+    const diag = new DiagnosticLogger(requestId);
+
+    try {
+      diag.log('PARAPHRASE_TEST_START', { providerId, userId });
+
+      // Check ownership
+      const provider = await this.getProvider(providerId, userId);
+
+      // Import AIOrchestrator
+      const { aiOrchestrator } = await import('../../ai/AIOrchestrator');
+
+      // Use the SAME pipeline as real paraphrase
+      const testRequest = {
+        userId,
+        text: 'Artificial intelligence is changing modern software development.',
+        mode: 'standard' as const,
+        language: 'en',
+        synonymLevel: 2,
+        frozenTerms: [],
+        providerId: provider.id,
+        modelId: provider.modelId || '',
+      };
+
+      diag.log('TEST_REQUEST_CREATED', {
+        modelId: provider.modelId,
+        textLength: testRequest.text.length,
+      });
+
+      const startTime = Date.now();
+      const response = await aiOrchestrator.generate(testRequest, requestId);
+      const latency = Date.now() - startTime;
+
+      diag.log('TEST_COMPLETE', {
+        latency,
+        outputLength: response.text.length,
+      });
+
+      return {
+        success: true,
+        provider: response.provider,
+        model: response.model,
+        latency,
+        outputLength: response.text.length,
+        requestId,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Paraphrase test failed';
+      diag.error('TEST_FAILED', error);
+
+      return {
+        success: false,
+        error: message,
+        requestId,
       };
     }
   }

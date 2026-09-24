@@ -48,9 +48,7 @@ export function Home() {
   const handleParaphrase = async () => {
     console.log('=== PARAPHRASE CLICKED ===');
     console.log('Selected Provider ID:', selectedProviderId);
-    console.log('Providers:', providers);
-    console.log('Input text:', inputText);
-    console.log('Is generating:', isGenerating);
+    console.log('Input text length:', inputText.length);
     
     if (!selectedProviderId) {
       console.log('No provider selected!');
@@ -58,8 +56,9 @@ export function Home() {
       navigate('/providers');
       return;
     }
+    
     const provider = providers.find(p => p.id === selectedProviderId);
-    console.log('Found provider:', provider);
+    console.log('Found provider:', provider?.name, provider?.type);
     
     if (!provider) {
       console.log('Provider not found in list!');
@@ -75,11 +74,28 @@ export function Home() {
     }
     
     try {
-      console.log('Starting paraphrase with:', { providerId: provider.id, modelId: provider.modelId });
-      await paraphrase(provider.id, provider.modelId);
-      console.log('Paraphrase completed successfully!');
+      console.log('Starting paraphrase with:', { 
+        providerId: provider.id, 
+        modelId: provider.modelId,
+        textLength: inputText.length,
+      });
+      
+      const result = await paraphrase(provider.id, provider.modelId);
+      
+      // Only log success if we got actual output
+      if (result && result.text && result.text.trim().length > 0) {
+        console.log('✓ Paraphrase SUCCESS:', {
+          outputLength: result.text.length,
+          provider: result.provider,
+          model: result.model,
+          latency: result.latency,
+        });
+      } else {
+        console.error('✗ Paraphrase returned empty result');
+        alert('Paraphrase failed: Provider returned empty response');
+      }
     } catch (err: any) {
-      console.error('Paraphrase error:', err);
+      console.error('✗ Paraphrase FAILED:', err);
       const errorMessage = apiClient.handleError(err);
       alert('Paraphrase failed: ' + errorMessage);
     }
