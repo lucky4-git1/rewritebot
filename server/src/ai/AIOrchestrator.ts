@@ -46,7 +46,7 @@ export class AIOrchestrator {
     const provider = await this.getOrCreateProvider(request.providerId, request.userId);
     
     diag?.log('PROVIDER_RESOLVED', {
-      providerId: provider.getId(),
+      providerId: provider.id,
       providerType: provider.type,
       providerName: provider.name,
     });
@@ -82,7 +82,7 @@ export class AIOrchestrator {
       };
       
       diag?.log('PROVIDER_REQUEST_START', {
-        providerId: provider.getId(),
+        providerId: provider.id,
         modelId: request.modelId,
       });
       
@@ -111,7 +111,7 @@ export class AIOrchestrator {
       };
     } catch (error) {
       diag?.error('GENERATION_FAILED', error, {
-        providerId: provider.getId(),
+        providerId: provider.id,
         modelId: request.modelId,
       });
       logger.error(`Generation failed: ${error}`);
