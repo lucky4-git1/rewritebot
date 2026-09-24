@@ -1,7 +1,7 @@
 import { FastifyReply } from 'fastify';
 import { ApiResponse, ApiError } from '@rewritebot/shared';
+import { randomUUID } from 'node:crypto';
 import { AppError } from './errors';
-import { nanoid } from 'nanoid';
 
 export function successResponse<T>(reply: FastifyReply, data: T, statusCode = 200): void {
   const response: ApiResponse<T> = {
@@ -16,7 +16,7 @@ export function errorResponse(
   error: Error | AppError,
   requestId?: string
 ): void {
-  const id = requestId || nanoid(10);
+  const id = requestId || randomUUID();
 
   const isAppError = error instanceof AppError ||
     (typeof (error as any)?.statusCode === 'number' && typeof (error as any)?.code === 'string');
