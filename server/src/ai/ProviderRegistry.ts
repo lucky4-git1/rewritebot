@@ -77,6 +77,15 @@ export class ProviderRegistry {
   }
 
   /**
+   * Invalidate a provider instance (force re-creation on next use)
+   */
+  invalidateProvider(providerId: string): void {
+    if (this.providers.delete(providerId)) {
+      logger.info(`Invalidated provider: ${providerId}`);
+    }
+  }
+
+  /**
    * Get all registered provider instances
    */
   getAllProviders(): IAIProvider[] {

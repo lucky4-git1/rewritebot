@@ -18,12 +18,16 @@ export function errorResponse(
 ): void {
   const id = requestId || nanoid(10);
 
-  if (error instanceof AppError) {
+  const isAppError = error instanceof AppError ||
+    (typeof (error as any)?.statusCode === 'number' && typeof (error as any)?.code === 'string');
+
+  if (isAppError) {
+    const appErr = error as any;
     const apiError: ApiError = {
-      code: error.code,
-      message: error.message,
+      code: appErr.code || 'ERROR',
+      message: appErr.message || 'An error occurred',
       requestId: id,
-      details: error.details,
+      details: appErr.details,
     };
 
     const response: ApiResponse = {
@@ -31,13 +35,17 @@ export function errorResponse(
       error: apiError,
     };
 
-    reply.status(error.statusCode).send(response);
+    reply.status(appErr.statusCode || 500).send(response);
   } else {
     // Unexpected error
     const apiError: ApiError = {
       code: 'INTERNAL_ERROR',
-      message: 'An unexpected error occurred',
+      message: (error as Error)?.message || 'An unexpected error occurred',
       requestId: id,
+      details: {
+        rawMessage: (error as Error)?.message,
+        stack: (error as Error)?.stack,
+      },
     };
 
     const response: ApiResponse = {

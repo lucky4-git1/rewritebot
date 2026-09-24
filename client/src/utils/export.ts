@@ -1,11 +1,7 @@
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { jsPDF } from 'jspdf';
-import MarkdownIt from 'markdown-it';
-
 export type ExportFormat = 'txt' | 'docx' | 'pdf' | 'md';
-
-const md = new MarkdownIt();
 
 /**
  * Export text to TXT format

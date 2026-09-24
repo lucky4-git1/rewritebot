@@ -9,6 +9,11 @@ class ApiClient {
   private refreshToken: string | null = null;
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      this.accessToken = localStorage.getItem('accessToken');
+      this.refreshToken = localStorage.getItem('refreshToken');
+    }
+
     this.client = axios.create({
       baseURL: API_BASE_URL,
       headers: {
@@ -20,8 +25,9 @@ class ApiClient {
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       (config) => {
-        if (this.accessToken && config.headers) {
-          config.headers.Authorization = `Bearer ${this.accessToken}`;
+        const token = this.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null);
+        if (token && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },

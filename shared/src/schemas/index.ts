@@ -39,6 +39,9 @@ export const addProviderSchema = z.object({
 
 export const updateProviderSchema = z.object({
   name: z.string().min(1).optional(),
+  baseUrl: z.string().url().optional().or(z.literal('')),
+  authenticationType: z.enum(['bearer', 'api-key', 'none']).optional(),
+  apiKey: z.string().optional(),
   modelId: z.string().optional(),
   isDefault: z.boolean().optional(),
   options: z

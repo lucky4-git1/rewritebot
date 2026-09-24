@@ -4,7 +4,7 @@ import { validateSchema } from '../../utils/validation';
 import { successResponse } from '../../utils/response';
 import { paraphraseSchema, ParaphraseInput } from '@rewritebot/shared';
 import { aiOrchestrator } from '../../ai/AIOrchestrator';
-import { generateRequestId, DiagnosticLogger } from '../../utils/diagnostics';
+import { DiagnosticLogger } from '../../utils/diagnostics';
 
 export class ParaphraseController {
   private paraphraseService: ParaphraseService;
@@ -21,8 +21,8 @@ export class ParaphraseController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const requestId = generateRequestId();
-    const diag = new DiagnosticLogger(requestId);
+    const requestId = request.id;
+    const diag = new DiagnosticLogger(requestId as string);
 
     diag.log('PARAPHRASE_REQUEST_RECEIVED', {
       hasBody: !!request.body,
@@ -68,6 +68,7 @@ export class ParaphraseController {
     const input = validateSchema(paraphraseSchema, request.body) as ParaphraseInput;
 
     // Set headers for Server-Sent Events
+    reply.hijack();
     reply.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -90,9 +91,11 @@ export class ParaphraseController {
       options: input.options,
     };
 
+    const requestId = request.id as string;
+
     try {
       // Stream chunks
-      for await (const chunk of aiOrchestrator.stream(aiRequest)) {
+      for await (const chunk of aiOrchestrator.stream(aiRequest, requestId)) {
         const eventData = JSON.stringify(chunk);
         reply.raw.write(`data: ${eventData}\n\n`);
       }

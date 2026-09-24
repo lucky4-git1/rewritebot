@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { config } from '../config';
+import { ProviderCredentialError } from '../utils/errors';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
@@ -7,6 +8,7 @@ const TAG_LENGTH = 16;
 
 /**
  * Encrypt sensitive data using AES-256-GCM
+ * ...
  */
 export function encrypt(plaintext: string): {
   encrypted: string;
@@ -62,7 +64,13 @@ export function decrypt(
 
     return decrypted;
   } catch (error) {
-    throw new Error('Decryption failed: Invalid encrypted data or key');
+    throw new ProviderCredentialError(
+      'Stored provider credentials could not be decrypted. Re-enter the provider API key.',
+      {
+        encryptionKeyPresent: !!config.encryption.key,
+        decodedKeyLength: Buffer.from(config.encryption.key, 'base64').length,
+      }
+    );
   }
 }
 

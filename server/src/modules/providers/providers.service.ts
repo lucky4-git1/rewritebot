@@ -120,11 +120,33 @@ export class ProvidersService {
       });
     }
 
+    // Handle API key update
+    if (input.apiKey !== undefined && input.apiKey !== '') {
+      const { encrypted, iv, tag } = encrypt(input.apiKey);
+      
+      await prisma.providerCredentials.upsert({
+        where: { providerId },
+        create: {
+          providerId,
+          encryptedApiKey: encrypted,
+          encryptionIv: iv,
+          encryptionTag: tag,
+        },
+        update: {
+          encryptedApiKey: encrypted,
+          encryptionIv: iv,
+          encryptionTag: tag,
+        },
+      });
+    }
+
     // Update provider
     const provider = await prisma.provider.update({
       where: { id: providerId },
       data: {
         name: input.name,
+        baseUrl: input.baseUrl !== undefined ? (input.baseUrl || null) : undefined,
+        authenticationType: input.authenticationType,
         modelId: input.modelId,
         isDefault: input.isDefault,
         options: input.options || undefined,
@@ -299,6 +321,10 @@ export class ProvidersService {
         providerId: provider.id,
         modelId: provider.modelId || '',
         userId,
+        options: {
+          maxTokens: 50,
+          timeout: 15000,
+        },
       };
 
       const startTime = Date.now();
@@ -403,10 +429,8 @@ export class ProvidersService {
    * Get or create a provider instance in the registry
    */
   private async getOrCreateProviderInstance(provider: Provider) {
-    // Check if already in registry
-    if (providerRegistry.hasProvider(provider.id)) {
-      return providerRegistry.getProvider(provider.id);
-    }
+    // Always invalidate to ensure fresh credentials  
+    providerRegistry.removeProvider(provider.id);
 
     // Get credentials
     const credentials = await prisma.providerCredentials.findUnique({

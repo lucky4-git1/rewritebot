@@ -20,9 +20,19 @@ interface EditorState {
   isStreaming: boolean;
   error: string | null;
   
-  // Statistics
+  // Statistics and metadata
   inputWordCount: number;
   outputWordCount: number;
+  latency: number | null;
+  currentProvider: string | null;
+  currentModel: string | null;
+  stats: {
+    inputWords?: number;
+    outputWords?: number;
+    changedWords?: number;
+    similarity?: number;
+    readingTime?: number;
+  } | null;
 
   // Actions
   setInputText: (text: string) => void;
@@ -36,7 +46,7 @@ interface EditorState {
   setCustomInstruction: (instruction: string) => void;
   
   // Generation
-  paraphrase: (providerId: string, modelId: string) => Promise<void>;
+  paraphrase: (providerId: string, modelId: string) => Promise<any>;
   paraphraseStream: (providerId: string, modelId: string) => Promise<void>;
   cancelGeneration: () => void;
   
@@ -65,6 +75,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   error: null,
   inputWordCount: 0,
   outputWordCount: 0,
+  latency: null,
+  currentProvider: null,
+  currentModel: null,
+  stats: null,
 
   // Setters
   setInputText: (text) => set({
@@ -131,6 +145,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       set({
         outputText: response.text,
         outputWordCount: countWords(response.text),
+        latency: response.latency,
+        currentProvider: response.provider,
+        currentModel: response.model,
         isGenerating: false,
       });
       

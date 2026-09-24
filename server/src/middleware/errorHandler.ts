@@ -11,11 +11,15 @@ export async function errorHandler(
   const requestId = request.id;
 
   // Log error (but not sensitive information)
-  if (error instanceof AppError) {
-    if (error.statusCode >= 500) {
-      logger.error({ requestId, error: error.message, code: error.code }, 'Application error');
+  const isAppError = error instanceof AppError ||
+    (typeof (error as any)?.statusCode === 'number' && typeof (error as any)?.code === 'string');
+
+  if (isAppError) {
+    const appErr = error as any;
+    if (appErr.statusCode >= 500) {
+      logger.error({ requestId, error: appErr.message, code: appErr.code }, 'Application error');
     } else {
-      logger.warn({ requestId, error: error.message, code: error.code }, 'Client error');
+      logger.warn({ requestId, error: appErr.message, code: appErr.code }, 'Client error');
     }
   } else {
     logger.error({ requestId, error: error.message, stack: error.stack }, 'Unexpected error');

@@ -3,7 +3,7 @@ import { providerRegistry } from './ProviderRegistry';
 import { PromptEngine } from './PromptEngine';
 import { responseNormalizer } from './ResponseNormalizer';
 import { logger } from '../config/logger';
-import { ValidationError, ProviderError, NotFoundError } from '../utils/errors';
+import { ValidationError, ProviderError, NotFoundError, ProviderCredentialError } from '../utils/errors';
 import { calculateStatistics } from '../utils/statistics';
 import { prisma } from '../database/prisma';
 import { decrypt } from '../security/crypto';
@@ -122,7 +122,7 @@ export class AIOrchestrator {
   /**
    * Generate with streaming
    */
-  async *stream(request: AIRequest): AsyncGenerator<AIChunk, void, unknown> {
+  async *stream(request: AIRequest, requestId?: string): AsyncGenerator<AIChunk, void, unknown> {
     // Validate request
     this.validateRequest(request);
 
@@ -373,10 +373,8 @@ export class AIOrchestrator {
       throw new NotFoundError(`Provider ${providerId}`); // Don't reveal it exists
     }
 
-    // Check if already in registry
-    if (providerRegistry.hasProvider(providerId)) {
-      return providerRegistry.getProvider(providerId);
-    }
+    // Always invalidate cached instance to ensure fresh credentials
+    providerRegistry.removeProvider(providerId);
 
     // Get credentials
     const credentials = await prisma.providerCredentials.findUnique({
@@ -385,11 +383,21 @@ export class AIOrchestrator {
 
     let apiKey: string | undefined;
     if (credentials?.encryptedApiKey) {
-      apiKey = decrypt(
-        credentials.encryptedApiKey,
-        credentials.encryptionIv!,
-        credentials.encryptionTag!
-      );
+      try {
+        apiKey = decrypt(
+          credentials.encryptedApiKey,
+          credentials.encryptionIv!,
+          credentials.encryptionTag!
+        );
+      } catch (error) {
+        // Re-throw ProviderCredentialError as-is, wrap others
+        if (error instanceof ProviderCredentialError) {
+          throw error;
+        }
+        throw new ProviderCredentialError(
+          'Stored provider credentials could not be decrypted. Re-enter the provider API key.'
+        );
+      }
     }
 
     // Create provider instance in registry

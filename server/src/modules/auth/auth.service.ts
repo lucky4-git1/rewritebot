@@ -98,46 +98,50 @@ export class AuthService {
     accessToken: string;
     refreshToken: string;
   }> {
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { email: input.email.toLowerCase() },
-    });
+    try {
+      // Find user
+      const user = await prisma.user.findUnique({
+        where: { email: input.email.toLowerCase() },
+      });
 
-    if (!user) {
-      throw new UnauthorizedError('Invalid email or password');
+      if (!user) {
+        throw new UnauthorizedError('Invalid email or password');
+      }
+
+      // Verify password
+      const isValidPassword = await verifyPassword(user.passwordHash, input.password);
+
+      if (!isValidPassword) {
+        throw new UnauthorizedError('Invalid email or password');
+      }
+
+      // Generate tokens
+      const refreshToken = generateToken(64);
+      const refreshTokenHash = hashValue(refreshToken);
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+      // Create session
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          refreshTokenHash,
+          expiresAt,
+        },
+      });
+
+      // Generate access token
+      const accessToken = this.generateAccessToken(user);
+
+      return {
+        user,
+        accessToken,
+        refreshToken,
+      };
+    } catch (err) {
+      throw err;
     }
-
-    // Verify password
-    const isValidPassword = await verifyPassword(user.passwordHash, input.password);
-
-    if (!isValidPassword) {
-      throw new UnauthorizedError('Invalid email or password');
-    }
-
-    // Generate tokens
-    const refreshToken = generateToken(64);
-    const refreshTokenHash = hashValue(refreshToken);
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
-
-    // Create session
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        refreshTokenHash,
-        expiresAt,
-      },
-    });
-
-    // Generate access token
-    const accessToken = this.generateAccessToken(user);
-
-    return {
-      user,
-      accessToken,
-      refreshToken,
-    };
   }
 
   /**

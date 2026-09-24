@@ -65,49 +65,53 @@ export abstract class BaseProvider implements IAIProvider {
   /**
    * Handle HTTP errors and convert to provider errors
    */
-  protected handleHttpError(error: AxiosError): never {
-    let code = 'PROVIDER_ERROR';
-    let message = 'Provider request failed';
-    let retryable = false;
-    let statusCode = error.response?.status;
+  protected handleHttpError(error: AxiosError | any): never {
+    // Handle OpenAI SDK errors (not AxiosErrors)
+    if (error?.status || error?.response?.status) {
+      const statusCode = error.status || error.response?.status;
+      const errorMessage = error.message || 'Provider request failed';
+      let code = 'PROVIDER_ERROR';
+      let retryable = false;
 
-    // Log full error for debugging
-    console.error('Provider HTTP Error:', {
-      code: error.code,
-      status: statusCode,
-      message: error.message,
-      responseData: error.response?.data,
-      url: error.config?.url,
-    });
+      if (statusCode === 401 || statusCode === 403) {
+        code = 'PROVIDER_UNAUTHORIZED';
+        retryable = false;
+      } else if (statusCode === 404 || statusCode === 410) {
+        code = 'MODEL_NOT_FOUND';
+        retryable = false;
+      } else if (statusCode === 429) {
+        code = 'PROVIDER_RATE_LIMITED';
+        retryable = true;
+      } else if (statusCode >= 500) {
+        code = 'PROVIDER_SERVER_ERROR';
+        retryable = true;
+      } else if (statusCode === 400) {
+        code = 'PROVIDER_BAD_REQUEST';
+        retryable = false;
+      }
 
-    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
-      code = 'PROVIDER_TIMEOUT';
-      message = 'Provider request timed out';
-      retryable = true;
-    } else if (error.code === 'ECONNREFUSED') {
-      code = 'PROVIDER_UNAVAILABLE';
-      message = 'Provider is unavailable';
-      retryable = true;
-    } else if (statusCode === 401 || statusCode === 403) {
-      code = 'PROVIDER_UNAUTHORIZED';
-      message = 'Invalid API key or unauthorized';
-      retryable = false;
-    } else if (statusCode === 429) {
-      code = 'PROVIDER_RATE_LIMITED';
-      message = 'Provider rate limit exceeded';
-      retryable = true;
-    } else if (statusCode && statusCode >= 500) {
-      code = 'PROVIDER_SERVER_ERROR';
-      message = 'Provider server error';
-      retryable = true;
-    } else if (error.response?.data) {
-      message = this.extractErrorMessage(error.response.data);
+      throw new ProviderErrorClass(errorMessage, this.type, retryable, {
+        code,
+        statusCode,
+      }, statusCode >= 500 ? 502 : statusCode === 429 ? 429 : 502, code);
     }
 
-    throw new ProviderErrorClass(message, this.type, retryable, {
-      code,
-      statusCode,
-      originalError: error.message,
+    // Handle connection errors
+    if (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT') {
+      throw new ProviderErrorClass('Provider request timed out', this.type, true, {
+        code: 'PROVIDER_TIMEOUT',
+      }, 504, 'PROVIDER_TIMEOUT');
+    }
+    if (error?.code === 'ECONNREFUSED') {
+      throw new ProviderErrorClass('Provider is unavailable. Check that the endpoint is running.', this.type, true, {
+        code: 'PROVIDER_UNAVAILABLE',
+      }, 502, 'PROVIDER_UNAVAILABLE');
+    }
+
+    // Fallback
+    const message = error instanceof Error ? error.message : 'Provider request failed';
+    throw new ProviderErrorClass(message, this.type, false, {
+      code: 'PROVIDER_ERROR',
     });
   }
 

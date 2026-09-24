@@ -51,10 +51,29 @@ export class ProviderError extends AppError {
     message: string,
     public provider: string,
     public retryable: boolean = false,
+    details?: Record<string, unknown>,
+    statusCode: number = 502,
+    code: string = 'PROVIDER_ERROR'
+  ) {
+    super(statusCode, code, message, { provider, retryable, ...details });
+    this.name = 'ProviderError';
+  }
+}
+
+export class ProviderCredentialError extends AppError {
+  constructor(
+    message = 'Stored provider credentials could not be decrypted. Re-enter the provider API key.',
     details?: Record<string, unknown>
   ) {
-    super(502, 'PROVIDER_ERROR', message, { provider, retryable, ...details });
-    this.name = 'ProviderError';
+    super(400, 'PROVIDER_CREDENTIAL_ERROR', message, details);
+    this.name = 'ProviderCredentialError';
+  }
+}
+
+export class ModelNotFoundError extends AppError {
+  constructor(message = 'Selected model was not found or has been decommissioned.', details?: Record<string, unknown>) {
+    super(400, 'MODEL_NOT_FOUND', message, details);
+    this.name = 'ModelNotFoundError';
   }
 }
 
@@ -64,3 +83,4 @@ export class RateLimitError extends AppError {
     this.name = 'RateLimitError';
   }
 }
+

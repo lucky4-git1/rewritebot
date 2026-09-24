@@ -40,6 +40,8 @@ lerna-debug.log*
 # Database
 *.db
 *.db-journal
+*.rdb
+redis/
 prisma/migrations/
 
 # Uploads

@@ -17,7 +17,7 @@ class ParaphraseService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiClient.getAccessToken()}`,
+        'Authorization': `Bearer ${apiClient.getAccessToken() || (typeof window !== 'undefined' ? localStorage.getItem('accessToken') : '')}`,
       },
       body: JSON.stringify(input),
     });
