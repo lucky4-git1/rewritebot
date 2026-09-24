@@ -17,14 +17,14 @@ export class HistoryController {
     request: FastifyRequest<{ Querystring: Record<string, string> }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const { events, total } = await this.historyService.getUserHistory(
       userId,
       request.query
     );
 
-    const page = parseInt(request.query.page || '1');
-    const pageSize = parseInt(request.query.pageSize || '20');
+    const page = parseInt(request.query?.page || '1');
+    const pageSize = parseInt(request.query?.pageSize || '20');
 
     paginatedResponse(reply, events, total, page, pageSize);
   }
@@ -37,7 +37,7 @@ export class HistoryController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const eventId = request.params.id;
 
     const event = await this.historyService.getHistoryEvent(eventId, userId);
@@ -53,7 +53,7 @@ export class HistoryController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const eventId = request.params.id;
 
     await this.historyService.deleteHistoryEvent(eventId, userId);
@@ -69,7 +69,7 @@ export class HistoryController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
 
     await this.historyService.clearHistory(userId);
 
@@ -84,7 +84,7 @@ export class HistoryController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
 
     const stats = await this.historyService.getHistoryStats(userId);
 
@@ -99,7 +99,7 @@ export class HistoryController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
 
     const events = await this.historyService.getRecentHistory(userId);
 

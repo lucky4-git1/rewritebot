@@ -44,10 +44,13 @@ export class ToolsController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const input = validateSchema(grammarCheckSchema, request.body);
 
-    const result = await this.toolsService.checkGrammar(userId, input);
+    const result = await this.toolsService.checkGrammar(userId, {
+      ...input,
+      language: input.language || 'en',
+    });
 
     successResponse(reply, result);
   }
@@ -60,10 +63,13 @@ export class ToolsController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const input = validateSchema(humanizeSchema, request.body);
 
-    const result = await this.toolsService.humanize(userId, input);
+    const result = await this.toolsService.humanize(userId, {
+      ...input,
+      language: input.language || 'auto',
+    });
 
     successResponse(reply, result);
   }
@@ -76,10 +82,13 @@ export class ToolsController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const input = validateSchema(summarizeSchema, request.body);
 
-    const result = await this.toolsService.summarize(userId, input);
+    const result = await this.toolsService.summarize(userId, {
+      ...input,
+      language: input.language || 'auto',
+    });
 
     successResponse(reply, result);
   }
@@ -92,10 +101,13 @@ export class ToolsController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const input = validateSchema(translateSchema, request.body);
 
-    const result = await this.toolsService.translate(userId, input);
+    const result = await this.toolsService.translate(userId, {
+      ...input,
+      sourceLanguage: input.sourceLanguage || 'auto',
+    });
 
     successResponse(reply, result);
   }
@@ -108,7 +120,7 @@ export class ToolsController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const input = validateSchema(citationSchema, request.body);
 
     const result = await this.toolsService.generateCitation(

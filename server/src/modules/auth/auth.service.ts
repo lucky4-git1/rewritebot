@@ -209,6 +209,7 @@ export class AuthService {
     return this.fastify.jwt.sign(
       {
         sub: user.id,
+        id: user.id,
         email: user.email,
         name: user.name,
       },

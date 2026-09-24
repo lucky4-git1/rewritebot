@@ -20,7 +20,7 @@ export class ProvidersController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
 
     const providers = await this.providersService.getUserProviders(userId);
 
@@ -41,7 +41,7 @@ export class ProvidersController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const providerId = request.params.id;
 
     const provider = await this.providersService.getProvider(providerId, userId);
@@ -60,10 +60,7 @@ export class ProvidersController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    console.log('Add provider request body:', request.body);
-    console.log('Add provider request user:', request.user);
-    
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const input = validateSchema(addProviderSchema, request.body);
 
     const provider = await this.providersService.addProvider(userId, input);
@@ -86,7 +83,7 @@ export class ProvidersController {
     request: FastifyRequest<{ Params: { id: string }; Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const providerId = request.params.id;
     const input = validateSchema(updateProviderSchema, request.body);
 
@@ -110,7 +107,7 @@ export class ProvidersController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const providerId = request.params.id;
 
     await this.providersService.deleteProvider(providerId, userId);
@@ -126,7 +123,7 @@ export class ProvidersController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const providerId = request.params.id;
 
     const result = await this.providersService.testConnection(providerId, userId);
@@ -142,7 +139,7 @@ export class ProvidersController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const providerId = request.params.id;
 
     const models = await this.providersService.getProviderModels(providerId, userId);
@@ -171,7 +168,7 @@ export class ProvidersController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const providerId = request.params.id;
 
     const result = await this.providersService.testGeneration(providerId, userId);
@@ -187,7 +184,7 @@ export class ProvidersController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const providerId = request.params.id;
 
     const result = await this.providersService.testParaphrase(providerId, userId);

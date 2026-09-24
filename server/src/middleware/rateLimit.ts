@@ -63,7 +63,7 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
         throw error;
       }
       // If Redis fails, allow the request (fail open)
-      request.log.error('Rate limit check failed:', error);
+      request.log.error({ err: error }, 'Rate limit check failed');
     }
   };
 }

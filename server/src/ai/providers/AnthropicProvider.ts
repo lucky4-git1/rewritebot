@@ -1,42 +1,71 @@
 import { BaseProvider } from '../BaseProvider';
-import { AIRequest, AIResponse, AIChunk } from '@rewritebot/shared';
+import { AIRequest, AIResponse, AIChunk, Model, ProviderCapability } from '@rewritebot/shared';
+import { ConnectionTestResult, ProviderConfig } from '../types';
 
 /**
  * Anthropic (Claude) provider
  * Uses Anthropic's native API
  */
 export class AnthropicProvider extends BaseProvider {
-  constructor(config: any) {
-    super({
-      ...config,
-      type: 'anthropic',
-      capabilities: ['chat', 'streaming', 'vision'],
-    });
+  constructor(config: ProviderConfig) {
+    super(config);
+  }
+
+  protected getDefaultModel(): string {
+    return 'claude-3-haiku-20240307';
+  }
+
+  getCapabilities(): ProviderCapability[] {
+    return ['chat', 'streaming', 'vision'];
+  }
+
+  async validateCredentials(): Promise<boolean> {
+    return !!this.apiKey;
+  }
+
+  async testConnection(): Promise<ConnectionTestResult> {
+    return {
+      success: !!this.apiKey,
+      error: this.apiKey ? undefined : 'API key missing',
+      modelsAvailable: true,
+    };
+  }
+
+  async listModels(): Promise<Model[]> {
+    return [
+      {
+        providerId: this.id,
+        modelId: 'claude-3-5-sonnet-20241022',
+        displayName: 'Claude 3.5 Sonnet',
+        capabilities: ['chat', 'streaming', 'vision'],
+        contextWindow: 200000,
+        streamingSupported: true,
+        visionSupported: true,
+        structuredOutputSupported: true,
+      },
+      {
+        providerId: this.id,
+        modelId: 'claude-3-haiku-20240307',
+        displayName: 'Claude 3 Haiku',
+        capabilities: ['chat', 'streaming'],
+        contextWindow: 200000,
+        streamingSupported: true,
+        visionSupported: false,
+        structuredOutputSupported: true,
+      },
+    ];
   }
 
   async generate(request: AIRequest): Promise<AIResponse> {
-    // Placeholder - full implementation would use @anthropic-ai/sdk
     throw new Error('Anthropic provider requires @anthropic-ai/sdk package');
   }
 
   async *stream(request: AIRequest): AsyncGenerator<AIChunk, void, unknown> {
     throw new Error('Anthropic streaming not implemented');
   }
-
-  async testConnection(): Promise<boolean> {
-    return false;
-  }
-
-  async listModels(): Promise<Array<{ id: string; name: string }>> {
-    return [
-      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
-      { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
-      { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
-    ];
-  }
 }
 
-export const createAnthropicProvider = (config: any): AnthropicProvider => {
+export const createAnthropicProvider = (config: ProviderConfig): AnthropicProvider => {
   return new AnthropicProvider(config);
 };
 

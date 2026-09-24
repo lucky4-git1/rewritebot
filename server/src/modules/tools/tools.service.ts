@@ -1,26 +1,51 @@
 import { prisma } from '../../database/prisma';
-import { aiOrchestrator } from '../../ai';
+import { aiOrchestrator } from '../../ai/AIOrchestrator';
 import { logger } from '../../config/logger';
-import { 
-  GrammarCheckInput, 
-  HumanizeInput, 
-  SummarizeInput, 
-  TranslateInput 
-} from '@rewritebot/shared';
 import { calculateStatistics } from '../../utils/statistics';
+
+interface GrammarInput {
+  text: string;
+  language?: string;
+  providerId: string;
+  modelId: string;
+}
+
+interface HumanizeInput {
+  text: string;
+  mode: 'natural' | 'academic' | 'casual' | 'professional' | 'conversational';
+  language?: string;
+  providerId: string;
+  modelId: string;
+}
+
+interface SummarizeInput {
+  text: string;
+  length: 'short' | 'medium' | 'detailed';
+  format: 'paragraph' | 'bullets' | 'key-points' | 'executive';
+  language?: string;
+  providerId: string;
+  modelId: string;
+}
+
+interface TranslateInput {
+  text: string;
+  sourceLanguage?: string;
+  targetLanguage: string;
+  providerId: string;
+  modelId: string;
+}
 
 export class ToolsService {
   /**
-   * Grammar check - analyze and correct grammar, spelling, punctuation
+   * Grammar check and correction
    */
-  async checkGrammar(userId: string, input: GrammarCheckInput) {
+  async checkGrammar(userId: string, input: GrammarInput) {
     const startTime = Date.now();
 
     try {
-      // Use AIOrchestrator to perform grammar check
       const response = await aiOrchestrator.checkGrammar({
         text: input.text,
-        language: input.language || 'auto',
+        language: input.language || 'en',
         providerId: input.providerId,
         modelId: input.modelId,
       });
@@ -33,10 +58,11 @@ export class ToolsService {
         data: {
           userId,
           operation: 'grammar',
+          mode: 'grammar',
           providerId: input.providerId,
           modelId: input.modelId,
-          inputText: input.text,
-          outputText: response.text,
+          input: input.text,
+          output: response.text,
           success: true,
           latency,
           statistics: stats as any,
@@ -60,12 +86,14 @@ export class ToolsService {
         data: {
           userId,
           operation: 'grammar',
+          mode: 'grammar',
           providerId: input.providerId,
           modelId: input.modelId,
-          inputText: input.text,
-          outputText: '',
+          input: input.text,
+          output: '',
           success: false,
           latency,
+          statistics: {} as any,
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
         },
       });
@@ -97,10 +125,11 @@ export class ToolsService {
         data: {
           userId,
           operation: 'humanize',
+          mode: input.mode || 'natural',
           providerId: input.providerId,
           modelId: input.modelId,
-          inputText: input.text,
-          outputText: response.text,
+          input: input.text,
+          output: response.text,
           success: true,
           latency,
           statistics: stats as any,
@@ -117,12 +146,14 @@ export class ToolsService {
         data: {
           userId,
           operation: 'humanize',
+          mode: input.mode || 'natural',
           providerId: input.providerId,
           modelId: input.modelId,
-          inputText: input.text,
-          outputText: '',
+          input: input.text,
+          output: '',
           success: false,
           latency,
+          statistics: {} as any,
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
         },
       });
@@ -155,10 +186,11 @@ export class ToolsService {
         data: {
           userId,
           operation: 'summarize',
+          mode: input.length || 'medium',
           providerId: input.providerId,
           modelId: input.modelId,
-          inputText: input.text,
-          outputText: response.text,
+          input: input.text,
+          output: response.text,
           success: true,
           latency,
           statistics: stats as any,
@@ -175,12 +207,14 @@ export class ToolsService {
         data: {
           userId,
           operation: 'summarize',
+          mode: input.length || 'medium',
           providerId: input.providerId,
           modelId: input.modelId,
-          inputText: input.text,
-          outputText: '',
+          input: input.text,
+          output: '',
           success: false,
           latency,
+          statistics: {} as any,
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
         },
       });
@@ -212,10 +246,11 @@ export class ToolsService {
         data: {
           userId,
           operation: 'translate',
+          mode: input.targetLanguage,
           providerId: input.providerId,
           modelId: input.modelId,
-          inputText: input.text,
-          outputText: response.text,
+          input: input.text,
+          output: response.text,
           success: true,
           latency,
           statistics: stats as any,
@@ -232,12 +267,14 @@ export class ToolsService {
         data: {
           userId,
           operation: 'translate',
+          mode: input.targetLanguage,
           providerId: input.providerId,
           modelId: input.modelId,
-          inputText: input.text,
-          outputText: '',
+          input: input.text,
+          output: '',
           success: false,
           latency,
+          statistics: {} as any,
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
         },
       });
@@ -273,12 +310,14 @@ export class ToolsService {
         data: {
           userId,
           operation: 'cite',
+          mode: style,
           providerId,
           modelId,
-          inputText: JSON.stringify(source),
-          outputText: response.citation,
+          input: JSON.stringify(source),
+          output: response.citation,
           success: true,
           latency,
+          statistics: {} as any,
         },
       });
 
@@ -292,12 +331,14 @@ export class ToolsService {
         data: {
           userId,
           operation: 'cite',
+          mode: style,
           providerId,
           modelId,
-          inputText: JSON.stringify(source),
-          outputText: '',
+          input: JSON.stringify(source),
+          output: '',
           success: false,
           latency,
+          statistics: {} as any,
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
         },
       });
@@ -306,3 +347,5 @@ export class ToolsService {
     }
   }
 }
+
+export const toolsService = new ToolsService();

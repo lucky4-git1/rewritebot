@@ -2,10 +2,16 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { UnauthorizedError } from '../utils/errors';
 import { AuthService } from '../modules/auth/auth.service';
 
-// Extend FastifyRequest to include user
-declare module 'fastify' {
-  interface FastifyRequest {
-    user?: {
+// Extend @fastify/jwt to type request.user and JWT payload
+declare module '@fastify/jwt' {
+  interface FastifyJWT {
+    payload: {
+      sub: string;
+      id: string;
+      email: string;
+      name: string;
+    };
+    user: {
       id: string;
       email: string;
       name: string;
@@ -42,12 +48,11 @@ export async function authenticate(
     }
 
     // Verify token using Fastify JWT
-    // @ts-ignore - jwt is added by @fastify/jwt plugin
-    const decoded = await request.jwtVerify();
+    const decoded = (await request.jwtVerify()) as any;
 
     // Attach user to request
     request.user = {
-      id: decoded.sub as string,
+      id: (decoded.sub || decoded.id) as string,
       email: decoded.email as string,
       name: decoded.name as string,
     };
@@ -71,6 +76,6 @@ export async function optionalAuthenticate(
     await authenticate(request, reply);
   } catch (error) {
     // Ignore authentication errors
-    request.user = undefined;
+    (request as any).user = undefined;
   }
 }

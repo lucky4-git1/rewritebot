@@ -26,7 +26,7 @@ export class ParaphraseService {
         userId, // SECURITY: Validate provider ownership
         documentId: input.documentId,
         text: input.text,
-        mode: input.mode,
+        mode: input.mode as any,
         language: input.language,
         synonymLevel: input.synonymLevel,
         frozenTerms: input.frozenTerms,

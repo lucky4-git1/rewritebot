@@ -42,7 +42,6 @@ lerna-debug.log*
 *.db-journal
 *.rdb
 redis/
-prisma/migrations/
 
 # Uploads
 uploads/

@@ -19,14 +19,14 @@ export class DocumentsController {
     request: FastifyRequest<{ Querystring: Record<string, string> }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const { documents, total } = await this.documentsService.getUserDocuments(
       userId,
       request.query
     );
 
-    const page = parseInt(request.query.page || '1');
-    const pageSize = parseInt(request.query.pageSize || '20');
+    const page = parseInt(request.query?.page || '1');
+    const pageSize = parseInt(request.query?.pageSize || '20');
 
     paginatedResponse(reply, documents, total, page, pageSize);
   }
@@ -39,7 +39,7 @@ export class DocumentsController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const documentId = request.params.id;
 
     const document = await this.documentsService.getDocument(documentId, userId);
@@ -55,10 +55,13 @@ export class DocumentsController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const input = validateSchema(createDocumentSchema, request.body);
 
-    const document = await this.documentsService.createDocument(userId, input);
+    const document = await this.documentsService.createDocument(userId, {
+      ...input,
+      content: input.content || '',
+    });
 
     successResponse(reply, document, 201);
   }
@@ -71,7 +74,7 @@ export class DocumentsController {
     request: FastifyRequest<{ Params: { id: string }; Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const documentId = request.params.id;
     const input = validateSchema(updateDocumentSchema, request.body);
 
@@ -92,7 +95,7 @@ export class DocumentsController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const documentId = request.params.id;
 
     await this.documentsService.deleteDocument(documentId, userId);
@@ -108,7 +111,7 @@ export class DocumentsController {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const documentId = request.params.id;
 
     const versions = await this.documentsService.getDocumentVersions(documentId, userId);
@@ -124,7 +127,7 @@ export class DocumentsController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
 
     const documents = await this.documentsService.getFavorites(userId);
 
@@ -139,8 +142,8 @@ export class DocumentsController {
     request: FastifyRequest<{ Querystring: { q: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
-    const query = request.query.q || '';
+    const userId = (request as any).user?.id;
+    const query = request.query?.q || '';
 
     const documents = await this.documentsService.searchDocuments(userId, query);
 

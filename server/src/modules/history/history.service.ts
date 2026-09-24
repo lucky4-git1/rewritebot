@@ -94,14 +94,14 @@ export class HistoryService {
 
     const stats = {
       totalEvents: events.length,
-      successfulEvents: events.filter(e => e.success).length,
-      failedEvents: events.filter(e => !e.success).length,
+      successfulEvents: events.filter((e: any) => e.success).length,
+      failedEvents: events.filter((e: any) => !e.success).length,
       byOperation: {} as Record<string, number>,
       byProvider: {} as Record<string, number>,
     };
 
     // Count by operation
-    events.forEach(event => {
+    events.forEach((event: any) => {
       stats.byOperation[event.operation] = (stats.byOperation[event.operation] || 0) + 1;
       stats.byProvider[event.providerId] = (stats.byProvider[event.providerId] || 0) + 1;
     });

@@ -26,10 +26,10 @@ export class ParaphraseController {
 
     diag.log('PARAPHRASE_REQUEST_RECEIVED', {
       hasBody: !!request.body,
-      hasUser: !!request.user,
+      hasUser: !!(request as any).user,
     });
 
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     
     diag.log('AUTHENTICATION_PASSED', { userId });
 
@@ -44,7 +44,16 @@ export class ParaphraseController {
       textLength: input.text.length,
     });
 
-    const response = await this.paraphraseService.paraphrase(userId, input, requestId);
+    const response = await this.paraphraseService.paraphrase(
+      userId,
+      {
+        ...input,
+        language: input.language || 'auto',
+        synonymLevel: input.synonymLevel ?? 2,
+        frozenTerms: input.frozenTerms || [],
+      },
+      requestId
+    );
 
     diag.log('PARAPHRASE_SUCCESS', {
       outputLength: response.text.length,
@@ -64,7 +73,7 @@ export class ParaphraseController {
     request: FastifyRequest<{ Body: unknown }>,
     reply: FastifyReply
   ): Promise<void> {
-    const userId = request.user!.id;
+    const userId = (request as any).user?.id;
     const input = validateSchema(paraphraseSchema, request.body) as ParaphraseInput;
 
     // Set headers for Server-Sent Events
@@ -81,8 +90,8 @@ export class ParaphraseController {
       userId, // SECURITY: Validate provider ownership
       documentId: input.documentId,
       text: input.text,
-      mode: input.mode,
-      language: input.language,
+      mode: input.mode as any,
+      language: input.language || 'auto',
       synonymLevel: input.synonymLevel,
       frozenTerms: input.frozenTerms,
       customInstruction: input.customInstruction,

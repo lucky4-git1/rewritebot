@@ -16,7 +16,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { initializeProviders } from './ai/initProviders';
 
 const server = Fastify({
-  logger,
+  logger: logger as any,
   requestIdHeader: 'x-request-id',
   requestIdLogLabel: 'requestId',
   disableRequestLogging: false,
@@ -24,7 +24,7 @@ const server = Fastify({
 });
 
 // Global error handler
-server.setErrorHandler(errorHandler);
+server.setErrorHandler(errorHandler as any);
 
 // Register plugins
 async function registerPlugins() {

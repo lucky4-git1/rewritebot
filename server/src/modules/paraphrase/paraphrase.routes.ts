@@ -8,7 +8,7 @@ export async function paraphraseRoutes(fastify: FastifyInstance) {
   const controller = new ParaphraseController();
 
   // Set error handler
-  fastify.setErrorHandler(errorHandler);
+  fastify.setErrorHandler(errorHandler as any);
 
   // All routes require authentication
   fastify.addHook('preHandler', authenticate);
@@ -17,13 +17,13 @@ export async function paraphraseRoutes(fastify: FastifyInstance) {
   fastify.post('/', {
     preHandler: [aiRateLimit],
   }, async (request, reply) => {
-    return controller.paraphrase(request, reply);
+    return controller.paraphrase(request as any, reply);
   });
 
   // Paraphrase (streaming)
   fastify.post('/stream', {
     preHandler: [aiRateLimit],
   }, async (request, reply) => {
-    return controller.paraphraseStream(request, reply);
+    return controller.paraphraseStream(request as any, reply);
   });
 }
