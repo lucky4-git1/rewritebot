@@ -16,7 +16,7 @@ RUN npm ci
 
 # Stage 2: Build applications
 FROM base AS builder
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Copy dependencies and package files
@@ -31,8 +31,9 @@ COPY tsconfig.json ./
 COPY shared ./shared
 COPY server ./server
 
-# Generate Prisma Client
-RUN cd server && npx prisma generate
+# Generate Prisma Client for the production runtime from the checked-in schema.
+RUN rm -rf /app/node_modules/.prisma/client && \
+    npx prisma generate --schema=/app/server/prisma/schema.prisma
 
 # Build shared package first, then server
 RUN npm run build --workspace=shared
