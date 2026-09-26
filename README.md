@@ -4,6 +4,11 @@
 
 **Your Private, High-Performance, Provider-Agnostic AI Writing Workspace**
 
+### 🚀 [Visit RewriteBot - AI Writing Workspace](https://rewritebot-client.vercel.app/) to experience the application!
+
+[![Live Application](https://img.shields.io/badge/Live%20Demo-rewritebot--client.vercel.app-10b981?style=for-the-badge&logo=vercel&logoColor=white)](https://rewritebot-client.vercel.app/)
+<br/><br/>
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
@@ -12,11 +17,11 @@
 [![Prisma](https://img.shields.io/badge/Prisma-5.x-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
+[Try Live Demo](https://rewritebot-client.vercel.app/) •
 [Key Features](#-key-features) •
 [Architecture](#-architecture) •
 [Quickstart](#-quickstart) •
 [AI Providers](#-supported-ai-providers) •
-[Deployment](#-production-deployment) •
 [Security](#-security--privacy) •
 [API Reference](#-api-endpoints)
 
@@ -254,25 +259,11 @@ All core API routes are prefixed under `/api/v1`:
 
 ---
 
-## 🚢 Production Deployment
+## 🌐 Experience RewriteBot
 
-RewriteBot is optimized for modern cloud deployments:
+Experience the live application in production:
 
-- **Frontend**: [Vercel](https://vercel.com/) (Edge CDN, automatic preview builds, SPA routing)
-- **Backend**: [Northflank](https://northflank.com/) / [Render](https://render.com/) / Docker container
-- **Database**: [Neon](https://neon.tech/) (Serverless PostgreSQL with connection pooling)
-- **Cache**: [Upstash](https://upstash.com/) (Serverless Redis with TLS support)
-
-### Automated Build Pipeline
-
-The root project enforces clean compile order across workspaces:
-
-```bash
-npm run build
-```
-1. Builds `@rewritebot/shared` (TypeScript definitions and Zod schemas)
-2. Compiles `@rewritebot/server` (Fastify TypeScript target)
-3. Bundles `@rewritebot/client` (Vite production minification and chunk splitting)
+👉 **[RewriteBot - AI Writing Workspace](https://rewritebot-client.vercel.app/)**
 
 ---
 
