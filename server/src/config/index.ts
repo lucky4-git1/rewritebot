@@ -48,6 +48,10 @@ const envSchema = z.object({
   
   // Logging
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+
+  // NVIDIA Provider Configuration
+  NVIDIA_TIMEOUT_MS: z.string().transform(Number).default('60000'),
+  NVIDIA_MAX_TOKENS: z.string().transform(Number).default('2048'),
 });
 
 // Parse and validate environment variables
@@ -109,5 +113,10 @@ export const config = {
   
   logging: {
     level: parsed.data.LOG_LEVEL,
+  },
+
+  nvidia: {
+    timeoutMs: parsed.data.NVIDIA_TIMEOUT_MS,
+    maxTokens: parsed.data.NVIDIA_MAX_TOKENS,
   },
 } as const;

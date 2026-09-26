@@ -96,16 +96,53 @@ export abstract class BaseProvider implements IAIProvider {
       }, statusCode >= 500 ? 502 : statusCode === 429 ? 429 : 502, code);
     }
 
-    // Handle connection errors
-    if (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT') {
-      throw new ProviderErrorClass('Provider request timed out', this.type, true, {
-        code: 'PROVIDER_TIMEOUT',
-      }, 504, 'PROVIDER_TIMEOUT');
+    // Handle timeout errors (Axios and OpenAI SDK)
+    if (
+      error?.name === 'APIConnectionTimeoutError' ||
+      error?.code === 'ECONNABORTED' ||
+      error?.code === 'ETIMEDOUT' ||
+      (typeof error?.message === 'string' && error.message.toLowerCase().includes('timeout'))
+    ) {
+      throw new ProviderErrorClass(
+        'The paraphrasing provider took too long to respond. Please try again.',
+        this.type,
+        true,
+        { code: 'PROVIDER_TIMEOUT' },
+        504,
+        'PROVIDER_TIMEOUT'
+      );
     }
-    if (error?.code === 'ECONNREFUSED') {
-      throw new ProviderErrorClass('Provider is unavailable. Check that the endpoint is running.', this.type, true, {
-        code: 'PROVIDER_UNAVAILABLE',
-      }, 502, 'PROVIDER_UNAVAILABLE');
+
+    // Handle request cancellation
+    if (
+      error?.name === 'APIUserAbortError' ||
+      error?.name === 'AbortError' ||
+      error?.code === 'ERR_CANCELED'
+    ) {
+      throw new ProviderErrorClass(
+        'Request was cancelled.',
+        this.type,
+        false,
+        { code: 'REQUEST_CANCELLED' },
+        499,
+        'REQUEST_CANCELLED'
+      );
+    }
+
+    // Handle connection errors
+    if (
+      error?.name === 'APIConnectionError' ||
+      error?.code === 'ECONNREFUSED' ||
+      error?.code === 'ENOTFOUND'
+    ) {
+      throw new ProviderErrorClass(
+        'Provider is unavailable. Check network connectivity or provider endpoint.',
+        this.type,
+        true,
+        { code: 'PROVIDER_UNAVAILABLE' },
+        502,
+        'PROVIDER_UNAVAILABLE'
+      );
     }
 
     // Fallback

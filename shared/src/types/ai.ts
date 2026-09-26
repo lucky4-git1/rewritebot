@@ -55,6 +55,7 @@ export interface AIRequestOptions {
   topP?: number;
   stream?: boolean;
   timeout?: number;
+  signal?: any;
 }
 
 export interface AIResponse {

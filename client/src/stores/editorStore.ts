@@ -61,6 +61,8 @@ const countWords = (text: string): number => {
   return text.trim().split(/\s+/).filter(w => w.length > 0).length;
 };
 
+let activeAbortController: AbortController | null = null;
+
 export const useEditorStore = create<EditorState>((set, get) => ({
   // Initial state
   inputText: '',
@@ -123,6 +125,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       throw new Error(error);
     }
 
+    if (activeAbortController) {
+      activeAbortController.abort();
+    }
+    activeAbortController = new AbortController();
+    const signal = activeAbortController.signal;
+
     set({ isGenerating: true, error: null, outputText: '' });
 
     try {
@@ -135,7 +143,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         customInstruction: customInstruction || undefined,
         providerId,
         modelId,
-      });
+      }, signal);
 
       // Validate response has actual content
       if (!response.text || response.text.trim().length === 0) {
@@ -160,6 +168,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       });
       // CRITICAL: Rethrow so caller knows it failed
       throw error;
+    } finally {
+      if (activeAbortController?.signal === signal) {
+        activeAbortController = null;
+      }
     }
   },
 
@@ -171,6 +183,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       set({ error: 'Please enter some text to paraphrase' });
       return;
     }
+
+    if (activeAbortController) {
+      activeAbortController.abort();
+    }
+    activeAbortController = new AbortController();
+    const signal = activeAbortController.signal;
 
     set({ isGenerating: true, isStreaming: true, error: null, outputText: '' });
 
@@ -186,7 +204,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         customInstruction: customInstruction || undefined,
         providerId,
         modelId,
-      })) {
+      }, signal)) {
         if (chunk.type === 'token' && chunk.content) {
           accumulatedText += chunk.content;
           set({
@@ -216,12 +234,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         isGenerating: false,
         isStreaming: false,
       });
+    } finally {
+      if (activeAbortController?.signal === signal) {
+        activeAbortController = null;
+      }
     }
   },
 
   cancelGeneration: () => {
-    // TODO: Implement proper cancellation
-    set({ isGenerating: false, isStreaming: false });
+    if (activeAbortController) {
+      activeAbortController.abort();
+      activeAbortController = null;
+    }
+    set({ isGenerating: false, isStreaming: false, error: 'Paraphrase request cancelled.' });
   },
 
   clearError: () => set({ error: null }),

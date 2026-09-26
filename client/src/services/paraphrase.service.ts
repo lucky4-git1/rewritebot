@@ -5,14 +5,14 @@ class ParaphraseService {
   /**
    * Paraphrase text (non-streaming)
    */
-  async paraphrase(input: ParaphraseInput): Promise<AIResponse> {
-    return apiClient.post<AIResponse>('/paraphrase', input);
+  async paraphrase(input: ParaphraseInput, signal?: AbortSignal): Promise<AIResponse> {
+    return apiClient.post<AIResponse>('/paraphrase', input, { signal });
   }
 
   /**
    * Paraphrase text with streaming
    */
-  async *paraphraseStream(input: ParaphraseInput): AsyncGenerator<AIChunk, void, unknown> {
+  async *paraphraseStream(input: ParaphraseInput, signal?: AbortSignal): AsyncGenerator<AIChunk, void, unknown> {
     const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'}/paraphrase/stream`, {
       method: 'POST',
       headers: {
@@ -20,6 +20,7 @@ class ParaphraseService {
         'Authorization': `Bearer ${apiClient.getAccessToken() || (typeof window !== 'undefined' ? localStorage.getItem('accessToken') : '')}`,
       },
       body: JSON.stringify(input),
+      signal,
     });
 
     if (!response.ok) {

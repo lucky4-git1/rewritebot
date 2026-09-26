@@ -44,6 +44,13 @@ export class ParaphraseController {
       textLength: input.text.length,
     });
 
+    const abortController = new AbortController();
+    request.raw.on('close', () => {
+      if (!reply.raw.writableEnded) {
+        abortController.abort();
+      }
+    });
+
     const response = await this.paraphraseService.paraphrase(
       userId,
       {
@@ -51,6 +58,10 @@ export class ParaphraseController {
         language: input.language || 'auto',
         synonymLevel: input.synonymLevel ?? 2,
         frozenTerms: input.frozenTerms || [],
+        options: {
+          ...input.options,
+          signal: abortController.signal,
+        } as any,
       },
       requestId
     );
@@ -76,6 +87,13 @@ export class ParaphraseController {
     const userId = (request as any).user?.id;
     const input = validateSchema(paraphraseSchema, request.body) as ParaphraseInput;
 
+    const streamAbortController = new AbortController();
+    request.raw.on('close', () => {
+      if (!reply.raw.writableEnded) {
+        streamAbortController.abort();
+      }
+    });
+
     // Set headers for Server-Sent Events
     reply.hijack();
     reply.raw.writeHead(200, {
@@ -97,7 +115,10 @@ export class ParaphraseController {
       customInstruction: input.customInstruction,
       providerId: input.providerId,
       modelId: input.modelId,
-      options: input.options,
+      options: {
+        ...input.options,
+        signal: streamAbortController.signal,
+      } as any,
     };
 
     const requestId = request.id as string;

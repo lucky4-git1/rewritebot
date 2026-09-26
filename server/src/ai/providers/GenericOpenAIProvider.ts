@@ -10,7 +10,7 @@ import OpenAI from 'openai';
  * Including: OpenAI, Azure OpenAI, many local models, custom endpoints
  */
 export class GenericOpenAIProvider extends BaseProvider {
-  private openai: OpenAI;
+  protected openai: OpenAI;
 
   constructor(config: ProviderConfig) {
     super(config);

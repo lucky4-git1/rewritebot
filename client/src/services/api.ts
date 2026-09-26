@@ -14,12 +14,14 @@ class ApiClient {
       this.refreshToken = localStorage.getItem('refreshToken');
     }
 
+    const timeoutMs = Number(import.meta.env?.VITE_PARAPHRASE_TIMEOUT_MS) || 65000;
+
     this.client = axios.create({
       baseURL: API_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 30000,
+      timeout: timeoutMs,
     });
 
     // Request interceptor to add auth token
@@ -127,6 +129,12 @@ class ApiClient {
   // Error handling helper
   handleError(error: unknown): string {
     if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED' || (error.message && error.message.toLowerCase().includes('timeout'))) {
+        return 'The paraphrasing provider took too long to respond. Please try again.';
+      }
+      if (error.code === 'ERR_CANCELED') {
+        return 'The paraphrasing request was cancelled.';
+      }
       const apiError = error.response?.data as ApiResponse;
       if (apiError?.error) {
         return apiError.error.message;
@@ -134,6 +142,9 @@ class ApiClient {
       return error.message || 'An unexpected error occurred';
     }
     if (error instanceof Error) {
+      if (error.message && error.message.toLowerCase().includes('timeout')) {
+        return 'The paraphrasing provider took too long to respond. Please try again.';
+      }
       return error.message;
     }
     return 'An unexpected error occurred';
