@@ -358,9 +358,15 @@ export class AIOrchestrator {
    * SECURITY: Validates user ownership of provider
    */
   private async getOrCreateProvider(providerId: string, userId?: string): Promise<IAIProvider> {
-    // Get provider from database
+    // If instance is already cached in registry, reuse it (saves DB + decrypt + TLS setup)
+    if (providerRegistry.hasProvider(providerId)) {
+      return providerRegistry.getProvider(providerId);
+    }
+
+    // Single query joining credentials to eliminate sequential roundtrips
     const provider = await prisma.provider.findUnique({
       where: { id: providerId },
+      include: { credentials: true },
     });
 
     if (!provider) {
@@ -373,21 +379,13 @@ export class AIOrchestrator {
       throw new NotFoundError(`Provider ${providerId}`); // Don't reveal it exists
     }
 
-    // Always invalidate cached instance to ensure fresh credentials
-    providerRegistry.removeProvider(providerId);
-
-    // Get credentials
-    const credentials = await prisma.providerCredentials.findUnique({
-      where: { providerId: provider.id },
-    });
-
     let apiKey: string | undefined;
-    if (credentials?.encryptedApiKey) {
+    if (provider.credentials?.encryptedApiKey) {
       try {
         apiKey = decrypt(
-          credentials.encryptedApiKey,
-          credentials.encryptionIv!,
-          credentials.encryptionTag!
+          provider.credentials.encryptedApiKey,
+          provider.credentials.encryptionIv!,
+          provider.credentials.encryptionTag!
         );
       } catch (error) {
         // Re-throw ProviderCredentialError as-is, wrap others

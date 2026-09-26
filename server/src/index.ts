@@ -26,6 +26,18 @@ const server = Fastify({
 // Global error handler
 server.setErrorHandler(errorHandler as any);
 
+// Request timing hooks
+server.addHook('onRequest', async (request) => {
+  (request as any).startTime = Date.now();
+});
+
+server.addHook('onResponse', async (request, reply) => {
+  const startTime = (request as any).startTime || Date.now();
+  const duration = Date.now() - startTime;
+  reply.header('Server-Timing', `total;dur=${duration}`);
+  logger.info(`[HTTP] ${request.method} ${request.url} status=${reply.statusCode} duration=${duration}ms requestId=${request.id}`);
+});
+
 // Register plugins
 async function registerPlugins() {
   // Security

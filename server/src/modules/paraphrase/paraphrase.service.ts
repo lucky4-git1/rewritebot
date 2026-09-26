@@ -56,11 +56,15 @@ export class ParaphraseService {
       // Calculate statistics
       const statistics = calculateStatistics(input.text, response.text);
 
-      // Record in history
-      await this.recordHistory(userId, input, response, statistics, true);
+      // Record in history asynchronously (don't block user response)
+      this.recordHistory(userId, input, response, statistics, true).catch((err) => {
+        logger.error('Background history recording failed:', err);
+      });
 
-      // Record success in health manager
-      await providerHealthManager.recordSuccess(input.providerId, response.latency);
+      // Record success in health manager asynchronously
+      providerHealthManager.recordSuccess(input.providerId, response.latency).catch((err) => {
+        logger.warn('Background provider health recording failed:', err);
+      });
 
       logger.info(`Paraphrase completed for user ${userId}: ${statistics.inputWords} words`);
 

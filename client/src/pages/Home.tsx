@@ -78,6 +78,7 @@ export function Home() {
     setLanguage,
     setSynonymLevel,
     paraphrase,
+    paraphraseStream,
     exportOutput,
   } = useEditorStore();
 
@@ -149,9 +150,14 @@ export function Home() {
 
     try {
       setSelectedTokenIndex(null);
-      const result = await paraphrase(provider.id, provider.modelId);
-      if (result && result.text && result.text.trim().length > 0) {
+      if (provider.options?.streamingEnabled !== false) {
+        await paraphraseStream(provider.id, provider.modelId);
         showToast('Paraphrase completed successfully!', 'success');
+      } else {
+        const result = await paraphrase(provider.id, provider.modelId);
+        if (result && result.text && result.text.trim().length > 0) {
+          showToast('Paraphrase completed successfully!', 'success');
+        }
       }
     } catch (err: any) {
       console.error('Paraphrase failed:', err);
