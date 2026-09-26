@@ -219,12 +219,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           });
           return;
         } else if (chunk.type === 'complete') {
+          if (!accumulatedText.trim()) {
+            throw new Error('Provider returned empty response');
+          }
           set({
             isGenerating: false,
             isStreaming: false,
           });
           return;
         }
+      }
+
+      if (!accumulatedText.trim()) {
+        throw new Error('Provider returned empty response');
       }
 
       set({ isGenerating: false, isStreaming: false });
@@ -234,6 +241,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         isGenerating: false,
         isStreaming: false,
       });
+      throw error;
     } finally {
       if (activeAbortController?.signal === signal) {
         activeAbortController = null;

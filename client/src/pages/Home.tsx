@@ -151,8 +151,16 @@ export function Home() {
     try {
       setSelectedTokenIndex(null);
       if (provider.options?.streamingEnabled !== false) {
-        await paraphraseStream(provider.id, provider.modelId);
-        showToast('Paraphrase completed successfully!', 'success');
+        try {
+          await paraphraseStream(provider.id, provider.modelId);
+          showToast('Paraphrase completed successfully!', 'success');
+        } catch (streamErr) {
+          console.warn('Streaming encountered issue, falling back to standard paraphrase:', streamErr);
+          const result = await paraphrase(provider.id, provider.modelId);
+          if (result && result.text && result.text.trim().length > 0) {
+            showToast('Paraphrase completed successfully!', 'success');
+          }
+        }
       } else {
         const result = await paraphrase(provider.id, provider.modelId);
         if (result && result.text && result.text.trim().length > 0) {
@@ -814,14 +822,31 @@ export function Home() {
               lineHeight: '1.7',
             }}
           >
-            {isGenerating ? (
+            {isGenerating && !outputText ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '20px' }}>
                 <div style={{ height: '20px', background: '#f1f5f9', borderRadius: '4px', width: '85%', animation: 'pulse 1.5s infinite' }} />
                 <div style={{ height: '20px', background: '#f1f5f9', borderRadius: '4px', width: '95%', animation: 'pulse 1.5s infinite' }} />
                 <div style={{ height: '20px', background: '#f1f5f9', borderRadius: '4px', width: '70%', animation: 'pulse 1.5s infinite' }} />
               </div>
             ) : outputText ? (
-              activeTab === 'diff' ? (
+              isGenerating || activeTab === 'plain' ? (
+                <div style={{ whiteSpace: 'pre-wrap', color: '#1e293b' }}>
+                  {outputText}
+                  {isGenerating && (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '2px',
+                        height: '18px',
+                        background: '#10b981',
+                        marginLeft: '3px',
+                        verticalAlign: 'middle',
+                        animation: 'pulse 0.8s infinite',
+                      }}
+                    />
+                  )}
+                </div>
+              ) : (
                 <div style={{ whiteSpace: 'pre-wrap' }}>
                   {diffTokens.map((token, idx) => {
                     const isChanged = token.type === 'changed';
@@ -846,8 +871,6 @@ export function Home() {
                     );
                   })}
                 </div>
-              ) : (
-                <div style={{ whiteSpace: 'pre-wrap', color: '#1e293b' }}>{outputText}</div>
               )
             ) : (
               <div
