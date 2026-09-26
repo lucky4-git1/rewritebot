@@ -109,7 +109,7 @@ export class ParaphraseService {
   /**
    * Record paraphrase in history
    */
-  private async recordHistory(
+  public async recordHistory(
     userId: string,
     input: ParaphraseInput,
     response: AIResponse,

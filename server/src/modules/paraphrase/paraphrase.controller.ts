@@ -5,6 +5,9 @@ import { successResponse } from '../../utils/response';
 import { paraphraseSchema, ParaphraseInput } from '@rewritebot/shared';
 import { aiOrchestrator } from '../../ai/AIOrchestrator';
 import { DiagnosticLogger } from '../../utils/diagnostics';
+import { calculateStatistics } from '../../utils/statistics';
+import { providerHealthManager } from '../../ai/ProviderHealthManager';
+import { logger } from '../../config/logger';
 
 export class ParaphraseController {
   private paraphraseService: ParaphraseService;
@@ -123,15 +126,45 @@ export class ParaphraseController {
 
     const requestId = request.id as string;
 
+    const startTime = Date.now();
+    let accumulatedText = '';
+
     try {
       // Stream chunks
       for await (const chunk of aiOrchestrator.stream(aiRequest, requestId)) {
+        if (chunk.type === 'token' && chunk.content) {
+          accumulatedText += chunk.content;
+        }
         const eventData = JSON.stringify(chunk);
         reply.raw.write(`data: ${eventData}\n\n`);
       }
 
       // Close stream
       reply.raw.end();
+
+      // Record in history and health manager asynchronously (non-blocking)
+      if (userId && accumulatedText.trim().length > 0) {
+        const latency = Date.now() - startTime;
+        const statistics = calculateStatistics(input.text, accumulatedText);
+        this.paraphraseService.recordHistory(
+          userId,
+          input,
+          {
+            text: accumulatedText,
+            provider: input.providerId,
+            model: input.modelId,
+            latency,
+          },
+          statistics,
+          true
+        ).catch((err: any) => {
+          logger.error('Background streaming history recording failed:', err);
+        });
+
+        providerHealthManager.recordSuccess(input.providerId, latency).catch((err: any) => {
+          logger.warn('Background provider health recording failed:', err);
+        });
+      }
     } catch (error) {
       const errorChunk = {
         type: 'error',
