@@ -22,6 +22,9 @@ import {
   FileText,
   AlertCircle,
   BookOpen,
+  Menu,
+  X,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface HistoryItem {
@@ -56,6 +59,8 @@ export function Home() {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [activeTab, setActiveTab] = useState<'diff' | 'plain'>('diff');
+  const [mobileTab, setMobileTab] = useState<'input' | 'output'>('input');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(null);
   const [thesaurusPos, setThesaurusPos] = useState<{ top: number; left: number } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
@@ -147,6 +152,9 @@ export function Home() {
       showToast('Please enter or paste text to paraphrase.', 'info');
       return;
     }
+
+    // On mobile, auto-switch to output view so streaming tokens appear immediately
+    setMobileTab('output');
 
     try {
       setSelectedTokenIndex(null);
@@ -251,7 +259,7 @@ export function Home() {
   const changePercentage = outputWordCount > 0 ? Math.round((changedWordsCount / outputWordCount) * 100) : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', maxHeight: '100dvh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Inter, system-ui, sans-serif', overflow: 'hidden' }}>
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -283,14 +291,14 @@ export function Home() {
         style={{
           background: '#ffffff',
           borderBottom: '1px solid #e2e8f0',
-          padding: '10px 24px',
+          padding: '10px 20px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          minHeight: '64px',
+          minHeight: '60px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => navigate('/')}>
             <div
               style={{
@@ -314,73 +322,75 @@ export function Home() {
             </div>
           </div>
 
-          {/* Provider Status Pill */}
-          {providers.length > 0 ? (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: '#f1f5f9',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                border: '1px solid #e2e8f0',
-                fontSize: '13px',
-              }}
-            >
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-              <span style={{ color: '#475569', fontWeight: 500 }}>Provider:</span>
-              <select
-                value={selectedProviderId}
-                onChange={(e) => setSelectedProviderId(e.target.value)}
+          {/* Provider Status Pill (Desktop) */}
+          <div className="show-on-desktop hide-on-mobile">
+            {providers.length > 0 ? (
+              <div
                 style={{
-                  border: 'none',
-                  background: 'transparent',
-                  fontWeight: 600,
-                  color: '#0f172a',
-                  cursor: 'pointer',
-                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#f1f5f9',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: '1px solid #e2e8f0',
                   fontSize: '13px',
                 }}
               >
-                {providers.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.type} / {p.modelId})
-                  </option>
-                ))}
-              </select>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+                <span style={{ color: '#475569', fontWeight: 500 }}>Provider:</span>
+                <select
+                  value={selectedProviderId}
+                  onChange={(e) => setSelectedProviderId(e.target.value)}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontSize: '13px',
+                  }}
+                >
+                  {providers.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.type} / {p.modelId})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => navigate('/providers')}
+                  title="Manage Providers"
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b', padding: '2px' }}
+                >
+                  <Settings size={14} />
+                </button>
+              </div>
+            ) : (
               <button
                 onClick={() => navigate('/providers')}
-                title="Manage Providers"
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b', padding: '2px' }}
+                style={{
+                  background: '#fee2e2',
+                  color: '#dc2626',
+                  border: '1px solid #fecaca',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
               >
-                <Settings size={14} />
+                <AlertCircle size={14} /> Add Provider
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => navigate('/providers')}
-              style={{
-                background: '#fee2e2',
-                color: '#dc2626',
-                border: '1px solid #fecaca',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <AlertCircle size={14} /> Add Provider
-            </button>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* User Profile & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* Desktop User Profile & Actions */}
+        <div className="show-on-desktop hide-on-mobile" style={{ alignItems: 'center', gap: '14px' }}>
           <button
             onClick={toggleHistory}
             style={{
@@ -457,24 +467,239 @@ export function Home() {
             </button>
           </div>
         </div>
+
+        {/* Mobile Hamburger Button */}
+        <div className="show-on-mobile hide-on-desktop" style={{ display: 'none', alignItems: 'center', gap: '10px' }}>
+          {providers.length === 0 && (
+            <button
+              onClick={() => navigate('/providers')}
+              style={{
+                background: '#fee2e2',
+                color: '#dc2626',
+                border: '1px solid #fecaca',
+                padding: '4px 10px',
+                borderRadius: '16px',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Add Provider
+            </button>
+          )}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open Navigation Menu"
+            className="touch-target"
+            style={{
+              border: '1px solid #e2e8f0',
+              background: '#fff',
+              color: '#334155',
+              borderRadius: '8px',
+              padding: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Menu size={22} />
+          </button>
+        </div>
       </header>
+
+      {/* Mobile Off-Canvas Drawer */}
+      {mobileMenuOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex' }}>
+          {/* Backdrop */}
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="animate-fade-in"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.45)',
+              backdropFilter: 'blur(2px)',
+            }}
+          />
+
+          {/* Off-canvas Panel */}
+          <div
+            className="animate-slide-in-right"
+            style={{
+              position: 'fixed',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: '290px',
+              maxWidth: '85vw',
+              background: '#ffffff',
+              boxShadow: '-4px 0 25px rgba(0,0,0,0.15)',
+              zIndex: 1001,
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '20px',
+              paddingBottom: 'calc(20px + var(--rb-safe-bottom, 0px))',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '50%',
+                    background: '#e0e7ff',
+                    color: '#4338ca',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                  }}
+                >
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{user?.name || 'User'}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>{user?.email}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="touch-target"
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  toggleHistory();
+                }}
+                className="touch-target"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 14px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: showHistory ? '#ecfdf5' : '#f8fafc',
+                  color: showHistory ? '#059669' : '#1e293b',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <History size={18} color="#10b981" />
+                <span>Paraphrase History</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate('/providers');
+                }}
+                className="touch-target"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 14px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: '#f8fafc',
+                  color: '#1e293b',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <Settings size={18} color="#3b82f6" />
+                <span>AI Providers Configuration</span>
+              </button>
+
+              {providers.length > 0 && (
+                <div style={{ marginTop: '16px', padding: '14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981' }} /> Active AI Provider
+                  </div>
+                  <select
+                    value={selectedProviderId}
+                    onChange={(e) => setSelectedProviderId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      background: '#fff',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {providers.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.type} / {p.modelId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                logout();
+              }}
+              className="touch-target"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px',
+                border: '1px solid #fee2e2',
+                borderRadius: '8px',
+                background: '#fef2f2',
+                color: '#dc2626',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginTop: 'auto',
+              }}
+            >
+              <LogOut size={16} />
+              <span>Log Out</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modes & Settings Control Bar */}
       <div
         style={{
           background: '#ffffff',
           borderBottom: '1px solid #e2e8f0',
-          padding: '10px 24px',
+          padding: '8px 20px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '16px',
+          gap: '12px',
           flexWrap: 'wrap',
         }}
       >
         {/* Mode Selector Tabs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginRight: '4px' }}>Modes:</span>
+        <div className="no-scrollbar" style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '2px', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginRight: '4px', flexShrink: 0 }}>Modes:</span>
           {modes.map((m) => {
             const isActive = mode === m.value;
             return (
@@ -493,6 +718,7 @@ export function Home() {
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 {m.label}
@@ -502,9 +728,9 @@ export function Home() {
         </div>
 
         {/* Synonyms Slider & Language Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           {/* Synonyms Level Slider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Sliders size={14} /> Synonyms:
             </span>
@@ -515,7 +741,7 @@ export function Home() {
                 max="4"
                 value={synonymLevel}
                 onChange={(e) => setSynonymLevel(Number(e.target.value))}
-                style={{ width: '100px', accentColor: '#10b981', cursor: 'pointer' }}
+                style={{ width: '90px', accentColor: '#10b981', cursor: 'pointer' }}
               />
               <span
                 style={{
@@ -534,7 +760,7 @@ export function Home() {
             </div>
           </div>
 
-          <div style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
 
           {/* Language Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -565,14 +791,74 @@ export function Home() {
         </div>
       </div>
 
-      {/* Editor Dual-Pane Workspace */}
-      <div style={{ flex: 1, display: 'flex', position: 'relative', overflow: 'hidden' }}>
-        {/* Left Pane (Input) */}
-        <div
+      {/* Mobile Segmented View Control (Input vs Output) */}
+      <div
+        className="show-on-mobile hide-on-desktop"
+        style={{
+          display: 'none',
+          background: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          padding: '8px 16px',
+          gap: '8px',
+          width: '100%',
+        }}
+      >
+        <button
+          onClick={() => setMobileTab('input')}
+          className="touch-target"
           style={{
             flex: 1,
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: mobileTab === 'input' ? '1.5px solid #10b981' : '1px solid #e2e8f0',
+            background: mobileTab === 'input' ? '#ecfdf5' : '#ffffff',
+            color: mobileTab === 'input' ? '#059669' : '#64748b',
+            fontWeight: mobileTab === 'input' ? 700 : 500,
+            fontSize: '13px',
             display: 'flex',
-            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <BookOpen size={15} />
+          <span>Input {inputWordCount > 0 ? `(${inputWordCount}w)` : ''}</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab('output')}
+          className="touch-target"
+          style={{
+            flex: 1,
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: mobileTab === 'output' ? '1.5px solid #10b981' : '1px solid #e2e8f0',
+            background: mobileTab === 'output' ? '#ecfdf5' : '#ffffff',
+            color: mobileTab === 'output' ? '#059669' : '#64748b',
+            fontWeight: mobileTab === 'output' ? 700 : 500,
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Sparkles size={15} />
+          <span>Output {outputWordCount > 0 ? `(${outputWordCount}w)` : ''}</span>
+          {isGenerating && <span className="spinner" style={{ width: '12px', height: '12px', borderWidth: '2px' }} />}
+        </button>
+      </div>
+
+      {/* Editor Dual-Pane Workspace */}
+      <div style={{ flex: 1, display: 'flex', position: 'relative', overflow: 'hidden', minHeight: 0 }}>
+        {/* Left Pane (Input) */}
+        <div
+          className={`workspace-pane-left ${mobileTab === 'input' ? 'mobile-active-pane' : 'mobile-hidden-pane'}`}
+          style={{
             background: '#ffffff',
             borderRight: '1px solid #e2e8f0',
           }}
@@ -694,6 +980,7 @@ export function Home() {
             <button
               onClick={handleParaphrase}
               disabled={isGenerating || !inputText.trim()}
+              className="touch-target"
               style={{
                 padding: '10px 28px',
                 borderRadius: '8px',
@@ -728,10 +1015,8 @@ export function Home() {
         {/* Right Pane (Output) */}
         <div
           ref={outputContainerRef}
+          className={`workspace-pane-right ${mobileTab === 'output' ? 'mobile-active-pane' : 'mobile-hidden-pane'}`}
           style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
             background: '#ffffff',
             position: 'relative',
           }}
@@ -746,7 +1031,26 @@ export function Home() {
               alignItems: 'center',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                className="show-on-mobile hide-on-desktop"
+                onClick={() => setMobileTab('input')}
+                style={{
+                  display: 'none',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '5px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  background: '#f8fafc',
+                  color: '#475569',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <ArrowLeft size={13} /> Edit
+              </button>
               <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Paraphrase
               </span>
@@ -1155,12 +1459,12 @@ export function Home() {
         {/* History Slide-Over Drawer */}
         {showHistory && (
           <div
+            className="history-drawer-responsive animate-slide-in-right"
             style={{
               position: 'absolute',
               top: 0,
               right: 0,
               bottom: 0,
-              width: '380px',
               background: '#ffffff',
               borderLeft: '1px solid #e2e8f0',
               boxShadow: '-4px 0 20px rgba(0,0,0,0.08)',

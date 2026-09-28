@@ -245,19 +245,20 @@ export function Providers() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Top Navbar */}
       <header
         style={{
           background: '#ffffff',
           borderBottom: '1px solid #e2e8f0',
-          padding: '12px 28px',
+          padding: '12px 20px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          gap: '12px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={() => navigate('/')}
             style={{
@@ -274,15 +275,15 @@ export function Providers() {
               fontWeight: 500,
             }}
           >
-            <ArrowLeft size={16} /> Back to Editor
+            <ArrowLeft size={16} /> <span className="hide-on-mobile">Back to </span>Editor
           </button>
-          <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
-            AI Provider Orchestration
+          <div style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a' }}>
+            AI Providers
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <span style={{ fontSize: '14px', color: '#64748b' }}>{user?.email}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span className="hide-on-mobile" style={{ fontSize: '13px', color: '#64748b' }}>{user?.email}</span>
           <button
             onClick={logout}
             style={{
@@ -300,15 +301,15 @@ export function Providers() {
       </header>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '32px 24px', overflowY: 'auto' }}>
+      <main style={{ flex: 1, padding: '24px 16px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           {/* Header Action Bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
-              <h1 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 6px 0', color: '#0f172a' }}>
+              <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 6px 0', color: '#0f172a' }}>
                 Configured AI Models & Providers
               </h1>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>
                 Bring your own API keys. All keys are encrypted at rest with AES-256-GCM.
               </p>
             </div>
@@ -325,12 +326,12 @@ export function Providers() {
                 }
               }}
               style={{
-                padding: '10px 20px',
+                padding: '10px 18px',
                 borderRadius: '8px',
                 border: 'none',
                 background: showAddForm ? '#64748b' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: '#fff',
-                fontSize: '14px',
+                fontSize: '13px',
                 fontWeight: 600,
                 cursor: 'pointer',
                 display: 'flex',
@@ -406,7 +407,7 @@ export function Providers() {
               </div>
 
               <form onSubmit={handleSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div className="responsive-grid-2" style={{ marginBottom: '16px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                       Provider Type {!editingProviderId && <span style={{ color: '#ef4444' }}>*</span>}
@@ -455,7 +456,7 @@ export function Providers() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <div className="responsive-grid-2" style={{ marginBottom: '16px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                       API Key {editingProviderId ? '(Leave empty to keep existing key)' : !['ollama', 'lmstudio'].includes(formData.type) && <span style={{ color: '#ef4444' }}>*</span>}
@@ -598,19 +599,17 @@ export function Providers() {
                 return (
                   <div
                     key={p.id}
+                    className="provider-card-responsive"
                     style={{
                       background: '#ffffff',
                       border: p.isDefault ? '2px solid #10b981' : '1px solid #e2e8f0',
                       borderRadius: '12px',
-                      padding: '20px',
+                      padding: '18px',
                       boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
                     }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>{p.name}</span>
                         {p.isDefault && (
                           <span
@@ -645,12 +644,12 @@ export function Providers() {
                         </span>
                       </div>
 
-                      <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', gap: '16px' }}>
+                      <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                         <span>
                           Model: <strong style={{ color: '#0f172a' }}>{p.modelId}</strong>
                         </span>
                         {p.baseUrl && (
-                          <span>
+                          <span style={{ wordBreak: 'break-all' }}>
                             URL: <code>{p.baseUrl}</code>
                           </span>
                         )}
@@ -672,13 +671,13 @@ export function Providers() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="provider-actions-responsive">
                       <button
                         onClick={() => handleTestConnection(p.id)}
                         disabled={isTesting}
                         title="Ping provider and verify credentials"
                         style={{
-                          padding: '6px 12px',
+                          padding: '7px 12px',
                           border: '1px solid #cbd5e1',
                           borderRadius: '6px',
                           background: '#fff',
@@ -699,7 +698,7 @@ export function Providers() {
                         disabled={isTesting}
                         title="Run an actual test AI generation"
                         style={{
-                          padding: '6px 12px',
+                          padding: '7px 12px',
                           border: '1px solid #cbd5e1',
                           borderRadius: '6px',
                           background: '#fff',
@@ -719,7 +718,7 @@ export function Providers() {
                         <button
                           onClick={() => handleSetDefault(p.id)}
                           style={{
-                            padding: '6px 12px',
+                            padding: '7px 12px',
                             border: '1px solid #cbd5e1',
                             borderRadius: '6px',
                             background: '#fff',
@@ -737,12 +736,15 @@ export function Providers() {
                         onClick={() => handleEdit(p)}
                         title="Edit provider configuration"
                         style={{
-                          padding: '6px',
+                          padding: '7px 10px',
                           border: '1px solid #cbd5e1',
                           borderRadius: '6px',
                           background: '#fff',
                           color: '#475569',
                           cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       >
                         <Edit2 size={14} />
@@ -752,12 +754,15 @@ export function Providers() {
                         onClick={() => handleDelete(p.id)}
                         title="Delete provider"
                         style={{
-                          padding: '6px',
+                          padding: '7px 10px',
                           border: '1px solid #fee2e2',
                           borderRadius: '6px',
                           background: '#fff',
                           color: '#ef4444',
                           cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       >
                         <Trash2 size={14} />
