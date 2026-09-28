@@ -19,17 +19,17 @@ export class NVIDIAProvider extends GenericOpenAIProvider {
       config.baseUrl = 'https://integrate.api.nvidia.com/v1';
     }
 
-    // Resolve timeout from provider options or environment config (default 60000ms)
+    // Resolve timeout from provider options or environment config (default 180000ms / 3 minutes)
     const timeoutMs =
       (config.options?.timeout as number) ||
       appConfig.nvidia.timeoutMs ||
-      60000;
+      180000;
 
-    // Resolve max tokens from provider options or environment config (default 2048)
+    // Resolve max tokens from provider options or environment config (default 8192)
     const defaultMaxTokens =
       (config.options?.maxTokens as number) ||
       appConfig.nvidia.maxTokens ||
-      2048;
+      8192;
 
     // Pass resolved timeout to GenericOpenAIProvider
     super({
@@ -67,10 +67,10 @@ export class NVIDIAProvider extends GenericOpenAIProvider {
     // Estimate tokens (roughly 3.5 chars per token)
     const estimatedInputTokens = Math.max(Math.ceil(inputChars / 3.5), 1);
     
-    // Paraphrased text is usually comparable to input; allow 1.5x with a minimum floor of 256
-    const targetTokens = Math.max(Math.ceil(estimatedInputTokens * 1.5), 256);
+    // Paraphrased text is comparable to input; allow 2.0x with a minimum floor of 512 tokens
+    const targetTokens = Math.max(Math.ceil(estimatedInputTokens * 2.0), 512);
     
-    // Bound to configured upper limit
+    // Bound to configured upper limit (8192)
     return Math.min(targetTokens, this.defaultMaxTokens);
   }
 

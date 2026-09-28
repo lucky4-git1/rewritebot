@@ -50,8 +50,8 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
   // NVIDIA Provider Configuration
-  NVIDIA_TIMEOUT_MS: z.string().transform(Number).default('60000'),
-  NVIDIA_MAX_TOKENS: z.string().transform(Number).default('2048'),
+  NVIDIA_TIMEOUT_MS: z.string().transform(Number).default('180000'),
+  NVIDIA_MAX_TOKENS: z.string().transform(Number).default('8192'),
 });
 
 // Parse and validate environment variables

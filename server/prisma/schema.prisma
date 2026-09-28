@@ -117,7 +117,7 @@ model DocumentVersion {
   createdAt    DateTime @default(now()) @map("created_at")
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  provider Provider @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@index([documentId, createdAt])
@@ -141,7 +141,7 @@ model HistoryEvent {
   createdAt    DateTime @default(now()) @map("created_at")
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider Provider @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, createdAt])

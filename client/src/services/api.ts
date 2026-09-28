@@ -14,7 +14,7 @@ class ApiClient {
       this.refreshToken = localStorage.getItem('refreshToken');
     }
 
-    const timeoutMs = Number(import.meta.env?.VITE_PARAPHRASE_TIMEOUT_MS) || 65000;
+    const timeoutMs = Number(import.meta.env?.VITE_PARAPHRASE_TIMEOUT_MS) || 180000;
 
     this.client = axios.create({
       baseURL: API_BASE_URL,

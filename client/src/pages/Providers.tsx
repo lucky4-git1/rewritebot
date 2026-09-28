@@ -14,6 +14,7 @@ import {
   Cpu,
   Edit2,
   X,
+  List,
 } from 'lucide-react';
 
 interface Provider {
@@ -59,6 +60,24 @@ export function Providers() {
     baseUrl: '',
     modelId: '',
   });
+
+  const [viewingModelsProvider, setViewingModelsProvider] = useState<Provider | null>(null);
+  const [fetchedModels, setFetchedModels] = useState<any[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  const handleFetchModels = async (provider: Provider) => {
+    try {
+      setViewingModelsProvider(provider);
+      setLoadingModels(true);
+      setFetchedModels([]);
+      const data = await apiClient.get<any[]>(`/providers/${provider.id}/models`);
+      setFetchedModels(data || []);
+      setLoadingModels(false);
+    } catch (err: any) {
+      setLoadingModels(false);
+      setError(err.message || 'Failed to fetch models from provider');
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -518,16 +537,15 @@ export function Providers() {
                   {formData.type === 'nvidia' && (
                     <div style={{ marginTop: '8px' }}>
                       <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
-                        Tested & recommended NVIDIA models:
+                        Verified working NVIDIA models (Meta Llama NIM):
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                         {[
                           { id: 'meta/llama-3.2-11b-vision-instruct', label: 'Llama 3.2 11B Vision (Default)' },
                           { id: 'meta/llama-3.3-70b-instruct', label: 'Llama 3.3 70B' },
                           { id: 'meta/llama-3.1-8b-instruct', label: 'Llama 3.1 8B' },
-                          { id: 'mistralai/mixtral-8x7b-instruct-v0.1', label: 'Mixtral 8x7B' },
-                          { id: 'qwen/qwen2.5-72b-instruct', label: 'Qwen 2.5 72B' },
-                          { id: 'nvidia/nemotron-4-340b-instruct', label: 'Nemotron-4 340B' },
+                          { id: 'meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
+                          { id: 'meta/llama-3.2-3b-instruct', label: 'Llama 3.2 3B' },
                         ].map((m) => (
                           <button
                             key={m.id}
@@ -552,13 +570,69 @@ export function Providers() {
                     </div>
                   )}
                   {formData.type === 'groq' && (
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
-                      Recommended for Groq: <code>qwen/qwen3.8-27b</code> • <code>llama-3.3-70b-versatile</code> • <code>llama-3.1-8b-instant</code>
+                    <div style={{ marginTop: '8px' }}>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                        Tested & recommended Groq models:
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                        {[
+                          { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Versatile)' },
+                          { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Instant)' },
+                          { id: 'qwen/qwen3.8-27b', label: 'Qwen 3.8 27B' },
+                        ].map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, modelId: m.id })}
+                            style={{
+                              border: formData.modelId === m.id ? '1.5px solid #10b981' : '1px solid #cbd5e1',
+                              background: formData.modelId === m.id ? '#ecfdf5' : '#f8fafc',
+                              color: formData.modelId === m.id ? '#059669' : '#334155',
+                              borderRadius: '14px',
+                              padding: '3px 10px',
+                              fontSize: '11px',
+                              fontWeight: formData.modelId === m.id ? 600 : 500,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {formData.type === 'openai' && (
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
-                      Recommended for OpenAI: <code>gpt-4o-mini</code> • <code>gpt-3.5-turbo</code> • <code>gpt-4o</code>
+                    <div style={{ marginTop: '8px' }}>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                        Tested & recommended OpenAI models:
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                        {[
+                          { id: 'gpt-4o-mini', label: 'GPT-4o Mini (Default)' },
+                          { id: 'gpt-4o', label: 'GPT-4o' },
+                          { id: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+                        ].map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, modelId: m.id })}
+                            style={{
+                              border: formData.modelId === m.id ? '1.5px solid #10b981' : '1px solid #cbd5e1',
+                              background: formData.modelId === m.id ? '#ecfdf5' : '#f8fafc',
+                              color: formData.modelId === m.id ? '#059669' : '#334155',
+                              borderRadius: '14px',
+                              padding: '3px 10px',
+                              fontSize: '11px',
+                              fontWeight: formData.modelId === m.id ? 600 : 500,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -776,6 +850,26 @@ export function Providers() {
                       )}
 
                       <button
+                        onClick={() => handleFetchModels(p)}
+                        title="Fetch available models from API"
+                        style={{
+                          padding: '7px 12px',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '6px',
+                          background: '#fff',
+                          color: '#334155',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <List size={13} /> Models
+                      </button>
+
+                      <button
                         onClick={() => handleEdit(p)}
                         title="Edit provider configuration"
                         style={{
@@ -818,6 +912,143 @@ export function Providers() {
           )}
         </div>
       </main>
+
+      {/* View Live Models Modal */}
+      {viewingModelsProvider && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.5)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+              width: '100%',
+              maxWidth: '560px',
+              maxHeight: '80vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid #f1f5f9',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
+                  Live Available Models ({viewingModelsProvider.name})
+                </h3>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                  Current active model: <code>{viewingModelsProvider.modelId}</code>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingModelsProvider(null)}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+              {loadingModels ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>
+                  <RotateCw size={24} className="spinner" style={{ marginBottom: '8px' }} />
+                  <div>Querying {viewingModelsProvider.type} API for models...</div>
+                </div>
+              ) : fetchedModels.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b', fontSize: '14px' }}>
+                  No models returned by API or API key does not have model listing permissions.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {fetchedModels.map((m: any) => {
+                    const isSelected = viewingModelsProvider.modelId === m.modelId;
+                    return (
+                      <div
+                        key={m.modelId}
+                        style={{
+                          padding: '10px 14px',
+                          borderRadius: '8px',
+                          border: isSelected ? '1.5px solid #10b981' : '1px solid #e2e8f0',
+                          background: isSelected ? '#ecfdf5' : '#f8fafc',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '10px',
+                        }}
+                      >
+                        <div style={{ fontSize: '13px', fontWeight: isSelected ? 600 : 500, color: '#0f172a', wordBreak: 'break-all' }}>
+                          {m.displayName || m.modelId}
+                        </div>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await apiClient.patch(`/providers/${viewingModelsProvider.id}`, { modelId: m.modelId });
+                              setProviders(providers.map((p) => p.id === viewingModelsProvider.id ? { ...p, modelId: m.modelId } : p));
+                              setViewingModelsProvider(null);
+                              showSuccess(`Active model updated to "${m.modelId}"`);
+                            } catch (err: any) {
+                              setError(err.message || 'Failed to update model');
+                            }
+                          }}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '4px',
+                            border: isSelected ? 'none' : '1px solid #cbd5e1',
+                            background: isSelected ? '#10b981' : '#fff',
+                            color: isSelected ? '#fff' : '#334155',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {isSelected ? 'Active' : 'Select'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div style={{ padding: '12px 20px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setViewingModelsProvider(null)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  background: '#fff',
+                  color: '#475569',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -170,7 +170,20 @@ export class ProvidersService {
     // Check ownership
     const provider = await this.getProvider(providerId, userId);
 
-    // Delete provider (cascade will delete credentials)
+    // Delete associated records first so foreign key constraints are never violated
+    await prisma.providerCredentials.deleteMany({
+      where: { providerId },
+    });
+
+    await prisma.historyEvent.deleteMany({
+      where: { providerId },
+    });
+
+    await prisma.documentVersion.deleteMany({
+      where: { providerId },
+    });
+
+    // Delete provider
     await prisma.provider.delete({
       where: { id: providerId },
     });
