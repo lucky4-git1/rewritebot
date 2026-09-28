@@ -90,7 +90,7 @@ export function Providers() {
     const defaultModels: Record<string, string> = {
       groq: 'qwen/qwen3.8-27b',
       openai: 'gpt-3.5-turbo',
-      nvidia: 'meta/llama-3.1-8b-instruct',
+      nvidia: 'meta/llama-3.2-11b-vision-instruct',
       ollama: 'llama3',
       anthropic: 'claude-3-haiku-20240307',
     };
@@ -99,7 +99,7 @@ export function Providers() {
       ...formData,
       type,
       name: formData.name || (selected ? `${selected.name} Provider` : type),
-      modelId: formData.modelId || defaultModels[type] || 'gpt-3.5-turbo',
+      modelId: defaultModels[type] || formData.modelId || 'gpt-3.5-turbo',
       baseUrl:
         type === 'ollama'
           ? 'http://localhost:11434/v1'
@@ -499,13 +499,13 @@ export function Providers() {
 
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                    Model Identifier <span style={{ color: '#ef4444' }}>*</span>
+                     Model Identifier <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.modelId}
                     onChange={(e) => setFormData({ ...formData, modelId: e.target.value })}
-                    placeholder="e.g. qwen/qwen3.8-27b or gpt-4o-mini"
+                    placeholder="e.g. meta/llama-3.2-11b-vision-instruct or qwen/qwen3.8-27b"
                     required
                     style={{
                       width: '100%',
@@ -515,9 +515,52 @@ export function Providers() {
                       fontSize: '14px',
                     }}
                   />
-                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                    Recommended for Groq: <code>qwen/qwen3.8-27b</code> • OpenAI: <code>gpt-3.5-turbo</code> or <code>gpt-4o</code>
-                  </div>
+                  {formData.type === 'nvidia' && (
+                    <div style={{ marginTop: '8px' }}>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                        Tested & recommended NVIDIA models:
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                        {[
+                          { id: 'meta/llama-3.2-11b-vision-instruct', label: 'Llama 3.2 11B Vision (Default)' },
+                          { id: 'meta/llama-3.3-70b-instruct', label: 'Llama 3.3 70B' },
+                          { id: 'meta/llama-3.1-8b-instruct', label: 'Llama 3.1 8B' },
+                          { id: 'mistralai/mixtral-8x7b-instruct-v0.1', label: 'Mixtral 8x7B' },
+                          { id: 'qwen/qwen2.5-72b-instruct', label: 'Qwen 2.5 72B' },
+                          { id: 'nvidia/nemotron-4-340b-instruct', label: 'Nemotron-4 340B' },
+                        ].map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, modelId: m.id })}
+                            style={{
+                              border: formData.modelId === m.id ? '1.5px solid #10b981' : '1px solid #cbd5e1',
+                              background: formData.modelId === m.id ? '#ecfdf5' : '#f8fafc',
+                              color: formData.modelId === m.id ? '#059669' : '#334155',
+                              borderRadius: '14px',
+                              padding: '3px 10px',
+                              fontSize: '11px',
+                              fontWeight: formData.modelId === m.id ? 600 : 500,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {formData.type === 'groq' && (
+                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
+                      Recommended for Groq: <code>qwen/qwen3.8-27b</code> • <code>llama-3.3-70b-versatile</code> • <code>llama-3.1-8b-instant</code>
+                    </div>
+                  )}
+                  {formData.type === 'openai' && (
+                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
+                      Recommended for OpenAI: <code>gpt-4o-mini</code> • <code>gpt-3.5-turbo</code> • <code>gpt-4o</code>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px' }}>

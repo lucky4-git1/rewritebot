@@ -51,7 +51,7 @@ export class NVIDIAProvider extends GenericOpenAIProvider {
   }
 
   protected getDefaultModel(): string {
-    return this.modelId || 'meta/llama-3.1-8b-instruct';
+    return this.modelId || 'meta/llama-3.2-11b-vision-instruct';
   }
 
   /**
