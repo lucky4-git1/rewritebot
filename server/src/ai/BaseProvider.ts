@@ -69,16 +69,24 @@ export abstract class BaseProvider implements IAIProvider {
     // Handle OpenAI SDK errors (not AxiosErrors)
     if (error?.status || error?.response?.status) {
       const statusCode = error.status || error.response?.status;
-      const errorMessage = error.message || 'Provider request failed';
+      let errorMessage = error.message || 'Provider request failed';
       let code = 'PROVIDER_ERROR';
       let retryable = false;
 
       if (statusCode === 401 || statusCode === 403) {
         code = 'PROVIDER_UNAUTHORIZED';
         retryable = false;
+        if (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('no body')) {
+          errorMessage = 'API key unauthorized or lacks permissions for this endpoint.';
+        }
       } else if (statusCode === 404 || statusCode === 410) {
         code = 'MODEL_NOT_FOUND';
         retryable = false;
+        if (this.type === 'nvidia') {
+          errorMessage = `Model "${this.modelId || 'selected model'}" returned 404 on NVIDIA. Standard developer keys only have access to "meta/llama-3.2-11b-vision-instruct". Please use this model.`;
+        } else {
+          errorMessage = `Model "${this.modelId || 'selected model'}" was not found (404 Not Found). Please verify the model ID.`;
+        }
       } else if (statusCode === 429) {
         code = 'PROVIDER_RATE_LIMITED';
         retryable = true;

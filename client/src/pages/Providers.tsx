@@ -537,15 +537,11 @@ export function Providers() {
                   {formData.type === 'nvidia' && (
                     <div style={{ marginTop: '8px' }}>
                       <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
-                        Verified working NVIDIA models (Meta Llama NIM):
+                        Verified working NVIDIA model:
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                         {[
-                          { id: 'meta/llama-3.2-11b-vision-instruct', label: 'Llama 3.2 11B Vision (Default)' },
-                          { id: 'meta/llama-3.3-70b-instruct', label: 'Llama 3.3 70B' },
-                          { id: 'meta/llama-3.1-8b-instruct', label: 'Llama 3.1 8B' },
-                          { id: 'meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
-                          { id: 'meta/llama-3.2-3b-instruct', label: 'Llama 3.2 3B' },
+                          { id: 'meta/llama-3.2-11b-vision-instruct', label: 'Llama 3.2 11B Vision (Working & Verified)' },
                         ].map((m) => (
                           <button
                             key={m.id}
@@ -556,16 +552,19 @@ export function Providers() {
                               background: formData.modelId === m.id ? '#ecfdf5' : '#f8fafc',
                               color: formData.modelId === m.id ? '#059669' : '#334155',
                               borderRadius: '14px',
-                              padding: '3px 10px',
-                              fontSize: '11px',
-                              fontWeight: formData.modelId === m.id ? 600 : 500,
+                              padding: '4px 12px',
+                              fontSize: '12px',
+                              fontWeight: 600,
                               cursor: 'pointer',
                               transition: 'all 0.15s ease',
                             }}
                           >
-                            {m.label}
+                            ✓ {m.label}
                           </button>
                         ))}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', lineHeight: 1.4 }}>
+                        * Note: NVIDIA personal developer API keys only have <code>meta/llama-3.2-11b-vision-instruct</code> enabled by default. Other models return <code>404 (no body)</code> unless organization access is granted by NVIDIA.
                       </div>
                     </div>
                   )}
