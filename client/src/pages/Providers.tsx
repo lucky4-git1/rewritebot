@@ -537,11 +537,13 @@ export function Providers() {
                   {formData.type === 'nvidia' && (
                     <div style={{ marginTop: '8px' }}>
                       <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
-                        Verified working NVIDIA model:
+                        NVIDIA Model Options:
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                         {[
-                          { id: 'meta/llama-3.2-11b-vision-instruct', label: 'Llama 3.2 11B Vision (Working & Verified)' },
+                          { id: 'meta/llama-3.2-11b-vision-instruct', label: 'Llama 3.2 11B Vision (Verified)' },
+                          { id: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B' },
+                          { id: 'mistralai/mistral-nemotron', label: 'Mistral Nemotron' },
                         ].map((m) => (
                           <button
                             key={m.id}
@@ -554,17 +556,17 @@ export function Providers() {
                               borderRadius: '14px',
                               padding: '4px 12px',
                               fontSize: '12px',
-                              fontWeight: 600,
+                              fontWeight: formData.modelId === m.id ? 600 : 500,
                               cursor: 'pointer',
                               transition: 'all 0.15s ease',
                             }}
                           >
-                            ✓ {m.label}
+                            {m.label}
                           </button>
                         ))}
                       </div>
                       <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', lineHeight: 1.4 }}>
-                        * Note: NVIDIA personal developer API keys only have <code>meta/llama-3.2-11b-vision-instruct</code> enabled by default. Other models return <code>404 (no body)</code> unless organization access is granted by NVIDIA.
+                        * <code>meta/llama-3.2-11b-vision-instruct</code> is confirmed working on standard developer accounts. For <code>GPT-OSS-20B</code> and <code>Mistral Nemotron</code>, you can test if your key has public endpoint entitlements using the <strong>Test Gen</strong> button.
                       </div>
                     </div>
                   )}
