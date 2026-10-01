@@ -90,20 +90,20 @@
    RewriteBot Brand Palette (Editorial Dark Theme)
    ==================================================================== */
 [data-theme='dark'] {
-  --rb-primary: #8a1338;
-  --rb-primary-hover: #a31c46;
+  --rb-primary: #e27293;
+  --rb-primary-hover: #f48fb1;
   --rb-primary-light: #380d19;
-  --rb-primary-border: #521526;
+  --rb-primary-border: #6b182e;
   
   --rb-accent: #BAD797;
   --rb-accent-hover: #cbe6ac;
   --rb-accent-light: #25331e;
-  --rb-accent-dark: #8ba968;
+  --rb-accent-dark: #cbe6ac;
   
   --rb-background: #171314;
   --rb-surface: #221c1d;
   --rb-surface-cream: #2a2324;
-  --rb-surface-muted: #332b2d;
+  --rb-surface-muted: #383032;
   
   --rb-border: #443a3c;
   --rb-border-light: #383032;
@@ -118,15 +118,15 @@
   --rb-info: #3b82f6;
 
   /* 3-Color Highlight Tokens (Dark Mode) */
-  --rb-diff-changed-bg: rgba(245, 158, 11, 0.18);
+  --rb-diff-changed-bg: rgba(245, 158, 11, 0.22);
   --rb-diff-changed-text: #fde68a;
   --rb-diff-changed-border: #f59e0b;
 
-  --rb-diff-unchanged-bg: rgba(59, 130, 246, 0.18);
+  --rb-diff-unchanged-bg: rgba(59, 130, 246, 0.20);
   --rb-diff-unchanged-text: #bfdbfe;
   --rb-diff-unchanged-border: #60a5fa;
 
-  --rb-diff-structural-bg: rgba(239, 68, 68, 0.2);
+  --rb-diff-structural-bg: rgba(239, 68, 68, 0.22);
   --rb-diff-structural-text: #fca5a5;
   --rb-diff-structural-border: #f87171;
   

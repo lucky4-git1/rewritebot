@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useEditorStore } from '../stores/editorStore';
+import { useThemeStore } from '../stores/themeStore';
 import { apiClient } from '../services/api';
 import { computeWordDiff, DiffToken, lookupSynonyms } from '../utils/wordDiff';
 import { ExportFormat, exportPlagiarismAuditPdf } from '../utils/export';
@@ -64,6 +65,7 @@ export function Home() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const isDark = useThemeStore((state) => state.isDark);
 
   const [providers, setProviders] = useState<any[]>([]);
   const [selectedProviderId, setSelectedProviderId] = useState('');
@@ -912,15 +914,15 @@ export function Home() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  background: '#f1f5f9',
+                  background: 'var(--rb-surface-cream)',
                   padding: '6px 14px',
                   borderRadius: '20px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--rb-border)',
                   fontSize: '13px',
                 }}
               >
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-                <span style={{ color: '#475569', fontWeight: 500 }}>Provider:</span>
+                <span style={{ color: 'var(--rb-text-secondary)', fontWeight: 500 }}>Provider:</span>
                 <select
                   value={selectedProviderId}
                   onChange={(e) => setSelectedProviderId(e.target.value)}
@@ -928,14 +930,14 @@ export function Home() {
                     border: 'none',
                     background: 'transparent',
                     fontWeight: 600,
-                    color: '#0f172a',
+                    color: 'var(--rb-text)',
                     cursor: 'pointer',
                     outline: 'none',
                     fontSize: '13px',
                   }}
                 >
                   {providers.map((p) => (
-                    <option key={p.id} value={p.id}>
+                    <option key={p.id} value={p.id} style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>
                       {p.name} ({p.type} / {p.modelId})
                     </option>
                   ))}
@@ -943,7 +945,7 @@ export function Home() {
                 <button
                   onClick={() => navigate('/providers')}
                   title="Manage Providers"
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b', padding: '2px' }}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', padding: '2px' }}
                 >
                   <Settings size={14} />
                 </button>
@@ -981,10 +983,10 @@ export function Home() {
               alignItems: 'center',
               gap: '6px',
               padding: '8px 14px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--rb-border)',
               borderRadius: '8px',
-              background: showHistory ? '#f1f5f9' : '#fff',
-              color: '#334155',
+              background: showHistory ? 'var(--rb-surface-muted)' : 'var(--rb-surface)',
+              color: 'var(--rb-text)',
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: 500,
@@ -1001,10 +1003,10 @@ export function Home() {
               alignItems: 'center',
               gap: '6px',
               padding: '8px 14px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--rb-border)',
               borderRadius: '8px',
-              background: '#fff',
-              color: '#334155',
+              background: 'var(--rb-surface)',
+              color: 'var(--rb-text)',
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: 500,
@@ -1013,7 +1015,7 @@ export function Home() {
             <Settings size={16} /> Providers
           </button>
 
-          <div style={{ width: '1px', height: '24px', background: '#e2e8f0' }} />
+          <div style={{ width: '1px', height: '24px', background: 'var(--rb-border)' }} />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
@@ -1032,7 +1034,7 @@ export function Home() {
             >
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#334155' }}>{user?.name}</span>
+            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--rb-text)' }}>{user?.name}</span>
             <button
               onClick={logout}
               title="Logout"
@@ -1313,7 +1315,7 @@ export function Home() {
               </button>
             );
           })}
-          <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 4px' }} />
+          <div style={{ width: '1px', height: '18px', background: 'var(--rb-border)', margin: '0 4px' }} />
           <button
             onClick={handleCompareModes}
             title="Compare Standard, Fluency, and Academic outputs side-by-side"
@@ -1323,16 +1325,16 @@ export function Home() {
               gap: '5px',
               padding: '6px 12px',
               borderRadius: '20px',
-              border: '1px solid #e0e7ff',
-              background: '#f5f3ff',
-              color: '#6d28d9',
+              border: isDark ? '1px solid rgba(124, 58, 237, 0.35)' : '1px solid #e0e7ff',
+              background: isDark ? 'rgba(124, 58, 237, 0.16)' : '#f5f3ff',
+              color: isDark ? '#c4b5fd' : '#6d28d9',
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
             }}
           >
-            <Columns size={13} color="#7c3aed" />
+            <Columns size={13} color={isDark ? '#c4b5fd' : '#7c3aed'} />
             <span>Compare Modes</span>
           </button>
         </div>
@@ -1349,20 +1351,20 @@ export function Home() {
               gap: '5px',
               padding: '4px 10px',
               borderRadius: '6px',
-              border: frozenTerms.length > 0 ? '1.5px solid #93c5fd' : '1px solid #e2e8f0',
-              background: frozenTerms.length > 0 ? '#eff6ff' : '#ffffff',
-              color: frozenTerms.length > 0 ? '#1d4ed8' : '#64748b',
+              border: frozenTerms.length > 0 ? (isDark ? '1.5px solid #60a5fa' : '1.5px solid #93c5fd') : '1px solid var(--rb-border)',
+              background: frozenTerms.length > 0 ? (isDark ? 'rgba(59, 130, 246, 0.18)' : '#eff6ff') : 'var(--rb-surface)',
+              color: frozenTerms.length > 0 ? (isDark ? '#93c5fd' : '#1d4ed8') : 'var(--rb-text)',
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
           >
-            <Snowflake size={14} color={frozenTerms.length > 0 ? '#2563eb' : '#94a3b8'} />
+            <Snowflake size={14} color={frozenTerms.length > 0 ? (isDark ? '#93c5fd' : '#2563eb') : 'var(--rb-text-muted)'} />
             <span>Freeze {frozenTerms.length > 0 ? `(${frozenTerms.length})` : ''}</span>
           </button>
 
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0' }} />
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
 
           {/* 🔍 Proofread (Grammar) Button */}
           <button
@@ -1375,24 +1377,24 @@ export function Home() {
               gap: '5px',
               padding: '4px 10px',
               borderRadius: '6px',
-              border: '1px solid #fed7aa',
-              background: '#fff7ed',
-              color: '#c2410c',
+              border: isDark ? '1px solid rgba(234, 88, 12, 0.35)' : '1px solid #fed7aa',
+              background: isDark ? 'rgba(234, 88, 12, 0.16)' : '#fff7ed',
+              color: isDark ? '#fdba74' : '#c2410c',
               fontSize: '12px',
               fontWeight: 600,
               cursor: isCheckingGrammar ? 'not-allowed' : 'pointer',
               transition: 'all 0.15s ease',
             }}
           >
-            <CheckCheck size={14} color="#ea580c" />
+            <CheckCheck size={14} color={isDark ? '#fdba74' : '#ea580c'} />
             <span>{isCheckingGrammar ? 'Checking…' : 'Proofread'}</span>
           </button>
 
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0' }} />
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
 
           {/* Synonyms Level Slider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--rb-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Sliders size={14} /> Synonyms:
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1408,8 +1410,8 @@ export function Home() {
                 style={{
                   fontSize: '11px',
                   fontWeight: 700,
-                  color: '#fff',
-                  background: '#10b981',
+                  color: isDark ? '#171314' : '#fff',
+                  background: isDark ? 'var(--rb-accent)' : '#10b981',
                   borderRadius: '10px',
                   padding: '2px 8px',
                   minWidth: '24px',
@@ -1421,36 +1423,36 @@ export function Home() {
             </div>
           </div>
 
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0' }} />
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
 
           {/* Language Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Globe size={15} color="#64748b" />
+            <Globe size={15} color="var(--rb-text-muted)" />
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               style={{
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--rb-border)',
                 borderRadius: '6px',
                 padding: '4px 10px',
                 fontSize: '13px',
-                color: '#334155',
-                background: '#fff',
+                color: 'var(--rb-text)',
+                background: 'var(--rb-surface)',
                 cursor: 'pointer',
                 outline: 'none',
               }}
             >
-              <option value="auto">Detect language</option>
-              <option value="en">English (US)</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="it">Italian</option>
-              <option value="pt">Portuguese</option>
+              <option value="auto" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Detect language</option>
+              <option value="en" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>English (US)</option>
+              <option value="es" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Spanish</option>
+              <option value="fr" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>French</option>
+              <option value="de" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>German</option>
+              <option value="it" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Italian</option>
+              <option value="pt" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Portuguese</option>
             </select>
           </div>
 
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0' }} />
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
 
           {/* Plagiarism Guard Toggle */}
           <button
@@ -1469,9 +1471,9 @@ export function Home() {
               gap: '6px',
               padding: '4px 10px',
               borderRadius: '6px',
-              border: plagiarismGuard ? '1px solid #c7d2fe' : '1px solid #e2e8f0',
-              background: plagiarismGuard ? '#eef2ff' : '#ffffff',
-              color: plagiarismGuard ? '#4338ca' : '#64748b',
+              border: plagiarismGuard ? (isDark ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid #c7d2fe') : '1px solid var(--rb-border)',
+              background: plagiarismGuard ? (isDark ? 'rgba(99, 102, 241, 0.2)' : '#eef2ff') : 'var(--rb-surface)',
+              color: plagiarismGuard ? (isDark ? '#c7d2fe' : '#4338ca') : 'var(--rb-text)',
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
@@ -1479,7 +1481,7 @@ export function Home() {
             }}
             title="When active, forces deep restructuring to ensure 100% unique, plagiarism-free output"
           >
-            <ShieldCheck size={14} color={plagiarismGuard ? '#4f46e5' : '#94a3b8'} />
+            <ShieldCheck size={14} color={plagiarismGuard ? (isDark ? '#c7d2fe' : '#4f46e5') : 'var(--rb-text-muted)'} />
             <span>Guard: {plagiarismGuard ? 'ON' : 'OFF'}</span>
           </button>
         </div>
@@ -1611,7 +1613,7 @@ export function Home() {
               alignItems: 'center',
             }}
           >
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--rb-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Input Text
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1620,9 +1622,9 @@ export function Home() {
                 style={{
                   padding: '5px 12px',
                   borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  background: '#fff',
-                  color: '#475569',
+                  border: '1px solid var(--rb-border)',
+                  background: 'var(--rb-surface)',
+                  color: 'var(--rb-text)',
                   fontSize: '12px',
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -1639,9 +1641,9 @@ export function Home() {
                 style={{
                   padding: '5px 12px',
                   borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  background: '#fff',
-                  color: '#475569',
+                  border: '1px solid var(--rb-border)',
+                  background: 'var(--rb-surface)',
+                  color: 'var(--rb-text)',
                   fontSize: '12px',
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -1657,9 +1659,9 @@ export function Home() {
                 style={{
                   padding: '5px 12px',
                   borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  background: '#fff',
-                  color: '#475569',
+                  border: '1px solid var(--rb-border)',
+                  background: 'var(--rb-surface)',
+                  color: 'var(--rb-text)',
                   fontSize: '12px',
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -1780,7 +1782,7 @@ export function Home() {
           ref={outputContainerRef}
           className={`workspace-pane-right ${mobileTab === 'output' ? 'mobile-active-pane' : 'mobile-hidden-pane'}`}
           style={{
-            background: '#ffffff',
+            background: 'var(--rb-surface)',
             position: 'relative',
           }}
         >
@@ -1804,9 +1806,9 @@ export function Home() {
                   gap: '4px',
                   padding: '5px 10px',
                   borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  background: '#f8fafc',
-                  color: '#475569',
+                  border: '1px solid var(--rb-border)',
+                  background: 'var(--rb-surface-cream)',
+                  color: 'var(--rb-text)',
                   fontSize: '12px',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -1814,7 +1816,7 @@ export function Home() {
               >
                 <ArrowLeft size={13} /> Edit
               </button>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--rb-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Paraphrase
               </span>
               {outputText && (
@@ -1875,16 +1877,34 @@ export function Home() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span
                   style={{
-                    fontSize: '12px',
+                    fontSize: '11px',
                     fontWeight: 600,
-                    color: '#059669',
-                    background: '#ecfdf5',
-                    padding: '3px 10px',
-                    borderRadius: '12px',
-                    border: '1px solid #d1fae5',
+                    color: isDark ? '#cbe6ac' : '#2d5a1e',
+                    background: isDark ? 'rgba(186, 215, 151, 0.16)' : '#ecfdf5',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    border: `1px solid ${isDark ? 'rgba(186, 215, 151, 0.35)' : '#a7f3d0'}`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    lineHeight: '1.2',
+                    flexShrink: 0,
                   }}
+                  title={`${changePercentage}% of text modified`}
                 >
-                  {changePercentage}% changed
+                  <span
+                    style={{
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      background: isDark ? '#BAD797' : '#10b981',
+                      display: 'inline-block',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span>
+                    {changePercentage}% <span className="hide-on-mobile">changed</span>
+                  </span>
                 </span>
 
                 {plagiarismReport && (
@@ -1892,13 +1912,13 @@ export function Home() {
                     <button
                       onClick={() => setShowPlagiarism(true)}
                       style={{
-                        border: 'none',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        color: plagiarismReport.originalityScore >= 85 ? '#065f46' : '#92400e',
-                        background: plagiarismReport.originalityScore >= 85 ? '#d1fae5' : '#fef3c7',
-                        padding: '3px 10px',
-                        borderRadius: '12px',
+                        border: isDark ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid #d1fae5',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: isDark ? '#86efac' : (plagiarismReport.originalityScore >= 85 ? '#065f46' : '#92400e'),
+                        background: isDark ? 'rgba(34, 197, 94, 0.14)' : (plagiarismReport.originalityScore >= 85 ? '#d1fae5' : '#fef3c7'),
+                        padding: '2px 8px',
+                        borderRadius: '10px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -1907,20 +1927,20 @@ export function Home() {
                       }}
                       title="Click to view Originality details"
                     >
-                      <ShieldCheck size={13} color={plagiarismReport.originalityScore >= 85 ? '#059669' : '#d97706'} />
-                      <span>{plagiarismReport.originalityScore}% Original</span>
+                      <ShieldCheck size={12} color={isDark ? '#86efac' : (plagiarismReport.originalityScore >= 85 ? '#059669' : '#d97706')} />
+                      <span>{plagiarismReport.originalityScore}% <span className="hide-on-mobile">Original</span></span>
                     </button>
 
                     <button
                       onClick={() => setShowPlagiarism(true)}
                       style={{
-                        border: 'none',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        color: (plagiarismReport.humanScore ?? 95) >= 80 ? '#3730a3' : '#991b1b',
-                        background: (plagiarismReport.humanScore ?? 95) >= 80 ? '#e0e7ff' : '#fee2e2',
-                        padding: '3px 10px',
-                        borderRadius: '12px',
+                        border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid #e0e7ff',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: isDark ? '#c7d2fe' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#3730a3' : '#991b1b'),
+                        background: isDark ? 'rgba(99, 102, 241, 0.14)' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#e0e7ff' : '#fee2e2'),
+                        padding: '2px 8px',
+                        borderRadius: '10px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -1929,14 +1949,14 @@ export function Home() {
                       }}
                       title="Estimated human content score (AI detection resilience)"
                     >
-                      <BrainCircuit size={13} color={(plagiarismReport.humanScore ?? 95) >= 80 ? '#4f46e5' : '#dc2626'} />
-                      <span>{plagiarismReport.humanScore ?? 95}% Human</span>
+                      <BrainCircuit size={12} color={isDark ? '#a5b4fc' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#4f46e5' : '#dc2626')} />
+                      <span>{plagiarismReport.humanScore ?? 95}% <span className="hide-on-mobile">Human</span></span>
                     </button>
                   </div>
                 )}
 
                 {latency && (
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--rb-text-muted)' }}>
                     {latency}ms
                   </span>
                 )}
@@ -2043,11 +2063,11 @@ export function Home() {
                       alignItems: 'center',
                       gap: '8px',
                       padding: '8px 12px',
-                      background: '#f0f9ff',
-                      border: '1px solid #bae6fd',
+                      background: isDark ? 'rgba(59, 130, 246, 0.14)' : '#f0f9ff',
+                      border: isDark ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid #bae6fd',
                       borderRadius: '8px',
                       fontSize: '12px',
-                      color: '#0369a1',
+                      color: isDark ? '#93c5fd' : '#0369a1',
                       fontWeight: 500,
                     }}
                   >
@@ -2061,8 +2081,12 @@ export function Home() {
                     {(outputText.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [outputText]).map((sentence, sIdx) => {
                       const isSelected = selectedSentence === sentence;
                       // Distinct alternating soft tints for easy reading and demarcated boundaries
-                      const bgTints = ['#f8fafc', '#eff6ff', '#f0fdf4', '#fdf4ff'];
-                      const borderTints = ['#cbd5e1', '#bfdbfe', '#bbf7d0', '#f5d0fe'];
+                      const bgTints = isDark
+                        ? ['rgba(255,255,255,0.04)', 'rgba(59,130,246,0.1)', 'rgba(186,215,151,0.1)', 'rgba(244,114,147,0.1)']
+                        : ['#f8fafc', '#eff6ff', '#f0fdf4', '#fdf4ff'];
+                      const borderTints = isDark
+                        ? ['rgba(255,255,255,0.14)', 'rgba(59,130,246,0.3)', 'rgba(186,215,151,0.3)', 'rgba(244,114,147,0.3)']
+                        : ['#cbd5e1', '#bfdbfe', '#bbf7d0', '#f5d0fe'];
                       const defaultBg = bgTints[sIdx % bgTints.length];
                       const defaultBorder = borderTints[sIdx % borderTints.length];
 
@@ -2075,10 +2099,10 @@ export function Home() {
                             padding: '4px 8px',
                             marginRight: '6px',
                             borderRadius: '6px',
-                            background: isSelected ? '#dbeafe' : defaultBg,
-                            border: isSelected ? '2px solid #2563eb' : `1.5px solid ${defaultBorder}`,
-                            boxShadow: isSelected ? '0 4px 12px rgba(37,99,235,0.22)' : '0 1px 2px rgba(0,0,0,0.04)',
-                            color: isSelected ? '#1e3a8a' : '#1e293b',
+                            background: isSelected ? (isDark ? 'rgba(186, 215, 151, 0.2)' : '#dbeafe') : defaultBg,
+                            border: isSelected ? (isDark ? '2px solid var(--rb-accent)' : '2px solid #2563eb') : `1.5px solid ${defaultBorder}`,
+                            boxShadow: isSelected ? (isDark ? '0 4px 12px rgba(186,215,151,0.25)' : '0 4px 12px rgba(37,99,235,0.22)') : '0 1px 2px rgba(0,0,0,0.04)',
+                            color: isSelected ? (isDark ? 'var(--rb-accent-hover)' : '#1e3a8a') : 'var(--rb-text)',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
                             boxDecorationBreak: 'clone',
@@ -2086,9 +2110,9 @@ export function Home() {
                           }}
                           onMouseEnter={(e) => {
                             if (!isSelected) {
-                              e.currentTarget.style.background = '#e0f2fe';
-                              e.currentTarget.style.borderColor = '#38bdf8';
-                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(56,189,248,0.2)';
+                              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.1)' : '#e0f2fe';
+                              e.currentTarget.style.borderColor = isDark ? 'var(--rb-accent)' : '#38bdf8';
+                              e.currentTarget.style.boxShadow = isDark ? '0 2px 8px rgba(186,215,151,0.2)' : '0 2px 8px rgba(56,189,248,0.2)';
                             }
                           }}
                           onMouseLeave={(e) => {
@@ -2108,8 +2132,8 @@ export function Home() {
                               width: '18px',
                               height: '18px',
                               borderRadius: '50%',
-                              background: isSelected ? '#2563eb' : '#64748b',
-                              color: '#ffffff',
+                              background: isSelected ? (isDark ? 'var(--rb-accent)' : '#2563eb') : (isDark ? 'var(--rb-border)' : '#64748b'),
+                              color: isSelected && isDark ? '#171314' : '#ffffff',
                               fontSize: '10px',
                               fontWeight: 700,
                               marginRight: '6px',
@@ -2176,8 +2200,8 @@ export function Home() {
                         }}
                         onMouseEnter={(e) => {
                           if (isWord && !isYellow && !isBlue && !isRed) {
-                            e.currentTarget.style.background = '#f1f5f9';
-                            e.currentTarget.style.borderBottom = '1px dotted #94a3b8';
+                            e.currentTarget.style.background = isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9';
+                            e.currentTarget.style.borderBottom = isDark ? '1px dotted var(--rb-border)' : '1px dotted #94a3b8';
                           }
                         }}
                         onMouseLeave={(e) => {
@@ -2202,7 +2226,7 @@ export function Home() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#94a3b8',
+                  color: 'var(--rb-text-muted)',
                   textAlign: 'center',
                 }}
               >
@@ -2211,21 +2235,21 @@ export function Home() {
                     width: '64px',
                     height: '64px',
                     borderRadius: '50%',
-                    background: '#f8fafc',
-                    border: '1px dashed #cbd5e1',
+                    background: 'var(--rb-surface-cream)',
+                    border: '1px dashed var(--rb-border)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: '16px',
-                    color: '#94a3b8',
+                    color: 'var(--rb-text-muted)',
                   }}
                 >
                   <FileText size={28} />
                 </div>
-                <div style={{ fontSize: '16px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--rb-text)', marginBottom: '6px' }}>
                   Your Paraphrased Text Will Appear Here
                 </div>
-                <p style={{ fontSize: '13px', maxWidth: '320px', lineHeight: 1.5, margin: 0 }}>
+                <p style={{ fontSize: '13px', maxWidth: '320px', lineHeight: 1.5, margin: 0, color: 'var(--rb-text-muted)' }}>
                   Enter your text on the left, pick a mode and synonym level, and click Paraphrase.
                 </p>
               </div>
@@ -2240,10 +2264,10 @@ export function Home() {
                 top: `${thesaurusPos.top}px`,
                 left: `${thesaurusPos.left}px`,
                 zIndex: 200,
-                background: '#ffffff',
-                border: '1.5px solid #cbd5e1',
+                background: 'var(--rb-surface)',
+                border: '1.5px solid var(--rb-border)',
                 borderRadius: '8px',
-                boxShadow: '0 12px 28px -5px rgba(0,0,0,0.2)',
+                boxShadow: isDark ? '0 12px 28px -5px rgba(0,0,0,0.6)' : '0 12px 28px -5px rgba(0,0,0,0.2)',
                 padding: '8px 10px',
                 minWidth: '200px',
                 maxWidth: '260px',
@@ -2255,19 +2279,19 @@ export function Home() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '2px 4px 6px',
-                  borderBottom: '1px solid #f1f5f9',
+                  borderBottom: '1px solid var(--rb-border)',
                 }}
               >
                 <span
                   style={{
                     fontSize: '11px',
                     fontWeight: 700,
-                    color: '#64748b',
+                    color: 'var(--rb-text-muted)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                   }}
                 >
-                  Synonyms: <strong style={{ color: '#0f172a' }}>{selectedWord}</strong>
+                  Synonyms: <strong style={{ color: 'var(--rb-text)' }}>{selectedWord}</strong>
                 </span>
                 <button
                   onClick={() => {
@@ -2278,7 +2302,7 @@ export function Home() {
                     border: 'none',
                     background: 'none',
                     cursor: 'pointer',
-                    color: '#94a3b8',
+                    color: 'var(--rb-text-muted)',
                     fontSize: '14px',
                     padding: '0 2px',
                   }}
@@ -2293,7 +2317,7 @@ export function Home() {
                     padding: '14px 8px',
                     textAlign: 'center',
                     fontSize: '12px',
-                    color: '#64748b',
+                    color: 'var(--rb-text-secondary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -2333,7 +2357,7 @@ export function Home() {
                         borderRadius: '4px',
                         border: 'none',
                         background: 'transparent',
-                        color: '#0f172a',
+                        color: 'var(--rb-text)',
                         fontSize: '13px',
                         fontWeight: 500,
                         cursor: 'pointer',
@@ -2342,16 +2366,16 @@ export function Home() {
                         justifyContent: 'space-between',
                         transition: 'background 0.12s ease',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#fef3c7')}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = isDark ? 'var(--rb-surface-cream)' : '#fef3c7')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                     >
                       <span>{syn}</span>
-                      <span style={{ fontSize: '10px', color: '#d97706', fontWeight: 600 }}>Swap</span>
+                      <span style={{ fontSize: '10px', color: isDark ? 'var(--rb-accent)' : '#d97706', fontWeight: 600 }}>Swap</span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <div style={{ padding: '12px 8px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                <div style={{ padding: '12px 8px', fontSize: '12px', color: 'var(--rb-text-muted)', textAlign: 'center' }}>
                   No alternative synonyms found
                 </div>
               )}
@@ -2366,11 +2390,10 @@ export function Home() {
                 top: `${sentenceWidgetPos.top}px`,
                 left: `${sentenceWidgetPos.left}px`,
                 zIndex: 120,
-
-                background: '#ffffff',
-                border: '1.5px solid #93c5fd',
+                background: 'var(--rb-surface)',
+                border: isDark ? '1.5px solid var(--rb-border)' : '1.5px solid #93c5fd',
                 borderRadius: '10px',
-                boxShadow: '0 12px 30px -5px rgba(37, 99, 235, 0.2)',
+                boxShadow: isDark ? '0 12px 30px -5px rgba(0, 0, 0, 0.6)' : '0 12px 30px -5px rgba(37, 99, 235, 0.2)',
                 padding: '12px 14px',
                 width: '360px',
                 maxWidth: '92vw',
@@ -2379,48 +2402,74 @@ export function Home() {
                 gap: '8px',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--rb-border)', paddingBottom: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? 'var(--rb-accent)' : '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Wand2 size={13} /> Sentence Alternatives
                 </span>
                 <button
                   onClick={() => setSelectedSentence(null)}
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '14px', padding: '2px' }}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '14px', padding: '2px' }}
                 >
                   ✕
                 </button>
               </div>
 
               {isLoadingAlternatives ? (
-                <div style={{ textAlign: 'center', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#64748b', fontSize: '13px' }}>
-                  <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: '#2563eb', borderTopColor: 'transparent' }} />
+                <div style={{ textAlign: 'center', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--rb-text-secondary)', fontSize: '13px' }}>
+                  <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: isDark ? 'var(--rb-accent)' : '#2563eb', borderTopColor: 'transparent' }} />
                   <span>Generating 3 alternatives…</span>
                 </div>
               ) : sentenceAlternatives.length > 0 ? (
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                    <span style={{ fontSize: '11px', color: 'var(--rb-text-secondary)', fontWeight: 600 }}>
                       Option {currentAltIndex + 1} of {sentenceAlternatives.length}
                     </span>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       <button
                         onClick={() => setCurrentAltIndex((prev) => (prev > 0 ? prev - 1 : sentenceAlternatives.length - 1))}
-                        style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        style={{
+                          border: '1px solid var(--rb-border)',
+                          background: 'var(--rb-surface-cream)',
+                          color: 'var(--rb-text)',
+                          borderRadius: '4px',
+                          padding: '3px 7px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease',
+                        }}
                         title="Previous alternative"
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-muted)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
                       >
-                        <ChevronLeft size={14} />
+                        <ChevronLeft size={14} color="var(--rb-text)" />
                       </button>
                       <button
                         onClick={() => setCurrentAltIndex((prev) => (prev < sentenceAlternatives.length - 1 ? prev + 1 : 0))}
-                        style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        style={{
+                          border: '1px solid var(--rb-border)',
+                          background: 'var(--rb-surface-cream)',
+                          color: 'var(--rb-text)',
+                          borderRadius: '4px',
+                          padding: '3px 7px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease',
+                        }}
                         title="Next alternative"
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-muted)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
                       >
-                        <ChevronRight size={14} />
+                        <ChevronRight size={14} color="var(--rb-text)" />
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#0f172a', background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--rb-text)', background: 'var(--rb-surface-cream)', padding: '10px', borderRadius: '6px', border: '1px solid var(--rb-border)' }}>
                     "{sentenceAlternatives[currentAltIndex]}"
                   </div>
 
@@ -2432,7 +2481,7 @@ export function Home() {
                         padding: '8px 12px',
                         borderRadius: '6px',
                         border: 'none',
-                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                        background: 'linear-gradient(135deg, var(--rb-primary) 0%, var(--rb-primary-hover) 100%)',
                         color: '#ffffff',
                         fontSize: '12px',
                         fontWeight: 600,
@@ -2441,6 +2490,7 @@ export function Home() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '6px',
+                        boxShadow: 'var(--rb-shadow-sm)',
                       }}
                     >
                       <Check size={14} /> Replace
@@ -2451,22 +2501,25 @@ export function Home() {
                       style={{
                         padding: '8px 10px',
                         borderRadius: '6px',
-                        border: '1px solid #e2e8f0',
-                        background: '#fff',
-                        color: '#475569',
+                        border: '1px solid var(--rb-border)',
+                        background: 'var(--rb-surface-cream)',
+                        color: 'var(--rb-text)',
                         fontSize: '12px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px',
+                        transition: 'all 0.15s ease',
                       }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-muted)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
                     >
                       <RotateCw size={13} />
                     </button>
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '10px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--rb-text-muted)', textAlign: 'center', padding: '10px' }}>
                   No alternative variations found.
                 </div>
               )}
@@ -2477,21 +2530,21 @@ export function Home() {
           <div
             style={{
               padding: '14px 20px',
-              borderTop: '1px solid #f1f5f9',
+              borderTop: '1px solid var(--rb-border)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              background: '#fafafa',
+              background: 'var(--rb-surface-cream)',
             }}
           >
-            <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', display: 'flex', gap: '12px', alignItems: 'center' }}>
               <span>
                 <strong>{outputWordCount}</strong> words
               </span>
               {currentProvider && currentModel && (
                 <>
                   <span>•</span>
-                  <span style={{ fontSize: '12px', color: '#475569' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--rb-text-muted)' }}>
                     {currentProvider} ({currentModel})
                   </span>
                 </>
@@ -2505,9 +2558,9 @@ export function Home() {
                 style={{
                   padding: '8px 16px',
                   borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  background: copied ? '#ecfdf5' : '#fff',
-                  color: copied ? '#059669' : '#334155',
+                  border: '1px solid var(--rb-border)',
+                  background: copied ? (isDark ? 'rgba(34, 197, 94, 0.2)' : '#ecfdf5') : 'var(--rb-surface)',
+                  color: copied ? (isDark ? '#86efac' : '#059669') : 'var(--rb-text)',
                   fontSize: '13px',
                   fontWeight: 500,
                   cursor: outputText ? 'pointer' : 'not-allowed',
@@ -2528,9 +2581,9 @@ export function Home() {
                 style={{
                   padding: '8px 14px',
                   borderRadius: '6px',
-                  border: '1px solid #c7d2fe',
-                  background: '#eef2ff',
-                  color: '#4338ca',
+                  border: isDark ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid #c7d2fe',
+                  background: isDark ? 'rgba(99, 102, 241, 0.15)' : '#eef2ff',
+                  color: isDark ? '#c7d2fe' : '#4338ca',
                   fontSize: '13px',
                   fontWeight: 600,
                   cursor: outputText || inputText.trim() ? 'pointer' : 'not-allowed',
@@ -2540,7 +2593,7 @@ export function Home() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                <ShieldCheck size={15} color="#4f46e5" />
+                <ShieldCheck size={15} color={isDark ? '#a5b4fc' : '#4f46e5'} />
                 <span>Plagiarism</span>
               </button>
 
@@ -2551,9 +2604,9 @@ export function Home() {
                 style={{
                   padding: '8px 12px',
                   borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  background: '#fff',
-                  color: '#334155',
+                  border: '1px solid var(--rb-border)',
+                  background: 'var(--rb-surface)',
+                  color: 'var(--rb-text)',
                   cursor: inputText.trim() && !isGenerating ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
@@ -2571,9 +2624,9 @@ export function Home() {
                   style={{
                     padding: '8px 14px',
                     borderRadius: '6px',
-                    border: '1px solid #e2e8f0',
-                    background: '#fff',
-                    color: '#334155',
+                    border: '1px solid var(--rb-border)',
+                    background: 'var(--rb-surface)',
+                    color: 'var(--rb-text)',
                     fontSize: '13px',
                     fontWeight: 500,
                     cursor: outputText ? 'pointer' : 'not-allowed',
@@ -2592,79 +2645,41 @@ export function Home() {
                       right: 0,
                       bottom: '100%',
                       marginBottom: '6px',
-                      background: '#fff',
-                      border: '1px solid #e2e8f0',
+                      background: 'var(--rb-surface)',
+                      border: '1px solid var(--rb-border)',
                       borderRadius: '8px',
-                      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+                      boxShadow: isDark ? '0 10px 25px -5px rgba(0,0,0,0.5)' : '0 10px 25px -5px rgba(0,0,0,0.1)',
                       zIndex: 200,
-                      minWidth: '150px',
+                      minWidth: '160px',
                       overflow: 'hidden',
                     }}
                   >
-                    <button
-                      onClick={() => handleExport('txt')}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '10px 14px',
-                        border: 'none',
-                        background: 'transparent',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      Plain Text (.txt)
-                    </button>
-                    <button
-                      onClick={() => handleExport('md')}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '10px 14px',
-                        border: 'none',
-                        background: 'transparent',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      Markdown (.md)
-                    </button>
-                    <button
-                      onClick={() => handleExport('docx')}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '10px 14px',
-                        border: 'none',
-                        background: 'transparent',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      Word Document (.docx)
-                    </button>
-                    <button
-                      onClick={() => handleExport('pdf')}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '10px 14px',
-                        border: 'none',
-                        background: 'transparent',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      PDF Document (.pdf)
-                    </button>
+                    {[
+                      { key: 'txt', label: 'Plain Text (.txt)' },
+                      { key: 'md', label: 'Markdown (.md)' },
+                      { key: 'docx', label: 'Word Document (.docx)' },
+                      { key: 'pdf', label: 'PDF Document (.pdf)' },
+                    ].map((item) => (
+                      <button
+                        key={item.key}
+                        onClick={() => handleExport(item.key as any)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 14px',
+                          border: 'none',
+                          background: 'transparent',
+                          color: 'var(--rb-text)',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -2681,9 +2696,9 @@ export function Home() {
               top: 0,
               right: 0,
               bottom: 0,
-              background: '#ffffff',
-              borderLeft: '1px solid #e2e8f0',
-              boxShadow: '-4px 0 20px rgba(0,0,0,0.08)',
+              background: 'var(--rb-surface)',
+              borderLeft: '1px solid var(--rb-border)',
+              boxShadow: isDark ? '-4px 0 25px rgba(0,0,0,0.5)' : '-4px 0 20px rgba(0,0,0,0.08)',
               zIndex: 300,
               display: 'flex',
               flexDirection: 'column',
@@ -2692,18 +2707,18 @@ export function Home() {
             <div
               style={{
                 padding: '16px 20px',
-                borderBottom: '1px solid #e2e8f0',
+                borderBottom: '1px solid var(--rb-border)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px', color: 'var(--rb-text)' }}>
                 <History size={18} color="#10b981" /> Paraphrase History
               </div>
               <button
                 onClick={() => setShowHistory(false)}
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px' }}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '18px' }}
               >
                 ✕
               </button>
@@ -2711,11 +2726,11 @@ export function Home() {
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
               {loadingHistory ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', fontSize: '14px' }}>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--rb-text-muted)', fontSize: '14px' }}>
                   Loading history...
                 </div>
               ) : historyItems.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', fontSize: '14px' }}>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--rb-text-muted)', fontSize: '14px' }}>
                   No paraphrase history yet.
                 </div>
               ) : (
@@ -2726,8 +2741,8 @@ export function Home() {
                       style={{
                         padding: '14px',
                         borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
-                        background: '#f8fafc',
+                        border: '1px solid var(--rb-border)',
+                        background: 'var(--rb-surface-cream)',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '8px',
@@ -2739,25 +2754,25 @@ export function Home() {
                             fontSize: '11px',
                             fontWeight: 600,
                             textTransform: 'uppercase',
-                            background: '#e2e8f0',
+                            background: isDark ? 'var(--rb-surface-muted)' : '#e2e8f0',
                             padding: '2px 8px',
                             borderRadius: '4px',
-                            color: '#475569',
+                            color: 'var(--rb-text)',
                           }}
                         >
                           {item.mode}
                         </span>
-                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--rb-text-muted)' }}>
                           {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
 
-                      <div style={{ fontSize: '13px', color: '#475569', lineBreak: 'anywhere' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', lineBreak: 'anywhere' }}>
                         <strong>In:</strong> {item.input.slice(0, 80)}...
                       </div>
 
                       {item.output && (
-                        <div style={{ fontSize: '13px', color: '#0f172a', fontWeight: 500, lineBreak: 'anywhere' }}>
+                        <div style={{ fontSize: '13px', color: 'var(--rb-text)', fontWeight: 500, lineBreak: 'anywhere' }}>
                           <strong>Out:</strong> {item.output.slice(0, 80)}...
                         </div>
                       )}
@@ -2774,9 +2789,9 @@ export function Home() {
                           alignSelf: 'flex-start',
                           padding: '4px 10px',
                           borderRadius: '4px',
-                          border: '1px solid #10b981',
-                          background: '#ecfdf5',
-                          color: '#059669',
+                          border: isDark ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid #10b981',
+                          background: isDark ? 'rgba(34, 197, 94, 0.16)' : '#ecfdf5',
+                          color: isDark ? '#86efac' : '#059669',
                           fontSize: '12px',
                           fontWeight: 600,
                           cursor: 'pointer',
@@ -3447,9 +3462,10 @@ export function Home() {
               style={{
                 width: '500px',
                 maxWidth: '92vw',
-                background: '#ffffff',
+                background: 'var(--rb-surface)',
+                border: '1px solid var(--rb-border)',
                 borderRadius: '14px',
-                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                boxShadow: isDark ? '0 25px 50px -12px rgba(0,0,0,0.6)' : '0 25px 50px -12px rgba(0,0,0,0.25)',
                 padding: '24px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -3457,19 +3473,19 @@ export function Home() {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '17px', fontWeight: 700, color: '#1e3a8a' }}>
-                  <Snowflake size={20} color="#2563eb" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '17px', fontWeight: 700, color: isDark ? 'var(--rb-accent)' : '#1e3a8a' }}>
+                  <Snowflake size={20} color={isDark ? 'var(--rb-accent)' : '#2563eb'} />
                   <span>Freeze Words & Phrases</span>
                 </div>
                 <button
                   onClick={() => setShowFreezeModal(false)}
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '20px' }}
                 >
                   ✕
                 </button>
               </div>
 
-              <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', margin: 0, lineHeight: 1.5 }}>
                 Terms entered here are strictly preserved verbatim. The AI engine will never alter, translate, or synonymize these words during rephrasing.
               </p>
 
@@ -3485,7 +3501,9 @@ export function Home() {
                     flex: 1,
                     padding: '10px 14px',
                     borderRadius: '8px',
-                    border: '1.5px solid #cbd5e1',
+                    border: '1.5px solid var(--rb-border)',
+                    background: 'var(--rb-surface-cream)',
+                    color: 'var(--rb-text)',
                     fontSize: '14px',
                     outline: 'none',
                   }}
@@ -3496,7 +3514,7 @@ export function Home() {
                     padding: '10px 18px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: '#2563eb',
+                    background: 'linear-gradient(135deg, var(--rb-primary) 0%, var(--rb-primary-hover) 100%)',
                     color: '#ffffff',
                     fontSize: '13px',
                     fontWeight: 600,
@@ -3508,7 +3526,7 @@ export function Home() {
               </div>
 
               {/* Active Terms Tag Container */}
-              <div style={{ minHeight: '100px', maxHeight: '200px', overflowY: 'auto', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ minHeight: '100px', maxHeight: '200px', overflowY: 'auto', padding: '12px', background: 'var(--rb-surface-cream)', borderRadius: '8px', border: '1px solid var(--rb-border)' }}>
                 {frozenTerms.length > 0 ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {frozenTerms.map((term) => (
@@ -3518,9 +3536,9 @@ export function Home() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          background: '#eff6ff',
-                          border: '1px solid #bfdbfe',
-                          color: '#1d4ed8',
+                          background: isDark ? 'rgba(59, 130, 246, 0.2)' : '#eff6ff',
+                          border: isDark ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid #bfdbfe',
+                          color: isDark ? '#93c5fd' : '#1d4ed8',
                           padding: '4px 10px',
                           borderRadius: '16px',
                           fontSize: '13px',
@@ -3530,7 +3548,7 @@ export function Home() {
                         <span>{term}</span>
                         <button
                           onClick={() => removeFrozenTerm(term)}
-                          style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', padding: 0 }}
+                          style={{ border: 'none', background: 'none', cursor: 'pointer', color: isDark ? '#93c5fd' : '#3b82f6', fontSize: '14px', padding: 0 }}
                           title="Remove term"
                         >
                           ✕
@@ -3539,7 +3557,7 @@ export function Home() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', paddingTop: '32px' }}>
+                  <div style={{ textAlign: 'center', color: 'var(--rb-text-muted)', fontSize: '13px', paddingTop: '32px' }}>
                     No frozen terms yet. Type a term and press Enter.
                   </div>
                 )}
@@ -3598,9 +3616,10 @@ export function Home() {
                 width: '1100px',
                 maxWidth: '96vw',
                 maxHeight: '90vh',
-                background: '#ffffff',
+                background: 'var(--rb-surface)',
+                border: '1px solid var(--rb-border)',
                 borderRadius: '16px',
-                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)',
+                boxShadow: isDark ? '0 25px 50px -12px rgba(0,0,0,0.6)' : '0 25px 50px -12px rgba(0,0,0,0.3)',
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
@@ -3610,27 +3629,27 @@ export function Home() {
               <div
                 style={{
                   padding: '18px 24px',
-                  borderBottom: '1px solid #e2e8f0',
+                  borderBottom: '1px solid var(--rb-border)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  background: '#f8fafc',
+                  background: 'var(--rb-surface-cream)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Columns size={20} color="#6d28d9" />
+                  <Columns size={20} color="#7c3aed" />
                   <div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--rb-text)' }}>
                       Compare Modes Side-by-Side
                     </div>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)' }}>
                       Select 2 to 4 modes below to generate and compare variations concurrently
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowCompareModal(false)}
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '20px' }}
                 >
                   ✕
                 </button>
@@ -3640,15 +3659,15 @@ export function Home() {
               <div
                 style={{
                   padding: '12px 24px',
-                  background: '#f8fafc',
-                  borderBottom: '1px solid #e2e8f0',
+                  background: 'var(--rb-surface-cream)',
+                  borderBottom: '1px solid var(--rb-border)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
                   flexWrap: 'wrap',
                 }}
               >
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569', marginRight: '4px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--rb-text-secondary)', marginRight: '4px' }}>
                   Choose modes (2–4):
                 </span>
                 {modes.map((m) => {
@@ -3658,9 +3677,9 @@ export function Home() {
                       key={m.value}
                       onClick={() => toggleCompareMode(m.value)}
                       style={{
-                        border: isSelected ? '1.5px solid #7c3aed' : '1px solid #cbd5e1',
-                        background: isSelected ? '#ede9fe' : '#ffffff',
-                        color: isSelected ? '#6d28d9' : '#475569',
+                        border: isSelected ? '1.5px solid #7c3aed' : '1px solid var(--rb-border)',
+                        background: isSelected ? (isDark ? 'rgba(124, 58, 237, 0.25)' : '#ede9fe') : 'var(--rb-surface)',
+                        color: isSelected ? (isDark ? '#c4b5fd' : '#6d28d9') : 'var(--rb-text)',
                         padding: '4px 10px',
                         borderRadius: '16px',
                         fontSize: '12px',
@@ -3706,10 +3725,10 @@ export function Home() {
                 {isComparing ? (
                   <div style={{ textAlign: 'center', padding: '80px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                     <div className="spinner" style={{ width: '44px', height: '44px', borderWidth: '3px', borderColor: '#7c3aed', borderTopColor: 'transparent' }} />
-                    <div style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--rb-text)' }}>
                       Generating {selectedCompareModes.length} modes in parallel...
                     </div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)' }}>
                       Running {selectedCompareModes.map((m) => modes.find((x) => x.value === m)?.label || m).join(', ')} simultaneously
                     </div>
                   </div>
@@ -3718,15 +3737,15 @@ export function Home() {
                     {compareResults.map((card) => {
                       const getModeColors = (m: string) => {
                         switch (m) {
-                          case 'academic': return { bg: '#f3e8ff', text: '#7e22ce' };
-                          case 'formal': return { bg: '#ede9fe', text: '#5b21b6' };
-                          case 'fluency': return { bg: '#ecfdf5', text: '#047857' };
-                          case 'creative': return { bg: '#fdf2f8', text: '#be185d' };
-                          case 'simple': return { bg: '#fef3c7', text: '#b45309' };
-                          case 'humanize': return { bg: '#e0e7ff', text: '#3730a3' };
-                          case 'expand': return { bg: '#e0f2fe', text: '#0369a1' };
-                          case 'shorten': return { bg: '#ffedd5', text: '#c2410c' };
-                          default: return { bg: '#eff6ff', text: '#1d4ed8' };
+                          case 'academic': return { bg: isDark ? 'rgba(168, 85, 247, 0.2)' : '#f3e8ff', text: isDark ? '#d8b4fe' : '#7e22ce' };
+                          case 'formal': return { bg: isDark ? 'rgba(139, 92, 246, 0.2)' : '#ede9fe', text: isDark ? '#c4b5fd' : '#5b21b6' };
+                          case 'fluency': return { bg: isDark ? 'rgba(34, 197, 94, 0.2)' : '#ecfdf5', text: isDark ? '#86efac' : '#047857' };
+                          case 'creative': return { bg: isDark ? 'rgba(236, 72, 153, 0.2)' : '#fdf2f8', text: isDark ? '#f472b6' : '#be185d' };
+                          case 'simple': return { bg: isDark ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7', text: isDark ? '#fde68a' : '#b45309' };
+                          case 'humanize': return { bg: isDark ? 'rgba(99, 102, 241, 0.2)' : '#e0e7ff', text: isDark ? '#a5b4fc' : '#3730a3' };
+                          case 'expand': return { bg: isDark ? 'rgba(56, 189, 248, 0.2)' : '#e0f2fe', text: isDark ? '#7dd3fc' : '#0369a1' };
+                          case 'shorten': return { bg: isDark ? 'rgba(249, 115, 22, 0.2)' : '#ffedd5', text: isDark ? '#fdba74' : '#c2410c' };
+                          default: return { bg: isDark ? 'rgba(59, 130, 246, 0.2)' : '#eff6ff', text: isDark ? '#93c5fd' : '#1d4ed8' };
                         }
                       };
                       const colors = getModeColors(card.mode);
@@ -3734,8 +3753,8 @@ export function Home() {
                       <div
                         key={card.mode}
                         style={{
-                          background: '#f8fafc',
-                          border: '1.5px solid #e2e8f0',
+                          background: 'var(--rb-surface-cream)',
+                          border: '1.5px solid var(--rb-border)',
                           borderRadius: '12px',
                           padding: '18px',
                           display: 'flex',
@@ -3757,7 +3776,7 @@ export function Home() {
                             {card.label}
                           </span>
 
-                          <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>
+                          <span style={{ fontSize: '12px', color: 'var(--rb-text-muted)', fontWeight: 500 }}>
                             {card.words} words
                           </span>
                         </div>
@@ -3767,14 +3786,14 @@ export function Home() {
                             flex: 1,
                             fontSize: '14px',
                             lineHeight: '1.7',
-                            color: '#1e293b',
+                            color: 'var(--rb-text)',
                             whiteSpace: 'pre-wrap',
                             maxHeight: '340px',
                             overflowY: 'auto',
                             padding: '12px',
-                            background: '#ffffff',
+                            background: 'var(--rb-surface)',
                             borderRadius: '8px',
-                            border: '1px solid #e2e8f0',
+                            border: '1px solid var(--rb-border)',
                           }}
                         >
                           {card.text}
@@ -3823,9 +3842,9 @@ export function Home() {
               top: 0,
               right: 0,
               bottom: 0,
-              background: '#ffffff',
-              borderLeft: '1px solid #e2e8f0',
-              boxShadow: '-4px 0 25px rgba(0,0,0,0.12)',
+              background: 'var(--rb-surface)',
+              borderLeft: '1px solid var(--rb-border)',
+              boxShadow: isDark ? '-4px 0 25px rgba(0,0,0,0.5)' : '-4px 0 25px rgba(0,0,0,0.12)',
               zIndex: 320,
               display: 'flex',
               flexDirection: 'column',
@@ -3835,14 +3854,14 @@ export function Home() {
             <div
               style={{
                 padding: '16px 20px',
-                borderBottom: '1px solid #e2e8f0',
+                borderBottom: '1px solid var(--rb-border)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                background: '#fff7ed',
+                background: isDark ? 'var(--rb-surface-cream)' : '#fff7ed',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px', color: '#9a3412' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px', color: isDark ? 'var(--rb-text)' : '#9a3412' }}>
                 <CheckCheck size={20} color="#ea580c" />
                 <span>Live Grammar & Proofreader</span>
               </div>
@@ -3856,9 +3875,9 @@ export function Home() {
                     gap: '4px',
                     padding: '4px 10px',
                     borderRadius: '6px',
-                    border: '1px solid #fed7aa',
-                    background: '#fff',
-                    color: '#c2410c',
+                    border: isDark ? '1px solid var(--rb-border)' : '1px solid #fed7aa',
+                    background: 'var(--rb-surface)',
+                    color: isDark ? 'var(--rb-text)' : '#c2410c',
                     fontSize: '12px',
                     fontWeight: 500,
                     cursor: isCheckingGrammar ? 'not-allowed' : 'pointer',
@@ -3869,7 +3888,7 @@ export function Home() {
                 </button>
                 <button
                   onClick={() => setShowGrammarDrawer(false)}
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px', padding: '4px' }}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '18px', padding: '4px' }}
                 >
                   ✕
                 </button>
@@ -3881,10 +3900,10 @@ export function Home() {
               {isCheckingGrammar ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                   <div className="spinner" style={{ width: '40px', height: '40px', borderWidth: '3px', borderColor: '#ea580c', borderTopColor: 'transparent' }} />
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--rb-text)' }}>
                     Scanning text for grammar & spelling...
                   </div>
-                  <div style={{ fontSize: '13px', color: '#64748b' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)' }}>
                     Checking syntactic agreement, typos, punctuation, and structural flow.
                   </div>
                 </div>
@@ -3895,8 +3914,8 @@ export function Home() {
                     style={{
                       padding: '16px',
                       borderRadius: '10px',
-                      background: grammarReport.corrections && grammarReport.corrections.length > 0 ? '#fff7ed' : '#ecfdf5',
-                      border: `1.5px solid ${grammarReport.corrections && grammarReport.corrections.length > 0 ? '#fed7aa' : '#a7f3d0'}`,
+                      background: isDark ? 'var(--rb-surface-cream)' : (grammarReport.corrections && grammarReport.corrections.length > 0 ? '#fff7ed' : '#ecfdf5'),
+                      border: isDark ? '1.5px solid var(--rb-border)' : `1.5px solid ${grammarReport.corrections && grammarReport.corrections.length > 0 ? '#fed7aa' : '#a7f3d0'}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -3905,12 +3924,12 @@ export function Home() {
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: grammarReport.corrections && grammarReport.corrections.length > 0 ? '#9a3412' : '#065f46' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: isDark ? 'var(--rb-text)' : (grammarReport.corrections && grammarReport.corrections.length > 0 ? '#9a3412' : '#065f46') }}>
                         {grammarReport.corrections && grammarReport.corrections.length > 0
                           ? `${grammarReport.corrections.length} Suggestion(s) Detected`
                           : '✓ Perfect! Zero Errors Found'}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)' }}>
                         {grammarReport.corrections && grammarReport.corrections.length > 0
                           ? 'Review individual suggestions below or fix everything in one click.'
                           : 'Your text is grammatically sound, well-punctuated, and fluent.'}
@@ -3950,8 +3969,8 @@ export function Home() {
                         style={{
                           padding: '14px',
                           borderRadius: '8px',
-                          background: '#f8fafc',
-                          border: '1px solid #e2e8f0',
+                          background: 'var(--rb-surface-cream)',
+                          border: '1px solid var(--rb-border)',
                           display: 'flex',
                           flexDirection: 'column',
                           gap: '6px',
@@ -3967,34 +3986,34 @@ export function Home() {
                               textTransform: 'uppercase',
                               background:
                                 corr.type === 'spelling'
-                                  ? '#fee2e2'
+                                  ? (isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2')
                                   : corr.type === 'grammar'
-                                  ? '#fef3c7'
+                                  ? (isDark ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7')
                                   : corr.type === 'punctuation'
-                                  ? '#e0e7ff'
-                                  : '#f3e8ff',
+                                  ? (isDark ? 'rgba(99, 102, 241, 0.2)' : '#e0e7ff')
+                                  : (isDark ? 'rgba(168, 85, 247, 0.2)' : '#f3e8ff'),
                               color:
                                 corr.type === 'spelling'
-                                  ? '#b91c1c'
+                                  ? (isDark ? '#fca5a5' : '#b91c1c')
                                   : corr.type === 'grammar'
-                                  ? '#b45309'
+                                  ? (isDark ? '#fde68a' : '#b45309')
                                   : corr.type === 'punctuation'
-                                  ? '#4338ca'
-                                  : '#7e22ce',
+                                  ? (isDark ? '#c7d2fe' : '#4338ca')
+                                  : (isDark ? '#d8b4fe' : '#7e22ce'),
                             }}
                           >
                             {corr.type}
                           </span>
                         </div>
 
-                        <div style={{ fontSize: '13px', color: '#1e293b' }}>
-                          <del style={{ color: '#dc2626', marginRight: '8px' }}>{corr.original}</del>
-                          <span style={{ color: '#94a3b8', marginRight: '8px' }}>→</span>
-                          <ins style={{ color: '#059669', fontWeight: 600, textDecoration: 'none' }}>{corr.corrected}</ins>
+                        <div style={{ fontSize: '13px', color: 'var(--rb-text)' }}>
+                          <del style={{ color: '#ef4444', marginRight: '8px' }}>{corr.original}</del>
+                          <span style={{ color: 'var(--rb-text-muted)', marginRight: '8px' }}>→</span>
+                          <ins style={{ color: isDark ? '#86efac' : '#059669', fontWeight: 600, textDecoration: 'none' }}>{corr.corrected}</ins>
                         </div>
 
                         {corr.explanation && (
-                          <div style={{ fontSize: '12px', color: '#64748b' }}>
+                          <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)' }}>
                             {corr.explanation}
                           </div>
                         )}
