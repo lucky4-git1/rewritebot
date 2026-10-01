@@ -32,7 +32,7 @@ export function Login() {
 
     try {
       await login({ email, password });
-      navigate('/');
+      navigate('/app');
     } catch (err: any) {
       setError(apiClient.handleError(err) || 'Invalid email or password');
     } finally {

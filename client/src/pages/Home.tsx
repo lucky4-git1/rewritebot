@@ -904,7 +904,7 @@ export function Home() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <BrandLogo variant="compact" height={36} />
+          <BrandLogo variant="compact" height={36} to="/app" />
 
           {/* Provider Status Pill (Desktop) */}
           <div className="show-on-desktop hide-on-mobile">

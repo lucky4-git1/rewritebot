@@ -47,7 +47,7 @@ export function Register() {
 
     try {
       await register({ name, email, password });
-      navigate('/');
+      navigate('/app');
     } catch (err: any) {
       setError(apiClient.handleError(err) || 'Registration failed');
     } finally {

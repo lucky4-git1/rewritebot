@@ -6,6 +6,7 @@ interface BrandLogoProps {
   variant?: 'full' | 'compact' | 'icon';
   height?: number | string;
   clickable?: boolean;
+  to?: string;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -14,6 +15,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   variant = 'compact',
   height = 36,
   clickable = true,
+  to = '/',
   className = '',
   style = {},
 }) => {
@@ -26,7 +28,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const handleClick = (e: React.MouseEvent) => {
     if (clickable) {
       e.preventDefault();
-      navigate('/');
+      navigate(to);
     }
   };
 

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { Landing } from '../pages/Landing';
 import { Login } from '../pages/Login';
 import { Register } from '../pages/Register';
 import { Home } from '../pages/Home';
@@ -12,13 +13,16 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/" />;
+  return !isAuthenticated ? <>{children}</> : <Navigate to="/app" />;
 }
 
 export function AppRouter() {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public Landing Page */}
+      <Route path="/" element={<Landing />} />
+
+      {/* Auth routes */}
       <Route
         path="/login"
         element={
@@ -36,9 +40,25 @@ export function AppRouter() {
         }
       />
 
-      {/* Private routes */}
+      {/* Protected Workspace / Studio routes */}
       <Route
-        path="/"
+        path="/app"
+        element={
+          <PrivateRoute>
+            <Home />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/app/*"
+        element={
+          <PrivateRoute>
+            <Home />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/studio"
         element={
           <PrivateRoute>
             <Home />
@@ -53,16 +73,8 @@ export function AppRouter() {
           </PrivateRoute>
         }
       />
-      <Route
-        path="/app/*"
-        element={
-          <PrivateRoute>
-            <Home />
-          </PrivateRoute>
-        }
-      />
 
-      {/* Catch all - redirect to home */}
+      {/* Catch all - redirect to landing */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

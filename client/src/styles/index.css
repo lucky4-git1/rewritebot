@@ -529,3 +529,28 @@ select option {
     gap: 8px;
   }
 }
+
+/* Smooth Scrolling & Landing Page Enhancements */
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: var(--rb-accent);
+  color: #251F20;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+.landing-glow-pulse {
+  animation: pulseGlow 3s ease-in-out infinite;
+}

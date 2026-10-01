@@ -280,9 +280,9 @@ export function Providers() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <BrandLogo variant="compact" height={32} />
+          <BrandLogo variant="compact" height={32} to="/app" />
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             style={{
               display: 'flex',
               alignItems: 'center',
