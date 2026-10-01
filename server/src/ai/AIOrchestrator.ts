@@ -339,6 +339,10 @@ export class AIOrchestrator {
       frozenTerms: [],
       providerId: params.providerId,
       modelId: params.modelId,
+      options: {
+        temperature: 0,
+        maxTokens: 1200,
+      },
     };
 
     const response = await this.generate(request, requestId);

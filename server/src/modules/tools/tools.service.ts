@@ -1,7 +1,17 @@
+import crypto from 'crypto';
 import { prisma } from '../../database/prisma';
 import { aiOrchestrator } from '../../ai/AIOrchestrator';
 import { logger } from '../../config/logger';
 import { calculateStatistics } from '../../utils/statistics';
+
+// In-memory fast cache for plagiarism scan results (15 min TTL, max 200 items)
+interface CachedPlagiarismResult {
+  response: any;
+  timestamp: number;
+}
+const PLAGIARISM_CACHE = new Map<string, CachedPlagiarismResult>();
+const CACHE_TTL_MS = 15 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 200;
 
 interface GrammarInput {
   text: string;
@@ -360,6 +370,21 @@ export class ToolsService {
   async checkPlagiarism(userId: string, input: PlagiarismInput) {
     const startTime = Date.now();
 
+    // Fast-path: Check in-memory cache for identical text/model/language
+    const cacheKey = crypto
+      .createHash('sha256')
+      .update(`${input.providerId}:${input.modelId}:${input.language || 'auto'}:${input.text.trim()}`)
+      .digest('hex');
+
+    const cached = PLAGIARISM_CACHE.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      logger.info(`Plagiarism check in-memory cache hit for user ${userId} [${cacheKey.slice(0, 8)}]`);
+      return {
+        ...cached.response,
+        latency: Math.max(5, Date.now() - startTime),
+      };
+    }
+
     try {
       const response = await aiOrchestrator.checkPlagiarism({
         text: input.text,
@@ -370,6 +395,13 @@ export class ToolsService {
 
       const latency = Date.now() - startTime;
       const statistics = calculateStatistics(input.text, '');
+
+      // Store in memory cache (evict oldest if limit reached)
+      if (PLAGIARISM_CACHE.size >= MAX_CACHE_ENTRIES) {
+        const oldestKey = PLAGIARISM_CACHE.keys().next().value;
+        if (oldestKey) PLAGIARISM_CACHE.delete(oldestKey);
+      }
+      PLAGIARISM_CACHE.set(cacheKey, { response, timestamp: Date.now() });
 
       // Asynchronously record in history (fire and forget)
       prisma.historyEvent.create({

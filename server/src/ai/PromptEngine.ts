@@ -273,52 +273,52 @@ ${source.accessed ? `Accessed: ${source.accessed}` : ''}`;
   }
 
   /**
-   * Build a prompt for plagiarism and originality checking
+   * Build a prompt for plagiarism and originality checking (speed-optimized)
    */
   buildPlagiarismPrompt(text: string, language?: string): string {
     const lang = language && language !== 'auto' ? `Language: ${this.getLanguageName(language)}` : '';
 
-    return `You are an expert academic plagiarism detection system and originality evaluator similar to Turnitin and QuillBot.
-Analyze the following text for potential plagiarism, patchwriting, verbatim borrows, clichéd phrases, and semantic overlap against published web content, academic articles, Wikipedia, and literature.
+    return `You are a fast academic plagiarism detection engine.
+Evaluate the text for potential plagiarism, patchwriting, and semantic overlap against published web content, academic articles, and literature.
 
 ${lang}
 
-CRITICAL: Return ONLY a valid JSON object matching the following schema without any markdown, without backticks, and without additional prose.
+CRITICAL: Return ONLY a valid, compact JSON object matching this schema without markdown formatting, backticks, or extra prose.
 
 {
-  "originalityScore": <integer between 0 and 100, where 100 is completely original and 0 is entirely copied>,
-  "plagiarismScore": <integer between 0 and 100, equal to 100 - originalityScore>,
+  "originalityScore": <0-100 integer: 100 is completely original, 0 is fully copied>,
+  "plagiarismScore": <0-100 integer: 100 - originalityScore>,
   "riskLevel": <"safe" | "moderate" | "high">,
-  "summary": <brief 1-sentence assessment of the text's uniqueness>,
+  "summary": "<ultra-brief 1-sentence assessment>",
   "matches": [
     {
-      "sentence": "<exact sentence string from text>",
+      "sentence": "<exact sentence>",
       "type": <"exact" | "paraphrased" | "clean">,
-      "similarity": <integer 0 to 100>,
-      "sourceTitle": "<likely publication, website, or reference domain, e.g. 'Wikipedia / Encyclopedia' or 'Academic Journal Archive' or 'Online Reference'>",
-      "sourceUrl": "<plausible or domain URL, e.g. 'https://en.wikipedia.org' or 'https://scholar.google.com'>",
-      "explanation": "<why this sentence was classified as exact, paraphrased, or clean>"
+      "similarity": <0-100 integer>,
+      "sourceTitle": "<source name or empty string if clean>",
+      "sourceUrl": "<source url or domain, or empty string if clean>",
+      "explanation": "<concise reason under 8 words, or empty string if clean>"
     }
   ],
   "sources": [
     {
-      "title": "<source name or publication title>",
-      "url": "<relevant web link or domain>",
-      "domain": "<clean domain name, e.g. 'wikipedia.org' or 'sciencedirect.com'>",
-      "snippet": "<matched or related phrase excerpt>",
-      "similarity": <percentage integer 0-100>,
-      "matchCount": <number of matching sentences>
+      "title": "<source title>",
+      "url": "<url or domain>",
+      "domain": "<clean domain, e.g. wikipedia.org>",
+      "snippet": "<short 4-8 word matched excerpt>",
+      "similarity": <0-100 integer>,
+      "matchCount": <integer>
     }
   ]
 }
 
-Guidelines:
-- Decompose the text into key sentences.
-- Label common everyday speech or widely known generic idioms as "clean" (similarity 0-10%).
-- Label heavily borrowed, textbook definitions, or famously published quotes as "exact" (similarity 80-100%).
-- Label close paraphrases or patchwriting as "paraphrased" (similarity 30-79%).
-- Ensure every sentence in the text is accounted for in the matches array.
-- "riskLevel" should be "safe" if originalityScore >= 85, "moderate" if 60 <= originalityScore < 85, and "high" if originalityScore < 60.
+SPEED & ACCURACY INSTRUCTIONS:
+- Break text into its sentences.
+- Label original phrasing or standard speech as "clean" (similarity 0-10%). For "clean", explanation, sourceTitle, and sourceUrl must be empty strings "".
+- Label close paraphrases / patchwriting as "paraphrased" (similarity 30-79%). Keep explanation under 8 words.
+- Label verbatim textbook/famous text as "exact" (similarity 80-100%). Keep explanation under 8 words.
+- "sources" array: Include AT MOST 2 top matched sources only if non-clean matches exist; if all clean, return [].
+- "riskLevel": "safe" if originalityScore >= 85, "moderate" if >= 60, else "high".
 
 TEXT TO ANALYZE:
 ---
