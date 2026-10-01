@@ -8,40 +8,67 @@
 }
 
 :root {
-  /* Colors */
-  --rb-primary: #2f8f2f;
-  --rb-primary-hover: #267026;
-  --rb-primary-light: #e8f5e8;
+  /* ====================================================================
+     RewriteBot Brand Palette (Editorial Light Theme)
+     - Cherry (#670626): Primary Brand
+     - Matcha (#BAD797): Accent / Secondary
+     - Warm Cream (#F7F3EB): Primary Light Background
+     - Ink (#251F20): Body / Utility Text
+     ==================================================================== */
+  --rb-primary: #670626;
+  --rb-primary-hover: #52041e;
+  --rb-primary-light: #fbebf0;
+  --rb-primary-border: #f3cbd7;
   
-  --rb-background: #ffffff;
-  --rb-surface: #fafafa;
-  --rb-surface-muted: #f5f5f5;
+  --rb-accent: #BAD797;
+  --rb-accent-hover: #a5c77e;
+  --rb-accent-light: #f2f8eb;
+  --rb-accent-dark: #6e8d4a;
   
-  --rb-border: #e0e0e0;
-  --rb-border-light: #eeeeee;
+  --rb-background: #F7F3EB;
+  --rb-surface: #FFFFFF;
+  --rb-surface-cream: #FAF6EF;
+  --rb-surface-muted: #EDE7DC;
   
-  --rb-text: #1a1a1a;
-  --rb-text-secondary: #666666;
-  --rb-text-muted: #999999;
+  --rb-border: #E0D7CB;
+  --rb-border-light: #ECE5DB;
   
-  --rb-danger: #d32f2f;
-  --rb-success: #2f8f2f;
-  --rb-warning: #f57c00;
-  --rb-info: #1976d2;
+  --rb-text: #251F20;
+  --rb-text-secondary: #5a5052;
+  --rb-text-muted: #8c8082;
+  
+  --rb-danger: #b91c1c;
+  --rb-success: #15803d;
+  --rb-warning: #b45309;
+  --rb-info: #1d4ed8;
+
+  /* 3-Color Highlight Tokens (Light) */
+  --rb-diff-changed-bg: #fef3c7;
+  --rb-diff-changed-text: #92400e;
+  --rb-diff-changed-border: #f59e0b;
+
+  --rb-diff-unchanged-bg: #eff6ff;
+  --rb-diff-unchanged-text: #1e40af;
+  --rb-diff-unchanged-border: #60a5fa;
+
+  --rb-diff-structural-bg: #fee2e2;
+  --rb-diff-structural-text: #991b1b;
+  --rb-diff-structural-border: #ef4444;
   
   /* Spacing */
   --rb-radius: 6px;
   --rb-radius-sm: 4px;
   --rb-radius-lg: 8px;
+  --rb-radius-xl: 12px;
   
   /* Shadows */
-  --rb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --rb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --rb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --rb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --rb-shadow-sm: 0 1px 2px rgba(37, 31, 32, 0.05);
+  --rb-shadow: 0 1px 3px rgba(37, 31, 32, 0.08);
+  --rb-shadow-md: 0 4px 6px rgba(37, 31, 32, 0.08);
+  --rb-shadow-lg: 0 10px 15px rgba(37, 31, 32, 0.1);
   
   /* Transitions */
-  --rb-transition: all 0.2s ease;
+  --rb-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   
   /* Typography */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -52,25 +79,61 @@
   
   font-size: 16px;
   line-height: 1.5;
+
+  --rb-safe-top: env(safe-area-inset-top, 0px);
+  --rb-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --rb-safe-left: env(safe-area-inset-left, 0px);
+  --rb-safe-right: env(safe-area-inset-right, 0px);
 }
 
-/* Dark Mode */
+/* ====================================================================
+   RewriteBot Brand Palette (Editorial Dark Theme)
+   ==================================================================== */
 [data-theme='dark'] {
-  --rb-background: #1a1a1a;
-  --rb-surface: #242424;
-  --rb-surface-muted: #2a2a2a;
+  --rb-primary: #8a1338;
+  --rb-primary-hover: #a31c46;
+  --rb-primary-light: #380d19;
+  --rb-primary-border: #521526;
   
-  --rb-border: #3a3a3a;
-  --rb-border-light: #333333;
+  --rb-accent: #BAD797;
+  --rb-accent-hover: #cbe6ac;
+  --rb-accent-light: #25331e;
+  --rb-accent-dark: #8ba968;
   
-  --rb-text: #e0e0e0;
-  --rb-text-secondary: #b0b0b0;
-  --rb-text-muted: #808080;
+  --rb-background: #171314;
+  --rb-surface: #221c1d;
+  --rb-surface-cream: #2a2324;
+  --rb-surface-muted: #332b2d;
   
-  --rb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --rb-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --rb-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --rb-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --rb-border: #443a3c;
+  --rb-border-light: #383032;
+  
+  --rb-text: #F7F3EB;
+  --rb-text-secondary: #d5cec5;
+  --rb-text-muted: #9c9193;
+
+  --rb-danger: #ef4444;
+  --rb-success: #22c55e;
+  --rb-warning: #f59e0b;
+  --rb-info: #3b82f6;
+
+  /* 3-Color Highlight Tokens (Dark Mode) */
+  --rb-diff-changed-bg: rgba(245, 158, 11, 0.18);
+  --rb-diff-changed-text: #fde68a;
+  --rb-diff-changed-border: #f59e0b;
+
+  --rb-diff-unchanged-bg: rgba(59, 130, 246, 0.18);
+  --rb-diff-unchanged-text: #bfdbfe;
+  --rb-diff-unchanged-border: #60a5fa;
+
+  --rb-diff-structural-bg: rgba(239, 68, 68, 0.2);
+  --rb-diff-structural-text: #fca5a5;
+  --rb-diff-structural-border: #f87171;
+  
+  --rb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --rb-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --rb-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --rb-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.6);
 }
 
 body {
@@ -78,6 +141,7 @@ body {
   background-color: var(--rb-background);
   color: var(--rb-text);
   overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* Typography */
@@ -138,7 +202,7 @@ a:hover {
 
 .btn-primary {
   background-color: var(--rb-primary);
-  color: white;
+  color: #F7F3EB;
   border-color: var(--rb-primary);
 }
 
@@ -155,6 +219,18 @@ a:hover {
 
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--rb-surface-muted);
+}
+
+.btn-accent {
+  background-color: var(--rb-accent);
+  color: #251F20;
+  border-color: var(--rb-accent);
+  font-weight: 600;
+}
+
+.btn-accent:hover:not(:disabled) {
+  background-color: var(--rb-accent-hover);
+  border-color: var(--rb-accent-hover);
 }
 
 .btn-sm {
@@ -175,7 +251,7 @@ a:hover {
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--rb-text);
-  background-color: var(--rb-background);
+  background-color: var(--rb-surface);
   border: 1px solid var(--rb-border);
   border-radius: var(--rb-radius);
   transition: var(--rb-transition);
@@ -184,7 +260,11 @@ a:hover {
 .form-control:focus {
   outline: none;
   border-color: var(--rb-primary);
-  box-shadow: 0 0 0 3px rgba(47, 143, 47, 0.1);
+  box-shadow: 0 0 0 3px rgba(103, 6, 38, 0.15);
+}
+
+[data-theme='dark'] .form-control:focus {
+  box-shadow: 0 0 0 3px rgba(186, 215, 151, 0.2);
 }
 
 .form-label {
@@ -252,7 +332,7 @@ a:hover {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--rb-surface);
+  background: var(--rb-surface-cream);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -268,17 +348,6 @@ a:hover {
 :focus-visible {
   outline: 2px solid var(--rb-primary);
   outline-offset: 2px;
-}
-
-/* ====================================================================
-   Responsive Breakpoint Utilities & Safe Area Support
-   ==================================================================== */
-
-:root {
-  --rb-safe-top: env(safe-area-inset-top, 0px);
-  --rb-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --rb-safe-left: env(safe-area-inset-left, 0px);
-  --rb-safe-right: env(safe-area-inset-right, 0px);
 }
 
 /* Hide scrollbar for clean horizontal tab rows while keeping scrollability */

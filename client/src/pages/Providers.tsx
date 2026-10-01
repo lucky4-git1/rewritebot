@@ -1,3 +1,5 @@
+import { BrandLogo } from '../components/BrandLogo';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
@@ -264,12 +266,12 @@ export function Providers() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: 'var(--rb-background)', color: 'var(--rb-text)', fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Top Navbar */}
       <header
         style={{
-          background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          background: 'var(--rb-surface)',
+          borderBottom: '1px solid var(--rb-border)',
           padding: '12px 20px',
           display: 'flex',
           justifyContent: 'space-between',
@@ -277,7 +279,8 @@ export function Providers() {
           gap: '12px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <BrandLogo variant="compact" height={32} />
           <button
             onClick={() => navigate('/')}
             style={{
@@ -285,10 +288,10 @@ export function Providers() {
               alignItems: 'center',
               gap: '6px',
               padding: '6px 12px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--rb-border)',
               borderRadius: '6px',
-              background: '#fff',
-              color: '#475569',
+              background: 'var(--rb-surface-cream)',
+              color: 'var(--rb-text)',
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: 500,
@@ -296,20 +299,19 @@ export function Providers() {
           >
             <ArrowLeft size={16} /> <span className="hide-on-mobile">Back to </span>Editor
           </button>
-          <div style={{ fontSize: '17px', fontWeight: 700, color: '#0f172a' }}>
-            AI Providers
-          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span className="hide-on-mobile" style={{ fontSize: '13px', color: '#64748b' }}>{user?.email}</span>
+          <ThemeToggle />
+          <span className="hide-on-mobile" style={{ fontSize: '13px', color: 'var(--rb-text-secondary)' }}>{user?.email}</span>
           <button
             onClick={logout}
             style={{
               padding: '6px 14px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--rb-border)',
               borderRadius: '6px',
-              background: '#fff',
+              background: 'var(--rb-surface)',
+              color: 'var(--rb-text)',
               cursor: 'pointer',
               fontSize: '13px',
             }}
@@ -325,7 +327,7 @@ export function Providers() {
           {/* Header Action Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
-              <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 6px 0', color: '#0f172a' }}>
+              <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--rb-text)' }}>
                 Configured AI Models & Providers
               </h1>
               <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>
@@ -348,7 +350,7 @@ export function Providers() {
                 padding: '10px 18px',
                 borderRadius: '8px',
                 border: 'none',
-                background: showAddForm ? '#64748b' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                background: showAddForm ? '#64748b' : 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
                 color: '#fff',
                 fontSize: '13px',
                 fontWeight: 600,
@@ -405,8 +407,8 @@ export function Providers() {
           {showAddForm && (
             <div
               style={{
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
+                background: 'var(--rb-surface)',
+                border: '1px solid var(--rb-border)',
                 borderRadius: '12px',
                 padding: '24px',
                 marginBottom: '28px',
@@ -682,7 +684,7 @@ export function Providers() {
           ) : providers.length === 0 ? (
             <div
               style={{
-                background: '#ffffff',
+                background: 'var(--rb-surface)',
                 border: '1px dashed #cbd5e1',
                 borderRadius: '12px',
                 padding: '48px',
@@ -690,7 +692,7 @@ export function Providers() {
               }}
             >
               <Cpu size={48} color="#94a3b8" style={{ marginBottom: '16px' }} />
-              <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#0f172a' }}>No Providers Configured</h3>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--rb-text)' }}>No Providers Configured</h3>
               <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '14px' }}>
                 Add your first AI provider key to begin paraphrasing.
               </p>
@@ -719,7 +721,7 @@ export function Providers() {
                     key={p.id}
                     className="provider-card-responsive"
                     style={{
-                      background: '#ffffff',
+                      background: 'var(--rb-surface)',
                       border: p.isDefault ? '2px solid #10b981' : '1px solid #e2e8f0',
                       borderRadius: '12px',
                       padding: '18px',
@@ -728,7 +730,7 @@ export function Providers() {
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>{p.name}</span>
+                        <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--rb-text)' }}>{p.name}</span>
                         {p.isDefault && (
                           <span
                             style={{
@@ -764,7 +766,7 @@ export function Providers() {
 
                       <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                         <span>
-                          Model: <strong style={{ color: '#0f172a' }}>{p.modelId}</strong>
+                          Model: <strong style={{ color: 'var(--rb-text)' }}>{p.modelId}</strong>
                         </span>
                         {p.baseUrl && (
                           <span style={{ wordBreak: 'break-all' }}>
@@ -931,9 +933,9 @@ export function Providers() {
         >
           <div
             style={{
-              background: '#ffffff',
+              background: 'var(--rb-surface)',
               borderRadius: '12px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--rb-border)',
               boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
               width: '100%',
               maxWidth: '560px',
@@ -953,7 +955,7 @@ export function Providers() {
               }}
             >
               <div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--rb-text)' }}>
                   Live Available Models ({viewingModelsProvider.name})
                 </h3>
                 <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
@@ -996,7 +998,7 @@ export function Providers() {
                           gap: '10px',
                         }}
                       >
-                        <div style={{ fontSize: '13px', fontWeight: isSelected ? 600 : 500, color: '#0f172a', wordBreak: 'break-all' }}>
+                        <div style={{ fontSize: '13px', fontWeight: isSelected ? 600 : 500, color: 'var(--rb-text)', wordBreak: 'break-all' }}>
                           {m.displayName || m.modelId}
                         </div>
                         <button

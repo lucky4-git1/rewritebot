@@ -1,3 +1,5 @@
+import { BrandLogo } from '../components/BrandLogo';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
@@ -860,7 +862,7 @@ export function Home() {
   const changePercentage = outputWordCount > 0 ? Math.round(((changedWordsCount + structuralCount) / outputWordCount) * 100) : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', maxHeight: '100dvh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Inter, system-ui, sans-serif', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', maxHeight: '100dvh', background: 'var(--rb-background)', color: 'var(--rb-text)', fontFamily: 'Inter, system-ui, sans-serif', overflow: 'hidden', transition: 'background-color 0.25s ease' }}>
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -890,8 +892,8 @@ export function Home() {
       {/* Main App Header */}
       <header
         style={{
-          background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          background: 'var(--rb-surface)',
+          borderBottom: '1px solid var(--rb-border)',
           padding: '10px 20px',
           display: 'flex',
           justifyContent: 'space-between',
@@ -900,28 +902,7 @@ export function Home() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => navigate('/')}>
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
-              }}
-            >
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
-                Rewrite<span style={{ color: '#10b981' }}>Bot</span>
-              </div>
-            </div>
-          </div>
+          <BrandLogo variant="compact" height={36} />
 
           {/* Provider Status Pill (Desktop) */}
           <div className="show-on-desktop hide-on-mobile">
@@ -992,6 +973,7 @@ export function Home() {
 
         {/* Desktop User Profile & Actions */}
         <div className="show-on-desktop hide-on-mobile" style={{ alignItems: 'center', gap: '14px' }}>
+          <ThemeToggle />
           <button
             onClick={toggleHistory}
             style={{
@@ -1134,7 +1116,8 @@ export function Home() {
               bottom: 0,
               width: '290px',
               maxWidth: '85vw',
-              background: '#ffffff',
+              background: 'var(--rb-surface)',
+              borderLeft: '1px solid var(--rb-border)',
               boxShadow: '-4px 0 25px rgba(0,0,0,0.15)',
               zIndex: 1001,
               display: 'flex',
@@ -1176,6 +1159,10 @@ export function Home() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--rb-surface-cream)', borderRadius: '8px', border: '1px solid var(--rb-border)', marginBottom: '4px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--rb-text)' }}>Theme</span>
+                <ThemeToggle showLabel />
+              </div>
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -1288,8 +1275,8 @@ export function Home() {
       {/* Modes & Settings Control Bar */}
       <div
         style={{
-          background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          background: 'var(--rb-surface)',
+          borderBottom: '1px solid var(--rb-border)',
           padding: '8px 20px',
           display: 'flex',
           alignItems: 'center',
@@ -1311,9 +1298,9 @@ export function Home() {
                 style={{
                   padding: '6px 14px',
                   borderRadius: '20px',
-                  border: isActive ? '1px solid #10b981' : '1px solid transparent',
-                  background: isActive ? '#ecfdf5' : 'transparent',
-                  color: isActive ? '#059669' : '#64748b',
+                  border: isActive ? '1.5px solid var(--rb-primary)' : '1px solid transparent',
+                  background: isActive ? 'var(--rb-primary-light)' : 'transparent',
+                  color: isActive ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
                   fontSize: '13px',
                   fontWeight: isActive ? 600 : 500,
                   cursor: 'pointer',
@@ -1503,8 +1490,8 @@ export function Home() {
         className="show-on-mobile hide-on-desktop"
         style={{
           display: 'none',
-          background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          background: 'var(--rb-surface)',
+          borderBottom: '1px solid var(--rb-border)',
           padding: '8px 16px',
           gap: '8px',
           width: '100%',
@@ -1517,9 +1504,9 @@ export function Home() {
             flex: 1,
             padding: '8px 12px',
             borderRadius: '8px',
-            border: mobileTab === 'input' ? '1.5px solid #10b981' : '1px solid #e2e8f0',
-            background: mobileTab === 'input' ? '#ecfdf5' : '#ffffff',
-            color: mobileTab === 'input' ? '#059669' : '#64748b',
+            border: mobileTab === 'input' ? '1.5px solid var(--rb-primary)' : '1px solid var(--rb-border)',
+            background: mobileTab === 'input' ? 'var(--rb-primary-light)' : 'var(--rb-surface)',
+            color: mobileTab === 'input' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
             fontWeight: mobileTab === 'input' ? 700 : 500,
             fontSize: '13px',
             display: 'flex',
@@ -1541,9 +1528,9 @@ export function Home() {
             flex: 1,
             padding: '8px 12px',
             borderRadius: '8px',
-            border: mobileTab === 'output' ? '1.5px solid #10b981' : '1px solid #e2e8f0',
-            background: mobileTab === 'output' ? '#ecfdf5' : '#ffffff',
-            color: mobileTab === 'output' ? '#059669' : '#64748b',
+            border: mobileTab === 'output' ? '1.5px solid var(--rb-primary)' : '1px solid var(--rb-border)',
+            background: mobileTab === 'output' ? 'var(--rb-primary-light)' : 'var(--rb-surface)',
+            color: mobileTab === 'output' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
             fontWeight: mobileTab === 'output' ? 700 : 500,
             fontSize: '13px',
             display: 'flex',
@@ -1566,8 +1553,8 @@ export function Home() {
         <div
           className={`workspace-pane-left ${mobileTab === 'input' ? 'mobile-active-pane' : 'mobile-hidden-pane'}`}
           style={{
-            background: '#ffffff',
-            borderRight: '1px solid #e2e8f0',
+            background: 'var(--rb-surface)',
+            borderRight: '1px solid var(--rb-border)',
             position: 'relative',
           }}
           onDragOver={(e) => {
@@ -1618,7 +1605,7 @@ export function Home() {
           <div
             style={{
               padding: '12px 20px',
-              borderBottom: '1px solid #f1f5f9',
+              borderBottom: '1px solid var(--rb-border)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -1721,7 +1708,8 @@ export function Home() {
               lineHeight: '1.7',
               resize: 'none',
               outline: 'none',
-              color: '#1e293b',
+              color: 'var(--rb-text)',
+              background: 'transparent',
               fontFamily: 'inherit',
             }}
           />
@@ -1730,11 +1718,11 @@ export function Home() {
           <div
             style={{
               padding: '14px 20px',
-              borderTop: '1px solid #f1f5f9',
+              borderTop: '1px solid var(--rb-border)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              background: '#fafafa',
+              background: 'var(--rb-surface-cream)',
             }}
           >
             <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', gap: '12px' }}>
@@ -1755,7 +1743,7 @@ export function Home() {
                 padding: '10px 28px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isGenerating || isAutoScanRunning || !inputText.trim() ? '#cbd5e1' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                background: isGenerating || isAutoScanRunning || !inputText.trim() ? 'var(--rb-border)' : 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
                 color: '#fff',
                 fontSize: '14px',
                 fontWeight: 600,
@@ -1763,7 +1751,7 @@ export function Home() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: isGenerating || isAutoScanRunning || !inputText.trim() ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.3)',
+                boxShadow: isGenerating || isAutoScanRunning || !inputText.trim() ? 'none' : '0 2px 10px rgba(103, 6, 38, 0.3)',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -1800,7 +1788,7 @@ export function Home() {
           <div
             style={{
               padding: '12px 20px',
-              borderBottom: '1px solid #f1f5f9',
+              borderBottom: '1px solid var(--rb-border)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -1830,7 +1818,7 @@ export function Home() {
                 Paraphrase
               </span>
               {outputText && (
-                <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '6px', padding: '2px' }}>
+                <div style={{ display: 'flex', background: 'var(--rb-surface-cream)', borderRadius: '6px', padding: '2px', border: '1px solid var(--rb-border)' }}>
                   <button
                     onClick={() => setActiveTab('diff')}
                     style={{
@@ -1839,10 +1827,10 @@ export function Home() {
                       borderRadius: '4px',
                       fontSize: '12px',
                       fontWeight: activeTab === 'diff' ? 600 : 500,
-                      background: activeTab === 'diff' ? '#fff' : 'transparent',
-                      color: activeTab === 'diff' ? '#0f172a' : '#64748b',
+                      background: activeTab === 'diff' ? 'var(--rb-surface)' : 'transparent',
+                      color: activeTab === 'diff' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
                       cursor: 'pointer',
-                      boxShadow: activeTab === 'diff' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                      boxShadow: activeTab === 'diff' ? 'var(--rb-shadow-sm)' : 'none',
                     }}
                   >
                     Synonyms
@@ -1855,10 +1843,10 @@ export function Home() {
                       borderRadius: '4px',
                       fontSize: '12px',
                       fontWeight: activeTab === 'sentences' ? 600 : 500,
-                      background: activeTab === 'sentences' ? '#fff' : 'transparent',
-                      color: activeTab === 'sentences' ? '#0f172a' : '#64748b',
+                      background: activeTab === 'sentences' ? 'var(--rb-surface)' : 'transparent',
+                      color: activeTab === 'sentences' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
                       cursor: 'pointer',
-                      boxShadow: activeTab === 'sentences' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                      boxShadow: activeTab === 'sentences' ? 'var(--rb-shadow-sm)' : 'none',
                     }}
                   >
                     Sentences
@@ -1871,10 +1859,10 @@ export function Home() {
                       borderRadius: '4px',
                       fontSize: '12px',
                       fontWeight: activeTab === 'plain' ? 600 : 500,
-                      background: activeTab === 'plain' ? '#fff' : 'transparent',
-                      color: activeTab === 'plain' ? '#0f172a' : '#64748b',
+                      background: activeTab === 'plain' ? 'var(--rb-surface)' : 'transparent',
+                      color: activeTab === 'plain' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
                       cursor: 'pointer',
-                      boxShadow: activeTab === 'plain' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                      boxShadow: activeTab === 'plain' ? 'var(--rb-shadow-sm)' : 'none',
                     }}
                   >
                     Plain
@@ -1961,32 +1949,32 @@ export function Home() {
             <div
               style={{
                 padding: '6px 20px',
-                background: '#f8fafc',
-                borderBottom: '1px solid #f1f5f9',
+                background: 'var(--rb-surface-cream)',
+                borderBottom: '1px solid var(--rb-border)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '16px',
                 fontSize: '11px',
-                color: '#64748b',
+                color: 'var(--rb-text-secondary)',
                 fontWeight: 500,
                 flexWrap: 'wrap',
               }}
             >
-              <span style={{ fontWeight: 600, color: '#475569' }}>Legend:</span>
+              <span style={{ fontWeight: 600, color: 'var(--rb-text)' }}>Legend:</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }} />
-                <span style={{ color: '#b45309', fontWeight: 600 }}>Changed Words</span>
-                <span style={{ color: '#94a3b8' }}>({changedWordsCount})</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--rb-diff-changed-border)' }} />
+                <span style={{ color: 'var(--rb-diff-changed-text)', fontWeight: 600 }}>Changed Words</span>
+                <span style={{ color: 'var(--rb-text-muted)' }}>({changedWordsCount})</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }} />
-                <span style={{ color: '#1d4ed8', fontWeight: 600 }}>Longest Unchanged</span>
-                <span style={{ color: '#94a3b8' }}>({longestUnchangedCount})</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--rb-diff-unchanged-border)' }} />
+                <span style={{ color: 'var(--rb-diff-unchanged-text)', fontWeight: 600 }}>Longest Unchanged</span>
+                <span style={{ color: 'var(--rb-text-muted)' }}>({longestUnchangedCount})</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
-                <span style={{ color: '#b91c1c', fontWeight: 600 }}>Structural Changes</span>
-                <span style={{ color: '#94a3b8' }}>({structuralCount})</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--rb-diff-structural-border)' }} />
+                <span style={{ color: 'var(--rb-diff-structural-text)', fontWeight: 600 }}>Structural Changes</span>
+                <span style={{ color: 'var(--rb-text-muted)' }}>({structuralCount})</span>
               </div>
             </div>
           )}
@@ -2031,7 +2019,7 @@ export function Home() {
               </div>
             ) : outputText ? (
               isGenerating || activeTab === 'plain' ? (
-                <div style={{ whiteSpace: 'pre-wrap', color: '#1e293b' }}>
+                <div style={{ whiteSpace: 'pre-wrap', color: 'var(--rb-text)' }}>
                   {outputText}
                   {isGenerating && (
                     <span
@@ -2146,28 +2134,28 @@ export function Home() {
                     const isRed = token.type === 'structural';
 
                     // 3-Color Highlight Palette
-                    let color = '#1e293b';
+                    let color = 'var(--rb-text)';
                     let bg = 'transparent';
                     let borderBottom = 'none';
                     let fontWeight = 400;
                     let title = isWord ? `Click to view synonyms for "${token.text.trim()}"` : undefined;
 
                     if (isYellow) {
-                      color = '#b45309'; // Warm Amber
-                      bg = '#fef3c7'; // Soft Amber
-                      borderBottom = '1.5px dashed #f59e0b';
+                      color = 'var(--rb-diff-changed-text)';
+                      bg = 'var(--rb-diff-changed-bg)';
+                      borderBottom = '1.5px dashed var(--rb-diff-changed-border)';
                       fontWeight = 600;
                       title = 'Changed Word (Synonym) - Click to choose alternatives';
                     } else if (isBlue) {
-                      color = '#1d4ed8'; // Royal Blue
-                      bg = '#eff6ff'; // Soft Ice Blue
-                      borderBottom = '1.5px solid #93c5fd';
+                      color = 'var(--rb-diff-unchanged-text)';
+                      bg = 'var(--rb-diff-unchanged-bg)';
+                      borderBottom = '1.5px solid var(--rb-diff-unchanged-border)';
                       fontWeight = 500;
                       title = 'Longest Unchanged - Preserved verbatim from original text';
                     } else if (isRed) {
-                      color = '#b91c1c'; // Crimson Red
-                      bg = '#fee2e2'; // Soft Rose
-                      borderBottom = '1.5px dashed #f87171';
+                      color = 'var(--rb-diff-structural-text)';
+                      bg = 'var(--rb-diff-structural-bg)';
+                      borderBottom = '1.5px dashed var(--rb-diff-structural-border)';
                       fontWeight = 600;
                       title = 'Structural Change (Syntax / Grammar alteration) - Click to replace';
                     }

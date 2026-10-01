@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { apiClient } from '../services/api';
 import {
-  Sparkles,
   Mail,
   Lock,
   Eye,
@@ -13,6 +12,8 @@ import {
   Cpu,
   AlertCircle,
 } from 'lucide-react';
+import { BrandLogo } from '../components/BrandLogo';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -43,45 +44,28 @@ export function Login() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'radial-gradient(ellipse at top, #f0fdf4 0%, #f8fafc 60%, #f1f5f9 100%)',
+        background: 'var(--rb-background)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         padding: '24px',
+        position: 'relative',
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+        transition: 'background-color 0.25s ease',
       }}
     >
+      {/* Floating Theme Toggle in top-right */}
+      <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
+        <ThemeToggle showLabel />
+      </div>
+
       {/* Brand Header */}
       <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '48px',
-            height: '48px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: '#fff',
-            boxShadow: '0 8px 20px -4px rgba(16, 185, 129, 0.4)',
-            marginBottom: '16px',
-          }}
-        >
-          <Sparkles size={26} />
+        <div style={{ display: 'inline-flex', marginBottom: '14px' }}>
+          <BrandLogo variant="full" height={48} clickable={false} />
         </div>
-        <h1
-          style={{
-            fontSize: '26px',
-            fontWeight: 800,
-            color: '#0f172a',
-            margin: '0 0 6px 0',
-            letterSpacing: '-0.5px',
-          }}
-        >
-          Welcome back to Rewrite<span style={{ color: '#10b981' }}>Bot</span>
-        </h1>
-        <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
+        <p style={{ margin: 0, color: 'var(--rb-text-secondary)', fontSize: '14px' }}>
           Your professional, provider-agnostic AI paraphrasing workspace
         </p>
       </div>
@@ -91,11 +75,12 @@ export function Login() {
         style={{
           width: '100%',
           maxWidth: '440px',
-          background: '#ffffff',
+          background: 'var(--rb-surface)',
           borderRadius: '16px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.06), 0 4px 12px -2px rgba(0, 0, 0, 0.03)',
+          border: '1px solid var(--rb-border)',
+          boxShadow: 'var(--rb-shadow-md)',
           padding: '36px 32px',
+          transition: 'all 0.2s ease',
         }}
       >
         {/* Error Alert */}
@@ -104,9 +89,9 @@ export function Login() {
             style={{
               padding: '12px 16px',
               borderRadius: '8px',
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              color: '#991b1b',
+              background: 'rgba(185, 28, 28, 0.1)',
+              border: '1px solid var(--rb-danger)',
+              color: 'var(--rb-danger)',
               fontSize: '13px',
               fontWeight: 500,
               display: 'flex',
@@ -129,7 +114,7 @@ export function Login() {
                 display: 'block',
                 fontSize: '13px',
                 fontWeight: 600,
-                color: '#334155',
+                color: 'var(--rb-text)',
                 marginBottom: '6px',
               }}
             >
@@ -142,7 +127,7 @@ export function Login() {
                   left: '12px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  color: '#94a3b8',
+                  color: 'var(--rb-text-muted)',
                   display: 'flex',
                   alignItems: 'center',
                 }}
@@ -161,22 +146,22 @@ export function Login() {
                   width: '100%',
                   padding: '11px 14px 11px 38px',
                   fontSize: '14px',
-                  color: '#0f172a',
-                  background: '#f8fafc',
-                  border: '1px solid #cbd5e1',
+                  color: 'var(--rb-text)',
+                  background: 'var(--rb-surface-cream)',
+                  border: '1px solid var(--rb-border)',
                   borderRadius: '8px',
                   outline: 'none',
                   transition: 'all 0.15s ease',
                   boxSizing: 'border-box',
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#10b981';
-                  e.target.style.background = '#fff';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.12)';
+                  e.target.style.borderColor = 'var(--rb-primary)';
+                  e.target.style.background = 'var(--rb-surface)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(103, 6, 38, 0.15)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#cbd5e1';
-                  e.target.style.background = '#f8fafc';
+                  e.target.style.borderColor = 'var(--rb-border)';
+                  e.target.style.background = 'var(--rb-surface-cream)';
                   e.target.style.boxShadow = 'none';
                 }}
               />
@@ -198,7 +183,7 @@ export function Login() {
                 style={{
                   fontSize: '13px',
                   fontWeight: 600,
-                  color: '#334155',
+                  color: 'var(--rb-text)',
                 }}
               >
                 Password
@@ -211,7 +196,7 @@ export function Login() {
                   left: '12px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  color: '#94a3b8',
+                  color: 'var(--rb-text-muted)',
                   display: 'flex',
                   alignItems: 'center',
                 }}
@@ -230,22 +215,22 @@ export function Login() {
                   width: '100%',
                   padding: '11px 40px 11px 38px',
                   fontSize: '14px',
-                  color: '#0f172a',
-                  background: '#f8fafc',
-                  border: '1px solid #cbd5e1',
+                  color: 'var(--rb-text)',
+                  background: 'var(--rb-surface-cream)',
+                  border: '1px solid var(--rb-border)',
                   borderRadius: '8px',
                   outline: 'none',
                   transition: 'all 0.15s ease',
                   boxSizing: 'border-box',
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#10b981';
-                  e.target.style.background = '#fff';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.12)';
+                  e.target.style.borderColor = 'var(--rb-primary)';
+                  e.target.style.background = 'var(--rb-surface)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(103, 6, 38, 0.15)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#cbd5e1';
-                  e.target.style.background = '#f8fafc';
+                  e.target.style.borderColor = 'var(--rb-border)';
+                  e.target.style.background = 'var(--rb-surface-cream)';
                   e.target.style.boxShadow = 'none';
                 }}
               />
@@ -260,7 +245,7 @@ export function Login() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#94a3b8',
+                  color: 'var(--rb-text-muted)',
                   display: 'flex',
                   alignItems: 'center',
                   padding: 0,
@@ -280,8 +265,8 @@ export function Login() {
               padding: '12px',
               borderRadius: '8px',
               border: 'none',
-              background: loading ? '#94a3b8' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: '#fff',
+              background: loading ? 'var(--rb-border)' : 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
+              color: '#F7F3EB',
               fontSize: '14px',
               fontWeight: 600,
               cursor: loading ? 'not-allowed' : 'pointer',
@@ -289,7 +274,7 @@ export function Login() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              boxShadow: loading ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
+              boxShadow: loading ? 'none' : '0 4px 14px rgba(103, 6, 38, 0.3)',
               transition: 'all 0.15s ease',
             }}
           >
@@ -301,7 +286,7 @@ export function Login() {
             ) : (
               <>
                 <span>Sign In to Workspace</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={16} color="#BAD797" />
               </>
             )}
           </button>
@@ -316,9 +301,9 @@ export function Login() {
             gap: '12px',
           }}
         >
-          <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
-          <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>NEW TO REWRITEBOT?</span>
-          <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+          <div style={{ flex: 1, height: '1px', background: 'var(--rb-border)' }} />
+          <span style={{ fontSize: '11px', color: 'var(--rb-text-muted)', fontWeight: 600, letterSpacing: '0.5px' }}>NEW TO REWRITEBOT?</span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--rb-border)' }} />
         </div>
 
         {/* Create Account Link */}
@@ -332,17 +317,17 @@ export function Login() {
               width: '100%',
               padding: '11px',
               borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              background: '#ffffff',
-              color: '#334155',
+              border: '1px solid var(--rb-border)',
+              background: 'var(--rb-surface)',
+              color: 'var(--rb-text)',
               fontSize: '14px',
               fontWeight: 600,
               textDecoration: 'none',
               transition: 'all 0.15s ease',
               boxSizing: 'border-box',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface)')}
           >
             Create an Account
           </Link>
@@ -357,15 +342,17 @@ export function Login() {
           alignItems: 'center',
           gap: '24px',
           fontSize: '12px',
-          color: '#64748b',
+          color: 'var(--rb-text-secondary)',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <ShieldCheck size={16} color="#10b981" />
+          <ShieldCheck size={16} color="#670626" />
           <span>Encrypted with AES-256-GCM</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Cpu size={16} color="#10b981" />
+          <Cpu size={16} color="#670626" />
           <span>Bring Your Own AI Provider</span>
         </div>
       </div>

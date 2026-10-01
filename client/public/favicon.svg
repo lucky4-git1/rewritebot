@@ -1,6 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <circle cx="50" cy="50" r="45" fill="#2f8f2f"/>
-  <path d="M30 40 L45 55 L70 30" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M30 60 L70 60" stroke="white" stroke-width="4" stroke-linecap="round"/>
-  <path d="M30 70 L70 70" stroke="white" stroke-width="4" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cherryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#670626" />
+      <stop offset="100%" stop-color="#4e041c" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle in Warm Cream or Cherry -->
+  <rect width="120" height="120" rx="28" fill="#F7F3EB" />
+  
+  <!-- Subtle border in warm tone -->
+  <rect width="118" height="118" x="1" y="1" rx="27" fill="none" stroke="#E2DBD0" stroke-width="2" />
+
+  <!-- Dual-arrow 'R' Cycle Emblem in signature Cherry & Matcha -->
+  <g transform="translate(18, 18)" filter="url(#shadow)">
+    <!-- Top-left arrow stem and loop -->
+    <path d="M 0,42 L 0,6 L 24,6 L 12,18 L 18,18 C 38,18 52,24 52,40 C 52,50 44,56 32,58 L 32,48 C 38,46 42,42 42,38 C 42,28 32,26 20,26 L 0,26 Z" fill="#670626" />
+    <!-- Bottom leg with reverse arrow return -->
+    <path d="M 0,46 L 40,46 C 45,46 48,44 50,42 L 68,78 L 52,78 L 38,52 L 20,52 L 20,78 L 0,78 Z" fill="#670626" />
+    <!-- Matcha accent spark -->
+    <circle cx="70" cy="20" r="8" fill="#BAD797" />
+  </g>
 </svg>
