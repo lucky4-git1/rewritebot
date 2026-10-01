@@ -317,9 +317,12 @@ SPEED & ACCURACY INSTRUCTIONS:
 - Break text into its sentences.
 - Label original phrasing or standard speech as "clean" (similarity 0-10%). For "clean", explanation, sourceTitle, and sourceUrl must be empty strings "".
 - Label close paraphrases / patchwriting as "paraphrased" (similarity 30-79%). Keep explanation under 8 words.
-- Label verbatim textbook/famous text as "exact" (similarity 80-100%). Keep explanation under 8 words.
 - "sources" array: Include AT MOST 2 top matched sources only if non-clean matches exist; if all clean, return [].
 - "riskLevel": "safe" if originalityScore >= 85, "moderate" if >= 60, else "high".
+- "humanScore": Objectively evaluate whether the text exhibits synthetic AI characteristics vs authentic human cadence:
+  * 20-55: Highly synthetic AI (monotonous sentence lengths, generic adjectives, predictable transition words like "Moreover", "Furthermore", "In conclusion", "It is crucial to note", "delve into").
+  * 56-78: Mixed / moderate AI presence (balanced phrasing with some formulaic sentences).
+  * 79-99: Highly natural human writing (dynamic burstiness with punchy short sentences mixed with long clauses, idiosyncratic rhythm, natural human voice).
 
 TEXT TO ANALYZE:
 ---

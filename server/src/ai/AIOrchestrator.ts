@@ -347,28 +347,33 @@ export class AIOrchestrator {
 
     const response = await this.generate(request, requestId);
 
+    const statisticalHuman = this.computeStatisticalHumanScore(params.text);
+
     let parsed: any;
     try {
-      const cleanJson = response.text
-        .replace(/^```json\s*/i, '')
-        .replace(/^```\s*/i, '')
-        .replace(/```\s*$/i, '')
-        .trim();
-      parsed = JSON.parse(cleanJson);
+      // Robust JSON extraction using greedy regex matching between { and }
+      const match = response.text.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsed = JSON.parse(match[0]);
+      } else {
+        throw new Error('No JSON structure found in LLM output');
+      }
     } catch (e) {
-      logger.warn('Failed to parse AI plagiarism JSON response, applying fallback structure:', e);
+      logger.warn('Failed to parse AI plagiarism JSON response, applying dynamic statistical fallback:', e);
+      const sentences = params.text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [params.text];
       parsed = {
-        originalityScore: 92,
-        plagiarismScore: 8,
-        riskLevel: 'safe',
-        matches: [
-          {
-            sentence: params.text.slice(0, 120),
-            type: 'clean',
-            similarity: 8,
-            explanation: 'General original phrasing detected',
-          },
-        ],
+        originalityScore: Math.min(98, Math.max(50, statisticalHuman + 6)),
+        plagiarismScore: Math.max(2, 100 - (statisticalHuman + 6)),
+        humanScore: statisticalHuman,
+        riskLevel: statisticalHuman >= 75 ? 'safe' : statisticalHuman >= 50 ? 'moderate' : 'high',
+        matches: sentences.slice(0, 8).map((s) => ({
+          sentence: s.trim(),
+          type: 'clean',
+          similarity: 6,
+          sourceTitle: '',
+          sourceUrl: '',
+          explanation: '',
+        })),
         sources: [],
       };
     }
@@ -381,10 +386,16 @@ export class AIOrchestrator {
       Math.min(100, Math.round(parsed.originalityScore ?? (100 - (parsed.plagiarismScore || 0))))
     );
     const plagiarismScore = Math.max(0, Math.min(100, 100 - originalityScore));
-    const humanScore = Math.max(
-      0,
-      Math.min(100, Math.round(parsed.humanScore ?? Math.min(100, originalityScore + 4)))
-    );
+
+    // Dynamic calibrated humanScore: weighted combination of model evaluation + statistical linguistic metrics
+    let humanScore: number;
+    if (typeof parsed.humanScore === 'number' && !isNaN(parsed.humanScore)) {
+      humanScore = Math.round(parsed.humanScore * 0.7 + statisticalHuman * 0.3);
+    } else {
+      humanScore = statisticalHuman;
+    }
+    humanScore = Math.max(5, Math.min(99, humanScore));
+
     const riskLevel: 'safe' | 'moderate' | 'high' =
       originalityScore >= 85 ? 'safe' : originalityScore >= 60 ? 'moderate' : 'high';
 
@@ -402,6 +413,58 @@ export class AIOrchestrator {
       latency: response.latency,
     };
   }
+
+  /**
+   * Statistical analysis of text for AI content detection (burstiness, sentence length variance, vocab richness, AI markers)
+   */
+  private computeStatisticalHumanScore(text: string): number {
+    const sentences = text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [text];
+    const words = text.toLowerCase().match(/\b[\w'-]+\b/g) || [];
+    if (words.length < 5) return 85;
+
+    // 1. Sentence length variance (Burstiness analysis)
+    const lengths = sentences.map((s) => s.trim().split(/\s+/).filter(Boolean).length).filter((l) => l > 0);
+    const meanLen = lengths.reduce((a, b) => a + b, 0) / (lengths.length || 1);
+    const variance = lengths.reduce((acc, len) => acc + Math.pow(len - meanLen, 2), 0) / (lengths.length || 1);
+    const stdDev = Math.sqrt(variance);
+    // Burstiness coefficient: high stdDev / meanLen indicates natural human cadence; low indicates robotic AI
+    const burstiness = stdDev / (meanLen || 1);
+
+    // 2. Vocabulary richness (Type-Token Ratio / TTR)
+    const uniqueWords = new Set(words);
+    const ttr = uniqueWords.size / words.length;
+
+    // 3. AI buzzword and robotic transitional markers penalty
+    const aiMarkers = [
+      'furthermore', 'moreover', 'in conclusion', 'it is important to note',
+      'delve', 'testament', 'pivotal role', 'crucial aspect', 'tapestry',
+      'beacon', 'realm', 'seamlessly', 'underscore', 'multifaceted', 'paramount',
+      'it is worth noting', 'in today\'s fast-paced'
+    ];
+    let markerCount = 0;
+    const lowerText = text.toLowerCase();
+    for (const marker of aiMarkers) {
+      if (lowerText.includes(marker)) markerCount++;
+    }
+
+    // Baseline natural score
+    let score = 76;
+
+    // Burstiness scoring
+    if (burstiness > 0.55) score += 16;
+    else if (burstiness > 0.38) score += 8;
+    else if (burstiness < 0.22) score -= 18;
+
+    // Vocabulary richness scoring
+    if (ttr > 0.68) score += 10;
+    else if (ttr < 0.44) score -= 14;
+
+    // Penalize AI formulaic transition markers
+    score -= markerCount * 9;
+
+    return Math.max(15, Math.min(98, Math.round(score)));
+  }
+
 
   /**
    * Extract in-text citation from full citation

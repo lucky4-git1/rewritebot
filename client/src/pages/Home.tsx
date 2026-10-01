@@ -101,6 +101,7 @@ export function Home() {
   // 📑 Compare Modes Multi-Pane
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [compareResults, setCompareResults] = useState<{ mode: string; label: string; text: string; words: number }[]>([]);
+  const [selectedCompareModes, setSelectedCompareModes] = useState<string[]>(['standard', 'fluency', 'academic']);
   const [isComparing, setIsComparing] = useState(false);
 
   // 📂 File Upload & Drag/Drop
@@ -450,7 +451,23 @@ export function Home() {
   };
 
   // 📑 Compare Modes Multi-Pane
-  const handleCompareModes = async () => {
+  const toggleCompareMode = (modeVal: string) => {
+    if (selectedCompareModes.includes(modeVal)) {
+      if (selectedCompareModes.length <= 2) {
+        showToast('Please keep at least 2 modes selected for comparison', 'info');
+        return;
+      }
+      setSelectedCompareModes(selectedCompareModes.filter((m) => m !== modeVal));
+    } else {
+      if (selectedCompareModes.length >= 4) {
+        showToast('You can compare up to 4 modes simultaneously', 'info');
+        return;
+      }
+      setSelectedCompareModes([...selectedCompareModes, modeVal]);
+    }
+  };
+
+  const handleCompareModes = async (modesOverride?: string[] | React.MouseEvent) => {
     const textToCompare = inputText.trim() || outputText.trim();
     if (!textToCompare) {
       showToast('Please enter text to compare modes', 'info');
@@ -462,15 +479,20 @@ export function Home() {
       return;
     }
 
+    const activeModesList = Array.isArray(modesOverride) ? modesOverride : selectedCompareModes;
+    if (activeModesList.length < 2) {
+      showToast('Please select at least 2 modes to compare', 'info');
+      return;
+    }
+
     setShowCompareModal(true);
     setIsComparing(true);
     setCompareResults([]);
 
-    const targetModes: Array<{ mode: any; label: string }> = [
-      { mode: 'standard', label: 'Standard' },
-      { mode: 'fluency', label: 'Fluency' },
-      { mode: 'academic', label: 'Academic' },
-    ];
+    const targetModes = activeModesList.map((mVal) => {
+      const found = modes.find((m) => m.value === mVal);
+      return { mode: mVal, label: found ? found.label : mVal };
+    });
 
     try {
       const results = await Promise.all(
@@ -478,7 +500,7 @@ export function Home() {
           try {
             const res = await paraphraseService.paraphrase({
               text: textToCompare,
-              mode: m.mode,
+              mode: m.mode as any,
               language,
               synonymLevel,
               frozenTerms,
@@ -3547,7 +3569,7 @@ export function Home() {
                       Compare Modes Side-by-Side
                     </div>
                     <div style={{ fontSize: '12px', color: '#64748b' }}>
-                      Standard vs. Fluency vs. Academic variations generated concurrently
+                      Select 2 to 4 modes below to generate and compare variations concurrently
                     </div>
                   </div>
                 </div>
@@ -3559,21 +3581,101 @@ export function Home() {
                 </button>
               </div>
 
+              {/* Interactive Mode Picker Toolbar */}
+              <div
+                style={{
+                  padding: '12px 24px',
+                  background: '#f8fafc',
+                  borderBottom: '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569', marginRight: '4px' }}>
+                  Choose modes (2–4):
+                </span>
+                {modes.map((m) => {
+                  const isSelected = selectedCompareModes.includes(m.value);
+                  return (
+                    <button
+                      key={m.value}
+                      onClick={() => toggleCompareMode(m.value)}
+                      style={{
+                        border: isSelected ? '1.5px solid #7c3aed' : '1px solid #cbd5e1',
+                        background: isSelected ? '#ede9fe' : '#ffffff',
+                        color: isSelected ? '#6d28d9' : '#475569',
+                        padding: '4px 10px',
+                        borderRadius: '16px',
+                        fontSize: '12px',
+                        fontWeight: isSelected ? 600 : 400,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <span>{isSelected ? '✓' : '+'}</span>
+                      <span>{m.label}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => handleCompareModes(selectedCompareModes)}
+                  disabled={isComparing}
+                  style={{
+                    marginLeft: 'auto',
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#7c3aed',
+                    color: '#ffffff',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: isComparing ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 2px 6px rgba(124, 58, 237, 0.25)',
+                  }}
+                >
+                  <RotateCw size={13} className={isComparing ? 'spinner' : ''} />
+                  <span>{isComparing ? 'Comparing…' : 'Re-Compare'}</span>
+                </button>
+              </div>
+
               {/* Compare Content Body */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
                 {isComparing ? (
                   <div style={{ textAlign: 'center', padding: '80px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                     <div className="spinner" style={{ width: '44px', height: '44px', borderWidth: '3px', borderColor: '#7c3aed', borderTopColor: 'transparent' }} />
                     <div style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b' }}>
-                      Generating 3 modes in parallel...
+                      Generating {selectedCompareModes.length} modes in parallel...
                     </div>
                     <div style={{ fontSize: '13px', color: '#64748b' }}>
-                      Running Standard, Fluency, and Academic engines simultaneously
+                      Running {selectedCompareModes.map((m) => modes.find((x) => x.value === m)?.label || m).join(', ')} simultaneously
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '20px' }}>
-                    {compareResults.map((card) => (
+                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${compareResults.length || selectedCompareModes.length}, minmax(280px, 1fr))`, gap: '20px' }}>
+                    {compareResults.map((card) => {
+                      const getModeColors = (m: string) => {
+                        switch (m) {
+                          case 'academic': return { bg: '#f3e8ff', text: '#7e22ce' };
+                          case 'formal': return { bg: '#ede9fe', text: '#5b21b6' };
+                          case 'fluency': return { bg: '#ecfdf5', text: '#047857' };
+                          case 'creative': return { bg: '#fdf2f8', text: '#be185d' };
+                          case 'simple': return { bg: '#fef3c7', text: '#b45309' };
+                          case 'humanize': return { bg: '#e0e7ff', text: '#3730a3' };
+                          case 'expand': return { bg: '#e0f2fe', text: '#0369a1' };
+                          case 'shorten': return { bg: '#ffedd5', text: '#c2410c' };
+                          default: return { bg: '#eff6ff', text: '#1d4ed8' };
+                        }
+                      };
+                      const colors = getModeColors(card.mode);
+                      return (
                       <div
                         key={card.mode}
                         style={{
@@ -3593,12 +3695,13 @@ export function Home() {
                               borderRadius: '20px',
                               fontSize: '12px',
                               fontWeight: 700,
-                              background: card.mode === 'academic' ? '#f3e8ff' : card.mode === 'fluency' ? '#ecfdf5' : '#eff6ff',
-                              color: card.mode === 'academic' ? '#7e22ce' : card.mode === 'fluency' ? '#047857' : '#1d4ed8',
+                              background: colors.bg,
+                              color: colors.text,
                             }}
                           >
                             {card.label}
                           </span>
+
                           <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>
                             {card.words} words
                           </span>
@@ -3647,7 +3750,8 @@ export function Home() {
                           <Check size={16} /> Use This Version
                         </button>
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 )}
               </div>

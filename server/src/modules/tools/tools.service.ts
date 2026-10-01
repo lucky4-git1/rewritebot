@@ -10,7 +10,7 @@ interface CachedPlagiarismResult {
   timestamp: number;
 }
 const PLAGIARISM_CACHE = new Map<string, CachedPlagiarismResult>();
-const CACHE_TTL_MS = 15 * 60 * 1000;
+const CACHE_TTL_MS = 90 * 1000;
 const MAX_CACHE_ENTRIES = 200;
 
 interface GrammarInput {
