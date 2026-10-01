@@ -244,6 +244,30 @@ a:hover {
 }
 
 /* Form Controls */
+select, option {
+  color: var(--rb-text);
+  background-color: var(--rb-surface);
+}
+
+select option {
+  color: var(--rb-text);
+  background-color: var(--rb-surface);
+}
+
+[data-theme='dark'] select,
+[data-theme='dark'] option,
+[data-theme='dark'] input,
+[data-theme='dark'] textarea {
+  color-scheme: dark;
+}
+
+[data-theme='light'] select,
+[data-theme='light'] option,
+[data-theme='light'] input,
+[data-theme='light'] textarea {
+  color-scheme: light;
+}
+
 .form-control {
   display: block;
   width: 100%;

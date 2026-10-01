@@ -430,8 +430,8 @@ export function Providers() {
               <form onSubmit={handleSubmit}>
                 <div className="responsive-grid-2" style={{ marginBottom: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                      Provider Type {!editingProviderId && <span style={{ color: '#ef4444' }}>*</span>}
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--rb-text)', marginBottom: '6px' }}>
+                      Provider Type {!editingProviderId && <span style={{ color: 'var(--rb-danger)' }}>*</span>}
                     </label>
                     <select
                       value={formData.type}
@@ -441,15 +441,16 @@ export function Providers() {
                       style={{
                         width: '100%',
                         padding: '10px 12px',
-                        border: '1px solid #cbd5e1',
+                        border: '1px solid var(--rb-border)',
                         borderRadius: '6px',
                         fontSize: '14px',
-                        background: editingProviderId ? '#f1f5f9' : '#fff',
+                        background: editingProviderId ? 'var(--rb-surface-muted)' : 'var(--rb-surface-cream)',
+                        color: 'var(--rb-text)',
                       }}
                     >
-                      <option value="">-- Choose Provider Type --</option>
+                      <option value="" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>-- Choose Provider Type --</option>
                       {providerTypes.map((t) => (
-                        <option key={t.type} value={t.type}>
+                        <option key={t.type} value={t.type} style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>
                           {t.name}
                         </option>
                       ))}
@@ -457,8 +458,8 @@ export function Providers() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                      Display Name <span style={{ color: '#ef4444' }}>*</span>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--rb-text)', marginBottom: '6px' }}>
+                      Display Name <span style={{ color: 'var(--rb-danger)' }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -469,9 +470,11 @@ export function Providers() {
                       style={{
                         width: '100%',
                         padding: '10px 12px',
-                        border: '1px solid #cbd5e1',
+                        border: '1px solid var(--rb-border)',
                         borderRadius: '6px',
                         fontSize: '14px',
+                        background: 'var(--rb-surface-cream)',
+                        color: 'var(--rb-text)',
                       }}
                     />
                   </div>
@@ -479,8 +482,8 @@ export function Providers() {
 
                 <div className="responsive-grid-2" style={{ marginBottom: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                      API Key {editingProviderId ? '(Leave empty to keep existing key)' : !['ollama', 'lmstudio'].includes(formData.type) && <span style={{ color: '#ef4444' }}>*</span>}
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--rb-text)', marginBottom: '6px' }}>
+                      API Key {editingProviderId ? '(Leave empty to keep existing key)' : !['ollama', 'lmstudio'].includes(formData.type) && <span style={{ color: 'var(--rb-danger)' }}>*</span>}
                     </label>
                     <input
                       type="password"
@@ -491,15 +494,17 @@ export function Providers() {
                       style={{
                         width: '100%',
                         padding: '10px 12px',
-                        border: '1px solid #cbd5e1',
+                        border: '1px solid var(--rb-border)',
                         borderRadius: '6px',
                         fontSize: '14px',
+                        background: 'var(--rb-surface-cream)',
+                        color: 'var(--rb-text)',
                       }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--rb-text)', marginBottom: '6px' }}>
                       Base URL (Optional override)
                     </label>
                     <input
@@ -510,17 +515,19 @@ export function Providers() {
                       style={{
                         width: '100%',
                         padding: '10px 12px',
-                        border: '1px solid #cbd5e1',
+                        border: '1px solid var(--rb-border)',
                         borderRadius: '6px',
                         fontSize: '14px',
+                        background: 'var(--rb-surface-cream)',
+                        color: 'var(--rb-text)',
                       }}
                     />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                     Model Identifier <span style={{ color: '#ef4444' }}>*</span>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--rb-text)', marginBottom: '6px' }}>
+                     Model Identifier <span style={{ color: 'var(--rb-danger)' }}>*</span>
                   </label>
                   <input
                     type="text"
@@ -531,14 +538,16 @@ export function Providers() {
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #cbd5e1',
+                      border: '1px solid var(--rb-border)',
                       borderRadius: '6px',
                       fontSize: '14px',
+                      background: 'var(--rb-surface-cream)',
+                      color: 'var(--rb-text)',
                     }}
                   />
                   {formData.type === 'nvidia' && (
                     <div style={{ marginTop: '8px' }}>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)', marginBottom: '6px' }}>
                         NVIDIA Model Options:
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
@@ -552,9 +561,9 @@ export function Providers() {
                             type="button"
                             onClick={() => setFormData({ ...formData, modelId: m.id })}
                             style={{
-                              border: formData.modelId === m.id ? '1.5px solid #10b981' : '1px solid #cbd5e1',
-                              background: formData.modelId === m.id ? '#ecfdf5' : '#f8fafc',
-                              color: formData.modelId === m.id ? '#059669' : '#334155',
+                              border: formData.modelId === m.id ? '1.5px solid var(--rb-accent)' : '1px solid var(--rb-border)',
+                              background: formData.modelId === m.id ? 'var(--rb-primary-light)' : 'var(--rb-surface-cream)',
+                              color: formData.modelId === m.id ? 'var(--rb-accent)' : 'var(--rb-text)',
                               borderRadius: '14px',
                               padding: '4px 12px',
                               fontSize: '12px',
@@ -567,14 +576,14 @@ export function Providers() {
                           </button>
                         ))}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: '11px', color: 'var(--rb-text-muted)', marginTop: '6px', lineHeight: 1.4 }}>
                         * <code>meta/llama-3.2-11b-vision-instruct</code> is confirmed working on standard developer accounts. For <code>GPT-OSS-20B</code> and <code>Mistral Nemotron</code>, you can test if your key has public endpoint entitlements using the <strong>Test Gen</strong> button.
                       </div>
                     </div>
                   )}
                   {formData.type === 'groq' && (
                     <div style={{ marginTop: '8px' }}>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)', marginBottom: '6px' }}>
                         Tested & recommended Groq models:
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
@@ -588,9 +597,9 @@ export function Providers() {
                             type="button"
                             onClick={() => setFormData({ ...formData, modelId: m.id })}
                             style={{
-                              border: formData.modelId === m.id ? '1.5px solid #10b981' : '1px solid #cbd5e1',
-                              background: formData.modelId === m.id ? '#ecfdf5' : '#f8fafc',
-                              color: formData.modelId === m.id ? '#059669' : '#334155',
+                              border: formData.modelId === m.id ? '1.5px solid var(--rb-accent)' : '1px solid var(--rb-border)',
+                              background: formData.modelId === m.id ? 'var(--rb-primary-light)' : 'var(--rb-surface-cream)',
+                              color: formData.modelId === m.id ? 'var(--rb-accent)' : 'var(--rb-text)',
                               borderRadius: '14px',
                               padding: '3px 10px',
                               fontSize: '11px',
@@ -607,7 +616,7 @@ export function Providers() {
                   )}
                   {formData.type === 'openai' && (
                     <div style={{ marginTop: '8px' }}>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)', marginBottom: '6px' }}>
                         Tested & recommended OpenAI models:
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
@@ -621,9 +630,9 @@ export function Providers() {
                             type="button"
                             onClick={() => setFormData({ ...formData, modelId: m.id })}
                             style={{
-                              border: formData.modelId === m.id ? '1.5px solid #10b981' : '1px solid #cbd5e1',
-                              background: formData.modelId === m.id ? '#ecfdf5' : '#f8fafc',
-                              color: formData.modelId === m.id ? '#059669' : '#334155',
+                              border: formData.modelId === m.id ? '1.5px solid var(--rb-accent)' : '1px solid var(--rb-border)',
+                              background: formData.modelId === m.id ? 'var(--rb-primary-light)' : 'var(--rb-surface-cream)',
+                              color: formData.modelId === m.id ? 'var(--rb-accent)' : 'var(--rb-text)',
                               borderRadius: '14px',
                               padding: '3px 10px',
                               fontSize: '11px',
@@ -647,8 +656,8 @@ export function Providers() {
                       padding: '10px 24px',
                       borderRadius: '6px',
                       border: 'none',
-                      background: '#10b981',
-                      color: '#fff',
+                      background: 'var(--rb-accent)',
+                      color: '#251F20',
                       fontWeight: 600,
                       fontSize: '14px',
                       cursor: 'pointer',
@@ -662,9 +671,9 @@ export function Providers() {
                     style={{
                       padding: '10px 18px',
                       borderRadius: '6px',
-                      border: '1px solid #cbd5e1',
-                      background: '#fff',
-                      color: '#475569',
+                      border: '1px solid var(--rb-border)',
+                      background: 'var(--rb-surface-cream)',
+                      color: 'var(--rb-text)',
                       fontSize: '14px',
                       cursor: 'pointer',
                     }}
@@ -722,10 +731,10 @@ export function Providers() {
                     className="provider-card-responsive"
                     style={{
                       background: 'var(--rb-surface)',
-                      border: p.isDefault ? '2px solid #10b981' : '1px solid #e2e8f0',
+                      border: p.isDefault ? '2px solid var(--rb-accent)' : '1px solid var(--rb-border)',
                       borderRadius: '12px',
                       padding: '18px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                      boxShadow: 'var(--rb-shadow)',
                     }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -736,11 +745,11 @@ export function Providers() {
                             style={{
                               fontSize: '11px',
                               fontWeight: 700,
-                              background: '#ecfdf5',
-                              color: '#059669',
+                              background: 'var(--rb-accent-light)',
+                              color: 'var(--rb-accent-dark)',
                               padding: '2px 8px',
                               borderRadius: '12px',
-                              border: '1px solid #d1fae5',
+                              border: '1px solid var(--rb-accent)',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '4px',
@@ -754,23 +763,24 @@ export function Providers() {
                             fontSize: '11px',
                             fontWeight: 600,
                             textTransform: 'uppercase',
-                            background: '#f1f5f9',
-                            color: '#475569',
+                            background: 'var(--rb-surface-muted)',
+                            color: 'var(--rb-text)',
                             padding: '2px 8px',
                             borderRadius: '4px',
+                            border: '1px solid var(--rb-border)',
                           }}
                         >
                           {p.type}
                         </span>
                       </div>
 
-                      <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                         <span>
                           Model: <strong style={{ color: 'var(--rb-text)' }}>{p.modelId}</strong>
                         </span>
                         {p.baseUrl && (
                           <span style={{ wordBreak: 'break-all' }}>
-                            URL: <code>{p.baseUrl}</code>
+                            URL: <code style={{ background: 'var(--rb-surface-cream)', color: 'var(--rb-accent)', padding: '2px 6px', borderRadius: '4px' }}>{p.baseUrl}</code>
                           </span>
                         )}
                       </div>
@@ -780,7 +790,7 @@ export function Providers() {
                           style={{
                             fontSize: '12px',
                             fontWeight: 500,
-                            color: result.success ? '#059669' : '#dc2626',
+                            color: result.success ? 'var(--rb-success)' : 'var(--rb-danger)',
                             marginTop: '2px',
                           }}
                         >
@@ -798,10 +808,10 @@ export function Providers() {
                         title="Ping provider and verify credentials"
                         style={{
                           padding: '7px 12px',
-                          border: '1px solid #cbd5e1',
+                          border: '1px solid var(--rb-border)',
                           borderRadius: '6px',
-                          background: '#fff',
-                          color: '#334155',
+                          background: 'var(--rb-surface-cream)',
+                          color: 'var(--rb-text)',
                           fontSize: '12px',
                           fontWeight: 500,
                           cursor: isTesting ? 'not-allowed' : 'pointer',
@@ -819,10 +829,10 @@ export function Providers() {
                         title="Run an actual test AI generation"
                         style={{
                           padding: '7px 12px',
-                          border: '1px solid #cbd5e1',
+                          border: '1px solid var(--rb-border)',
                           borderRadius: '6px',
-                          background: '#fff',
-                          color: '#334155',
+                          background: 'var(--rb-surface-cream)',
+                          color: 'var(--rb-text)',
                           fontSize: '12px',
                           fontWeight: 500,
                           cursor: isTesting ? 'not-allowed' : 'pointer',
@@ -839,12 +849,12 @@ export function Providers() {
                           onClick={() => handleSetDefault(p.id)}
                           style={{
                             padding: '7px 12px',
-                            border: '1px solid #cbd5e1',
+                            border: '1px solid var(--rb-border)',
                             borderRadius: '6px',
-                            background: '#fff',
-                            color: '#059669',
+                            background: 'var(--rb-surface-cream)',
+                            color: 'var(--rb-accent)',
                             fontSize: '12px',
-                            fontWeight: 500,
+                            fontWeight: 600,
                             cursor: 'pointer',
                           }}
                         >
@@ -857,10 +867,10 @@ export function Providers() {
                         title="Fetch available models from API"
                         style={{
                           padding: '7px 12px',
-                          border: '1px solid #cbd5e1',
+                          border: '1px solid var(--rb-border)',
                           borderRadius: '6px',
-                          background: '#fff',
-                          color: '#334155',
+                          background: 'var(--rb-surface-cream)',
+                          color: 'var(--rb-text)',
                           fontSize: '12px',
                           fontWeight: 500,
                           cursor: 'pointer',
@@ -877,10 +887,10 @@ export function Providers() {
                         title="Edit provider configuration"
                         style={{
                           padding: '7px 10px',
-                          border: '1px solid #cbd5e1',
+                          border: '1px solid var(--rb-border)',
                           borderRadius: '6px',
-                          background: '#fff',
-                          color: '#475569',
+                          background: 'var(--rb-surface-cream)',
+                          color: 'var(--rb-text)',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -895,10 +905,10 @@ export function Providers() {
                         title="Delete provider"
                         style={{
                           padding: '7px 10px',
-                          border: '1px solid #fee2e2',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
                           borderRadius: '6px',
-                          background: '#fff',
-                          color: '#ef4444',
+                          background: 'var(--rb-surface-cream)',
+                          color: 'var(--rb-danger)',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -948,7 +958,8 @@ export function Providers() {
             <div
               style={{
                 padding: '16px 20px',
-                borderBottom: '1px solid #f1f5f9',
+                borderBottom: '1px solid var(--rb-border)',
+                background: 'var(--rb-surface-cream)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -958,13 +969,13 @@ export function Providers() {
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--rb-text)' }}>
                   Live Available Models ({viewingModelsProvider.name})
                 </h3>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                  Current active model: <code>{viewingModelsProvider.modelId}</code>
+                <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)', marginTop: '2px' }}>
+                  Current active model: <code style={{ color: 'var(--rb-accent)' }}>{viewingModelsProvider.modelId}</code>
                 </div>
               </div>
               <button
                 onClick={() => setViewingModelsProvider(null)}
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)' }}
               >
                 <X size={20} />
               </button>
@@ -972,12 +983,12 @@ export function Providers() {
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
               {loadingModels ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--rb-text-muted)' }}>
                   <RotateCw size={24} className="spinner" style={{ marginBottom: '8px' }} />
                   <div>Querying {viewingModelsProvider.type} API for models...</div>
                 </div>
               ) : fetchedModels.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b', fontSize: '14px' }}>
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--rb-text-muted)', fontSize: '14px' }}>
                   No models returned by API or API key does not have model listing permissions.
                 </div>
               ) : (
@@ -990,8 +1001,8 @@ export function Providers() {
                         style={{
                           padding: '10px 14px',
                           borderRadius: '8px',
-                          border: isSelected ? '1.5px solid #10b981' : '1px solid #e2e8f0',
-                          background: isSelected ? '#ecfdf5' : '#f8fafc',
+                          border: isSelected ? '1.5px solid var(--rb-accent)' : '1px solid var(--rb-border)',
+                          background: isSelected ? 'var(--rb-primary-light)' : 'var(--rb-surface-cream)',
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
@@ -1015,11 +1026,11 @@ export function Providers() {
                           style={{
                             padding: '4px 10px',
                             borderRadius: '4px',
-                            border: isSelected ? 'none' : '1px solid #cbd5e1',
-                            background: isSelected ? '#10b981' : '#fff',
-                            color: isSelected ? '#fff' : '#334155',
+                            border: isSelected ? 'none' : '1px solid var(--rb-border)',
+                            background: isSelected ? 'var(--rb-accent)' : 'var(--rb-surface)',
+                            color: isSelected ? '#251F20' : 'var(--rb-text)',
                             fontSize: '12px',
-                            fontWeight: 500,
+                            fontWeight: 600,
                             cursor: 'pointer',
                             whiteSpace: 'nowrap',
                           }}
@@ -1033,15 +1044,15 @@ export function Providers() {
               )}
             </div>
 
-            <div style={{ padding: '12px 20px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--rb-border)', background: 'var(--rb-surface-cream)', display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setViewingModelsProvider(null)}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  background: '#fff',
-                  color: '#475569',
+                  border: '1px solid var(--rb-border)',
+                  background: 'var(--rb-surface)',
+                  color: 'var(--rb-text)',
                   fontSize: '13px',
                   cursor: 'pointer',
                 }}

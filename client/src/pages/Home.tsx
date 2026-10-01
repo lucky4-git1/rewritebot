@@ -1128,15 +1128,15 @@ export function Home() {
               paddingBottom: 'calc(20px + var(--rb-safe-bottom, 0px))',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid var(--rb-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div
                   style={{
                     width: '38px',
                     height: '38px',
                     borderRadius: '50%',
-                    background: '#e0e7ff',
-                    color: '#4338ca',
+                    background: 'var(--rb-primary-light)',
+                    color: 'var(--rb-primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1147,14 +1147,14 @@ export function Home() {
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{user?.name || 'User'}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>{user?.email}</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--rb-text)' }}>{user?.name || 'User'}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)' }}>{user?.email}</div>
                 </div>
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="touch-target"
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <X size={22} />
               </button>
@@ -1176,18 +1176,18 @@ export function Home() {
                   alignItems: 'center',
                   gap: '12px',
                   padding: '12px 14px',
-                  border: 'none',
+                  border: '1px solid var(--rb-border)',
                   borderRadius: '8px',
-                  background: showHistory ? '#ecfdf5' : '#f8fafc',
-                  color: showHistory ? '#059669' : '#1e293b',
+                  background: showHistory ? 'var(--rb-primary-light)' : 'var(--rb-surface-cream)',
+                  color: showHistory ? 'var(--rb-primary)' : 'var(--rb-text)',
                   fontSize: '14px',
                   fontWeight: 500,
                   cursor: 'pointer',
                   textAlign: 'left',
                 }}
               >
-                <History size={18} color="#10b981" />
-                <span>Paraphrase History</span>
+                <History size={18} color="var(--rb-accent)" />
+                <span style={{ color: 'var(--rb-text)' }}>Paraphrase History</span>
               </button>
 
               <button
@@ -1201,10 +1201,10 @@ export function Home() {
                   alignItems: 'center',
                   gap: '12px',
                   padding: '12px 14px',
-                  border: 'none',
+                  border: '1px solid var(--rb-border)',
                   borderRadius: '8px',
-                  background: '#f8fafc',
-                  color: '#1e293b',
+                  background: 'var(--rb-surface-cream)',
+                  color: 'var(--rb-text)',
                   fontSize: '14px',
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -1212,12 +1212,12 @@ export function Home() {
                 }}
               >
                 <Settings size={18} color="#3b82f6" />
-                <span>AI Providers Configuration</span>
+                <span style={{ color: 'var(--rb-text)' }}>AI Providers Configuration</span>
               </button>
 
               {providers.length > 0 && (
-                <div style={{ marginTop: '16px', padding: '14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ marginTop: '16px', padding: '14px', background: 'var(--rb-surface-cream)', borderRadius: '8px', border: '1px solid var(--rb-border)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--rb-text-secondary)', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981' }} /> Active AI Provider
                   </div>
                   <select
@@ -1226,17 +1226,17 @@ export function Home() {
                     style={{
                       width: '100%',
                       padding: '10px 12px',
-                      border: '1px solid #cbd5e1',
+                      border: '1px solid var(--rb-border)',
                       borderRadius: '6px',
-                      background: '#fff',
+                      background: 'var(--rb-surface)',
                       fontWeight: 600,
-                      color: '#0f172a',
+                      color: 'var(--rb-text)',
                       fontSize: '13px',
                       cursor: 'pointer',
                     }}
                   >
                     {providers.map((p) => (
-                      <option key={p.id} value={p.id}>
+                      <option key={p.id} value={p.id} style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>
                         {p.name} ({p.type} / {p.modelId})
                       </option>
                     ))}
@@ -2707,18 +2707,38 @@ export function Home() {
             <div
               style={{
                 padding: '16px 20px',
+                background: 'var(--rb-surface-cream)',
                 borderBottom: '1px solid var(--rb-border)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px', color: 'var(--rb-text)' }}>
-                <History size={18} color="#10b981" /> Paraphrase History
-              </div>
+              <h3
+                style={{
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  color: 'var(--rb-text)',
+                }}
+              >
+                <History size={18} color="var(--rb-accent)" /> Paraphrase History
+              </h3>
               <button
                 onClick={() => setShowHistory(false)}
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '18px' }}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: 'var(--rb-text-muted)',
+                  fontSize: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '4px',
+                }}
               >
                 ✕
               </button>
