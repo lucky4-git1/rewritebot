@@ -855,7 +855,9 @@ export function Home() {
 
   const diffTokens = computeWordDiff(inputText, outputText);
   const changedWordsCount = diffTokens.filter((t) => t.type === 'changed').length;
-  const changePercentage = outputWordCount > 0 ? Math.round((changedWordsCount / outputWordCount) * 100) : 0;
+  const longestUnchangedCount = diffTokens.filter((t) => t.type === 'longest-unchanged').length;
+  const structuralCount = diffTokens.filter((t) => t.type === 'structural').length;
+  const changePercentage = outputWordCount > 0 ? Math.round(((changedWordsCount + structuralCount) / outputWordCount) * 100) : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', maxHeight: '100dvh', background: '#f8fafc', color: '#1e293b', fontFamily: 'Inter, system-ui, sans-serif', overflow: 'hidden' }}>
@@ -1954,6 +1956,41 @@ export function Home() {
             )}
           </div>
 
+          {/* 🎨 QuillBot-Style 3-Color Legend Bar */}
+          {outputText && activeTab === 'diff' && (
+            <div
+              style={{
+                padding: '6px 20px',
+                background: '#f8fafc',
+                borderBottom: '1px solid #f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                fontSize: '11px',
+                color: '#64748b',
+                fontWeight: 500,
+                flexWrap: 'wrap',
+              }}
+            >
+              <span style={{ fontWeight: 600, color: '#475569' }}>Legend:</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }} />
+                <span style={{ color: '#b45309', fontWeight: 600 }}>Changed Words</span>
+                <span style={{ color: '#94a3b8' }}>({changedWordsCount})</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }} />
+                <span style={{ color: '#1d4ed8', fontWeight: 600 }}>Longest Unchanged</span>
+                <span style={{ color: '#94a3b8' }}>({longestUnchangedCount})</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
+                <span style={{ color: '#b91c1c', fontWeight: 600 }}>Structural Changes</span>
+                <span style={{ color: '#94a3b8' }}>({structuralCount})</span>
+              </div>
+            </div>
+          )}
+
           {/* 🛡️ Guard Pipeline Status Banner */}
           {isAutoScanRunning && (
             <div
@@ -2103,35 +2140,65 @@ export function Home() {
               ) : (
                 <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
                   {diffTokens.map((token, idx) => {
-                    const isChanged = token.type === 'changed';
                     const isWord = /[\w]/.test(token.text);
+                    const isYellow = token.type === 'changed';
+                    const isBlue = token.type === 'longest-unchanged';
+                    const isRed = token.type === 'structural';
+
+                    // 3-Color Highlight Palette
+                    let color = '#1e293b';
+                    let bg = 'transparent';
+                    let borderBottom = 'none';
+                    let fontWeight = 400;
+                    let title = isWord ? `Click to view synonyms for "${token.text.trim()}"` : undefined;
+
+                    if (isYellow) {
+                      color = '#b45309'; // Warm Amber
+                      bg = '#fef3c7'; // Soft Amber
+                      borderBottom = '1.5px dashed #f59e0b';
+                      fontWeight = 600;
+                      title = 'Changed Word (Synonym) - Click to choose alternatives';
+                    } else if (isBlue) {
+                      color = '#1d4ed8'; // Royal Blue
+                      bg = '#eff6ff'; // Soft Ice Blue
+                      borderBottom = '1.5px solid #93c5fd';
+                      fontWeight = 500;
+                      title = 'Longest Unchanged - Preserved verbatim from original text';
+                    } else if (isRed) {
+                      color = '#b91c1c'; // Crimson Red
+                      bg = '#fee2e2'; // Soft Rose
+                      borderBottom = '1.5px dashed #f87171';
+                      fontWeight = 600;
+                      title = 'Structural Change (Syntax / Grammar alteration) - Click to replace';
+                    }
+
                     return (
                       <span
                         key={idx}
                         onClick={(e) => isWord && handleWordClick(token, idx, e)}
                         style={{
-                          color: isChanged ? '#b45309' : '#1e293b',
-                          background: isChanged ? '#fef3c7' : 'transparent',
-                          borderRadius: isChanged ? '4px' : '2px',
-                          padding: isChanged ? '1px 4px' : '1px 0px',
-                          fontWeight: isChanged ? 600 : 400,
+                          color,
+                          background: bg,
+                          borderRadius: isYellow || isBlue || isRed ? '4px' : '2px',
+                          padding: isYellow || isBlue || isRed ? '1px 3px' : '0px',
+                          fontWeight,
                           cursor: isWord ? 'pointer' : 'default',
                           transition: 'all 0.15s ease',
-                          borderBottom: isChanged ? '1.5px dashed #f59e0b' : 'none',
+                          borderBottom,
                         }}
                         onMouseEnter={(e) => {
-                          if (isWord && !isChanged) {
+                          if (isWord && !isYellow && !isBlue && !isRed) {
                             e.currentTarget.style.background = '#f1f5f9';
                             e.currentTarget.style.borderBottom = '1px dotted #94a3b8';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (isWord && !isChanged) {
+                          if (isWord && !isYellow && !isBlue && !isRed) {
                             e.currentTarget.style.background = 'transparent';
                             e.currentTarget.style.borderBottom = 'none';
                           }
                         }}
-                        title={isWord ? (isChanged ? 'Rewritten word - click for synonyms' : 'Click for synonyms') : undefined}
+                        title={title}
                       >
                         {token.text}
                       </span>

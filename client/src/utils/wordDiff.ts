@@ -1,10 +1,3 @@
-export interface DiffToken {
-  text: string;
-  type: 'unchanged' | 'changed' | 'inserted';
-  originalWord?: string;
-  synonyms?: string[];
-}
-
 export const COMMON_SYNONYMS: Record<string, string[]> = {
   important: ['crucial', 'essential', 'vital', 'significant', 'critical', 'paramount'],
   vital: ['essential', 'crucial', 'indispensable', 'key', 'fundamental'],
@@ -167,6 +160,32 @@ export async function lookupSynonyms(word: string): Promise<string[]> {
 /**
  * Tokenize text into words and punctuation
  */
+export interface DiffToken {
+  text: string;
+  type: 'changed' | 'structural' | 'longest-unchanged' | 'unchanged';
+  originalWord?: string;
+  synonyms?: string[];
+}
+
+const STRUCTURAL_MARKERS = new Set([
+  'furthermore', 'moreover', 'however', 'although', 'whereas', 'consequently',
+  'therefore', 'nevertheless', 'nonetheless', 'meanwhile', 'subsequently',
+  'accordingly', 'conversely', 'incidentally', 'specifically', 'namely',
+  'similarly', 'likewise', 'instead', 'otherwise', 'hence', 'thus',
+  'whereby', 'wherein', 'whereupon', 'inasmuch', 'notwithstanding',
+  'because', 'since', 'while', 'whilst', 'unless', 'though',
+  'despite', 'regarding', 'concerning', 'provided', 'assuming',
+  'leading', 'resulting', 'causing', 'enabling', 'allowing',
+  'which', 'whose', 'where', 'thereby', 'in order to'
+]);
+
+/**
+ * Tokenize text into words and punctuation with QuillBot-style 3-color diffing:
+ * - 🟡 changed: Vocabulary / synonym replacement
+ * - 🔵 longest-unchanged: Verbatim preserved multi-word sequences from original
+ * - 🔴 structural: Syntax rearrangement, newly inserted clause connectors / transitions
+ * - unchanged: Neutral isolated punctuation & common filler
+ */
 export function computeWordDiff(original: string, modified: string): DiffToken[] {
   if (!original.trim() || !modified.trim()) {
     return modified.split(/(\s+)/).map((t) => ({
@@ -177,11 +196,47 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
 
   const origWords = original.toLowerCase().match(/\b[\w'-]+\b/g) || [];
   const origSet = new Set(origWords);
+  const origWordString = ' ' + origWords.join(' ') + ' ';
 
   // Split modified text keeping whitespace and punctuation
   const tokens = modified.split(/(\s+|[^\w\s'-]+)/);
 
-  return tokens.map((token) => {
+  // Extract clean word tokens with their indices
+  interface WordInfo {
+    tokenIndex: number;
+    clean: string;
+  }
+  const wordTokens: WordInfo[] = [];
+
+  tokens.forEach((token, index) => {
+    if (!/^\s+$/.test(token) && !/^[^\w\s'-]+$/.test(token) && token) {
+      const clean = token.toLowerCase().replace(/^[^\w]+|[^\w]+$/g, '');
+      if (clean) {
+        wordTokens.push({ tokenIndex: index, clean });
+      }
+    }
+  });
+
+  // Identify Longest Unchanged Sequences (🔵 Blue)
+  // Continuous sequences of 2 or more words that appear identically in the original
+  const longestUnchangedTokens = new Set<number>();
+
+  for (let i = 0; i < wordTokens.length; i++) {
+    for (let len = 6; len >= 2; len--) {
+      if (i + len <= wordTokens.length) {
+        const slice = wordTokens.slice(i, i + len);
+        const phrase = ' ' + slice.map((w) => w.clean).join(' ') + ' ';
+        if (origWordString.includes(phrase)) {
+          for (let k = 0; k < len; k++) {
+            longestUnchangedTokens.add(wordTokens[i + k].tokenIndex);
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  return tokens.map((token, index) => {
     // If whitespace or punctuation, return unchanged
     if (/^\s+$/.test(token) || /^[^\w\s'-]+$/.test(token) || !token) {
       return {
@@ -191,12 +246,31 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     }
 
     const cleanWord = token.toLowerCase().replace(/^[^\w]+|[^\w]+$/g, '');
-    const isPresent = origSet.has(cleanWord);
-
+    const isPresentInOriginal = origSet.has(cleanWord);
     const lookupKey = cleanWord;
     const synonyms = COMMON_SYNONYMS[lookupKey] || undefined;
 
-    if (!isPresent) {
+    // 1. 🔵 Longest Unchanged Words (preserved sequences)
+    if (longestUnchangedTokens.has(index)) {
+      return {
+        text: token,
+        type: 'longest-unchanged',
+        synonyms,
+      };
+    }
+
+    // 2. Not present in original text
+    if (!isPresentInOriginal) {
+      // Check if it's a structural connector / syntax modifier (🔴 Red)
+      if (STRUCTURAL_MARKERS.has(cleanWord)) {
+        return {
+          text: token,
+          type: 'structural',
+          synonyms,
+        };
+      }
+
+      // Check if it replaces an original word with a synonym or content word (🟡 Yellow)
       return {
         text: token,
         type: 'changed',
@@ -204,11 +278,23 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
       };
     }
 
+    // 3. Present in original, but single isolated occurrence
+    // If it's a structural connector that was re-positioned, mark as structural
+    if (STRUCTURAL_MARKERS.has(cleanWord)) {
+      return {
+        text: token,
+        type: 'structural',
+        synonyms,
+      };
+    }
+
+    // Default neutral unchanged word
     return {
       text: token,
       type: 'unchanged',
-      synonyms: COMMON_SYNONYMS[lookupKey] || undefined,
+      synonyms,
     };
   });
 }
+
 
