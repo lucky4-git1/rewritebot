@@ -144,9 +144,44 @@ export function getMimeType(format: ExportFormat): string {
 }
 
 /**
- * Generate a formal PDF Plagiarism & Originality Audit Report
+ * Asynchronously loads the RewriteBot brand logo for PDF embedding.
+ * Prefers cached DOM element for instant resolution, with fallback to Image fetch.
  */
-export function exportPlagiarismAuditPdf(
+async function getLogoImageElement(): Promise<HTMLImageElement | null> {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    // 1. Fast path: Check if logo is already rendered in DOM
+    const existingDomImg = document.querySelector('img[src*="logo-light"]') as HTMLImageElement | null;
+    if (existingDomImg && existingDomImg.complete && existingDomImg.naturalWidth > 0) {
+      return existingDomImg;
+    }
+
+    // 2. Fetch/load directly
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const loadPromise = new Promise<HTMLImageElement>((resolve, reject) => {
+      img.onload = () => resolve(img);
+      img.onerror = (err) => reject(err);
+    });
+    img.src = '/logo-light.png';
+
+    // Race with a 2-second timeout to prevent any possible hang
+    const result = await Promise.race([
+      loadPromise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+    ]);
+    return result;
+  } catch (err) {
+    console.warn('Could not load logo image for PDF:', err);
+    return null;
+  }
+}
+
+/**
+ * Generate a formal PDF Plagiarism & Originality Audit Report with brand logo
+ */
+export async function exportPlagiarismAuditPdf(
   report: {
     originalityScore: number;
     plagiarismScore: number;
@@ -169,34 +204,78 @@ export function exportPlagiarismAuditPdf(
   },
   _documentText: string,
   filename: string = 'RewriteBot_Originality_Audit'
-): void {
+): Promise<void> {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   const contentWidth = pageWidth - 2 * margin;
-  let y = 22;
+  let y = 14;
 
-  // Header Bar
-  doc.setFillColor(16, 185, 129); // #10b981
-  doc.rect(margin, y, contentWidth, 3, 'F');
-  y += 10;
+  // 1. Brand Top Accent Bar (Cherry #670626 & Matcha #BAD797)
+  doc.setFillColor(103, 6, 38); // Cherry
+  doc.rect(margin, y, contentWidth * 0.72, 3, 'F');
+  doc.setFillColor(186, 215, 151); // Matcha
+  doc.rect(margin + contentWidth * 0.72, y, contentWidth * 0.28, 3, 'F');
+  y += 9;
 
-  // Document Title
+  // 2. Official Brand Logo
+  const logo = await getLogoImageElement();
+  const logoW = 48; // mm width
+  const logoH = 13; // mm height (aspect ratio ~3.68)
+
+  if (logo) {
+    try {
+      doc.addImage(logo, 'PNG', margin, y, logoW, logoH);
+    } catch {
+      // Fallback stylized text header
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.setTextColor(103, 6, 38);
+      doc.text('RewriteBot', margin, y + 10);
+    }
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(103, 6, 38);
+    doc.text('RewriteBot', margin, y + 10);
+  }
+
+  // 3. Right-Aligned Certificate Verification Block
+  const certId = `RB-${Math.abs(Math.sin(report.originalityScore) * 10000).toFixed(0)}-${Date.now().toString(36).toUpperCase()}`;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.setTextColor(15, 23, 42); // #0f172a
-  doc.text('RewriteBot Originality Audit Certificate', margin, y);
+  doc.setFontSize(8.5);
+  doc.setTextColor(103, 6, 38);
+  doc.text('OFFICIAL AUDIT CERTIFICATE', pageWidth - margin, y + 3, { align: 'right' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`ID: ${certId}`, pageWidth - margin, y + 7.5, { align: 'right' });
+  doc.text(`Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`, pageWidth - margin, y + 12, { align: 'right' });
+
+  y += Math.max(logoH, 13) + 6;
+
+  // 4. Subtle Header Divider Line
+  doc.setDrawColor(226, 232, 240);
+  doc.line(margin, y, margin + contentWidth, y);
   y += 7;
 
-  // Subtitle & Timestamp
+  // 5. Document Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(37, 31, 32); // Ink #251F20
+  doc.text('Originality & AI Compliance Audit Certificate', margin, y);
+  y += 5.5;
+
+  // 6. Subtitle & Timestamp
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(100, 116, 139); // #64748b
   const timestamp = new Date().toLocaleString();
   doc.text(`Generated on ${timestamp} • Verified by RewriteBot AI Compliance Engine`, margin, y);
-  y += 12;
+  y += 10;
 
-  // Score Summary Cards
+  // 7. Score Summary Cards
   doc.setDrawColor(226, 232, 240);
   doc.setFillColor(248, 250, 252);
   doc.roundedRect(margin, y, contentWidth, 24, 3, 3, 'FD');
