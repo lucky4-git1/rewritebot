@@ -74,6 +74,7 @@ export function Home() {
   const [selectedMatchIndex, setSelectedMatchIndex] = useState<number | null>(null);
   const [rewritingSentenceIndex, setRewritingSentenceIndex] = useState<number | null>(null);
   const [isAutoFixingAll, setIsAutoFixingAll] = useState(false);
+  const [isAutoScanRunning, setIsAutoScanRunning] = useState(false);
 
   const {
     inputText,
@@ -165,6 +166,9 @@ export function Home() {
       return;
     }
 
+    // Clear any stale plagiarism report immediately so the badge doesn't show old data
+    setPlagiarismReport(null);
+
     // On mobile, auto-switch to output view so streaming tokens appear immediately
     setMobileTab('output');
 
@@ -187,6 +191,42 @@ export function Home() {
           showToast('Paraphrase completed successfully!', 'success');
         }
       }
+
+      // ── Plagiarism Guard auto-pipeline ──────────────────────────────────────
+      if (plagiarismGuard) {
+        setIsAutoScanRunning(true);
+        try {
+          // Read the freshly-generated text directly from store (avoids stale closure)
+          const freshText = useEditorStore.getState().outputText;
+
+          setIsScanningPlagiarism(true);
+          const scanRes = await toolsService.checkPlagiarism({
+            text: freshText,
+            providerId: provider.id,
+            modelId: provider.modelId,
+            language,
+          });
+          setPlagiarismReport(scanRes);
+          setIsScanningPlagiarism(false);
+
+          const flagged = scanRes.matches.filter((m) => m.type !== 'clean');
+          if (flagged.length > 0) {
+            showToast(`🛡️ Guard: ${flagged.length} flagged sentence(s) found – auto-fixing…`, 'info');
+            await runAutoFix(scanRes);
+            showToast('🛡️ Guard: Document fully cleaned! Opening report…', 'success');
+          } else {
+            showToast(`🛡️ Guard: ${scanRes.originalityScore}% Original – all clear!`, 'success');
+          }
+          setShowPlagiarism(true);
+        } catch (scanErr: any) {
+          console.error('Guard auto-scan failed:', scanErr);
+          showToast('Guard scan failed – you can run plagiarism check manually.', 'error');
+        } finally {
+          setIsAutoScanRunning(false);
+          setIsScanningPlagiarism(false);
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────────
     } catch (err: any) {
       console.error('Paraphrase failed:', err);
       const errorMessage = apiClient.handleError(err);
@@ -352,16 +392,14 @@ export function Home() {
     }
   };
 
-  const handleAutoFixAll = async () => {
-    if (!plagiarismReport || !plagiarismReport.matches) return;
-    const flaggedItems = plagiarismReport.matches
+  // Core auto-fix logic – accepts a report so it can be called from the Guard pipeline
+  // or from the manual "Auto-Rewrite All Flagged" button
+  const runAutoFix = async (report: PlagiarismCheckResponse): Promise<void> => {
+    const flaggedItems = report.matches
       .map((m, idx) => ({ match: m, idx }))
       .filter((item) => item.match.type !== 'clean');
 
-    if (flaggedItems.length === 0) {
-      showToast('No flagged sentences to fix!', 'info');
-      return;
-    }
+    if (flaggedItems.length === 0) return;
 
     const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
     if (!provider) {
@@ -369,51 +407,65 @@ export function Home() {
       return;
     }
 
+    let currentDoc = useEditorStore.getState().outputText || inputText;
+    const updatedMatches = [...report.matches];
+
+    for (const { match, idx } of flaggedItems) {
+      try {
+        const res = await paraphraseService.paraphrase({
+          text: match.sentence,
+          mode: 'fluency',
+          language,
+          synonymLevel: 3,
+          frozenTerms: [],
+          providerId: provider.id,
+          modelId: provider.modelId,
+          plagiarismGuard: true,
+        });
+
+        const newSentence = res.text.trim();
+        if (newSentence && currentDoc.includes(match.sentence)) {
+          currentDoc = currentDoc.replace(match.sentence, newSentence);
+          updatedMatches[idx] = {
+            ...match,
+            sentence: newSentence,
+            type: 'clean',
+            similarity: 0,
+            explanation: 'Auto-rewritten for originality',
+          };
+        }
+      } catch (e) {
+        console.error('Failed to rewrite individual sentence in batch:', e);
+      }
+    }
+
+    const cleanCount = updatedMatches.filter((m) => m.type === 'clean').length;
+    const newOriginality = updatedMatches.length > 0 ? Math.round((cleanCount / updatedMatches.length) * 100) : 100;
+
+    setOutputText(currentDoc);
+    setPlagiarismReport({
+      ...report,
+      originalityScore: newOriginality,
+      plagiarismScore: 100 - newOriginality,
+      riskLevel: newOriginality >= 85 ? 'safe' : newOriginality >= 60 ? 'moderate' : 'high',
+      matches: updatedMatches,
+      sources: newOriginality === 100 ? [] : report.sources,
+    });
+    setSelectedMatchIndex(null);
+  };
+
+  const handleAutoFixAll = async () => {
+    if (!plagiarismReport || !plagiarismReport.matches) return;
+    const hasFlagged = plagiarismReport.matches.some((m) => m.type !== 'clean');
+    if (!hasFlagged) {
+      showToast('No flagged sentences to fix!', 'info');
+      return;
+    }
+
     try {
       setIsAutoFixingAll(true);
-      let currentDoc = outputText || inputText;
-      const updatedMatches = [...plagiarismReport.matches];
-
-      for (const { match, idx } of flaggedItems) {
-        try {
-          const res = await paraphraseService.paraphrase({
-            text: match.sentence,
-            mode: 'fluency',
-            language,
-            synonymLevel: 3,
-            frozenTerms: [],
-            providerId: provider.id,
-            modelId: provider.modelId,
-            plagiarismGuard: true,
-          });
-
-          const newSentence = res.text.trim();
-          if (newSentence && currentDoc.includes(match.sentence)) {
-            currentDoc = currentDoc.replace(match.sentence, newSentence);
-            updatedMatches[idx] = {
-              ...match,
-              sentence: newSentence,
-              type: 'clean',
-              similarity: 0,
-              explanation: 'Auto-rewritten for originality',
-            };
-          }
-        } catch (e) {
-          console.error('Failed to rewrite individual sentence in batch:', e);
-        }
-      }
-
-      setOutputText(currentDoc);
-      setPlagiarismReport({
-        ...plagiarismReport,
-        originalityScore: 100,
-        plagiarismScore: 0,
-        riskLevel: 'safe',
-        matches: updatedMatches,
-        sources: [],
-      });
-      setSelectedMatchIndex(null);
-      showToast('All flagged sentences rewritten in-place! Document is now 100% original.', 'success');
+      await runAutoFix(plagiarismReport);
+      showToast('All flagged sentences rewritten in-place! Document is now original.', 'success');
     } catch (err: any) {
       console.error('Auto-fix failed:', err);
       showToast(err.message || 'Auto-fix failed', 'error');
@@ -421,6 +473,7 @@ export function Home() {
       setIsAutoFixingAll(false);
     }
   };
+
 
   const modes = [
     { value: 'standard', label: 'Standard', desc: 'Balances changes with original meaning' },
@@ -1192,25 +1245,30 @@ export function Home() {
 
             <button
               onClick={handleParaphrase}
-              disabled={isGenerating || !inputText.trim()}
+              disabled={isGenerating || isAutoScanRunning || !inputText.trim()}
               className="touch-target"
               style={{
                 padding: '10px 28px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isGenerating || !inputText.trim() ? '#cbd5e1' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                background: isGenerating || isAutoScanRunning || !inputText.trim() ? '#cbd5e1' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: '#fff',
                 fontSize: '14px',
                 fontWeight: 600,
-                cursor: isGenerating || !inputText.trim() ? 'not-allowed' : 'pointer',
+                cursor: isGenerating || isAutoScanRunning || !inputText.trim() ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: isGenerating || !inputText.trim() ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.3)',
+                boxShadow: isGenerating || isAutoScanRunning || !inputText.trim() ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.3)',
                 transition: 'all 0.15s ease',
               }}
             >
-              {isGenerating ? (
+              {isAutoScanRunning ? (
+                <>
+                  <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                  <span>🛡️ Guard active…</span>
+                </>
+              ) : isGenerating ? (
                 <>
                   <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
                   <span>Paraphrasing...</span>
@@ -1353,6 +1411,28 @@ export function Home() {
               </div>
             )}
           </div>
+
+          {/* 🛡️ Guard Pipeline Status Banner */}
+          {isAutoScanRunning && (
+            <div
+              style={{
+                padding: '8px 20px',
+                background: '#f5f3ff',
+                borderBottom: '1px solid #c7d2fe',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: '#4338ca',
+              }}
+            >
+              <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: '#6d28d9', borderTopColor: 'transparent' }} />
+              {isScanningPlagiarism
+                ? '🛡️ Guard: Scanning for plagiarism…'
+                : '🛡️ Guard: Auto-fixing flagged sentences…'}
+            </div>
+          )}
 
           {/* Output Content Area */}
           <div
