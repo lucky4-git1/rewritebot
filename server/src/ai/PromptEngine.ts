@@ -5,34 +5,35 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced vocabulary changes and structural clause rearrangements while preserving its original meaning and key information. Vary the sentence architecture, clause order, and transitions without altering facts, names, or numbers.`,
+  standard: `Rewrite the following text with balanced clause rearrangement and syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, and refresh vocabulary without retaining the source sentence's exact template.`,
 
-  fluency: `Improve the grammatical flow, sentence structure, and coherence of the following text. Focus on:
-- Reorganizing clause order and sentence structure for natural cadence
-- Varied sentence transitions and openings
-- Eliminating awkward phrasing, repetition, and passive monotony
-- Smooth, professional readability
+  fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text. Focus on:
+- Reorganizing clause order and sentence structure for natural human cadence
+- Inverting dependent and independent clauses where it enhances readability
+- Fronting transitional modifiers and varied sentence openings
+- Eliminating awkward phrasing, word repetition, and monotonous rhythm
 Preserve all factual information, names, numbers, and technical terms.`,
 
-  humanize: `Rewrite the following text with human-like structural variety and dynamic cadence. Use:
-- Varied sentence lengths (mix punchy short statements with compound clauses)
-- Alternating clause structures and natural human discourse flow
-- Natural transitions and conversational clarity
-Keep all facts, names, numbers, and technical terms unchanged.`,
+  humanize: `Rewrite the following text with deep sentence-level variety to sound naturally authored and defeat AI detectors. Use:
+- Dramatic sentence length variation (mix punchy 5-word statements with compound thoughts)
+- Inverted conversational clause structures and natural human cadence
+- Asymmetric discourse connectors and organic flow
+- Never preserve the robotic word-for-word sentence structure of the source
+Keep all facts, names, numbers, and technical terms intact.`,
 
-  formal: `Rewrite the following text in an authoritative, sophisticated professional style. Restructure sentences to use polished syntax, formal transitions, and elevated grammatical construction while preserving all original facts and information.`,
+  formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, and polished formal transitions while preserving all original facts.`,
 
-  academic: `Rewrite the following text in an academic scholarly style. Reframe sentences using precise syntactic structure, scholarly discourse markers, and clear conceptual hierarchy. Do not invent references or alter data.`,
+  academic: `Rewrite the following text in a scholarly peer-reviewed academic style. Reframe sentences by fronting evidence, condition, or methodology clauses, utilizing syntactic nominalization, and synthesizing conceptual relationships with varied sentence architecture.`,
 
-  simple: `Simplify the following text to make it effortless to read. Restructure complex, convoluted clauses into clean, direct sentences with clear subject-verb order while keeping meaning accurate.`,
+  simple: `Simplify the following text to make it effortless to understand. Break convoluted, nested clauses into clean, direct sentences with clear subject-verb order, and reorder ideas chronologically or logically while keeping meaning accurate.`,
 
-  creative: `Rewrite the following text with expressive, imaginative phrasing and dynamic sentence pacing. Vary syntax, use engaging sentence rhythms, and employ descriptive clause structures while preserving the core meaning.`,
+  creative: `Rewrite the following text with expressive, imaginative phrasing and dynamic sentence pacing. Radically vary sentence rhythms, restructure narrative clause order, and employ evocative syntactic flow while preserving core meaning.`,
 
-  expand: `Expand the following text with contextual detail, descriptive nuance, and elaborated sentence structures without inventing unsupported claims.`,
+  expand: `Expand the following text with contextual nuance, explanatory depth, and elaborated sentence structures without inventing unsupported claims. Combine ideas into sophisticated compound-complex sentences.`,
 
-  shorten: `Condense the following text into concise, high-impact phrasing. Merge redundant clauses and strip filler while keeping every essential fact and meaning.`,
+  shorten: `Condense the following text into high-impact, concise sentences. Merge redundant clauses, eliminate filler, and invert syntax for maximal economy of language while keeping every essential fact.`,
 
-  custom: `Follow these instructions to rewrite the text:
+  custom: `Follow these instructions to rewrite the text with full sentence restructuring:
 
 {customInstruction}`,
 };
@@ -48,7 +49,7 @@ export class PromptEngine {
     const parts: string[] = [];
 
     // System-level instructions
-    parts.push('You are an AI writing assistant. Your task is to rewrite text according to specific instructions.');
+    parts.push('You are an expert AI paraphrasing and rewriting engine. Your primary objective is to rewrite text by fundamentally restructuring its sentence syntax and clause architecture.');
     parts.push('');
 
     // Mode-specific instructions
@@ -57,15 +58,28 @@ export class PromptEngine {
     parts.push('');
 
     // QuillBot-grade Syntactic & Structural Restructuring Directive
-    parts.push('SYNTACTIC & CLAUSE RESTRUCTURING DIRECTIVE:');
-    parts.push('- Do NOT merely replace words with synonyms in-place (patchwriting).');
-    parts.push('- Actively restructure the sentence syntax and grammar:');
-    parts.push('  * Invert dependent and independent clauses (e.g. lead with conditions, results, or contextual clauses).');
-    parts.push('  * Shift between active and passive constructions where natural to improve flow.');
-    parts.push('  * Combine short, choppy sentences into compound clauses, or split long run-on sentences into crisp units.');
-    parts.push('  * Re-position adverbial modifiers, prepositional phrases, and transitional discourse connectors.');
-    parts.push('  * Vary sentence openings (use participial phrases, prepositional openers, or dependent clause starters).');
-    parts.push('- Retain 100% of factual accuracy, numbers, proper nouns, and core semantic meaning.');
+    parts.push('MANDATORY SENTENCE-LEVEL STRUCTURAL RESTRUCTURING DIRECTIVE:');
+    parts.push('You must transform the grammatical architecture and clause order of every sentence. Do NOT perform 1:1 word-for-word synonym swapping.');
+    parts.push('');
+    parts.push('NEGATIVE CONSTRAINT (DO NOT DO THIS - LAZY PATCHWRITING):');
+    parts.push('Input: "Because the storm caused severe flooding, the city council decided to evacuate the coastal residents."');
+    parts.push('Bad output: "Since the tempest produced intense inundation, the town board resolved to relocate the seaside inhabitants."');
+    parts.push('Error: Every word was merely substituted in the exact same grammatical slot. This is lazy patchwriting.');
+    parts.push('');
+    parts.push('POSITIVE DEMONSTRATIONS (MANDATORY SENTENCE RESTRUCTURING):');
+    parts.push('- Clause Inversion (Flip order of clauses):');
+    parts.push('  "The city council evacuated coastal residents after severe flooding struck the area."');
+    parts.push('- Voice & Subject Inversion (Object/Causal phrase becomes subject):');
+    parts.push('  "Severe coastal flooding prompted municipal leaders to order an immediate evacuation."');
+    parts.push('- Fronted Prepositional / Participial Opener:');
+    parts.push('  "Following catastrophic flooding from the storm, coastal residents were swiftly evacuated by local officials."');
+    parts.push('');
+    parts.push('RULES FOR EVERY SENTENCE:');
+    parts.push('1. Clause Reordering: If a sentence contains two or more clauses, invert their sequence or front the conditional/purpose clause.');
+    parts.push('2. Subject Transformation: Change the grammatical subject of the sentence where natural (e.g. active <-> passive voice, or nominalize verbs).');
+    parts.push('3. Dynamic Sentence Length: Combine choppy sentences into compound structures, or divide verbose run-on sentences into crisp, punchy ideas.');
+    parts.push('4. Varied Openings: Never start consecutive sentences with the same word or syntactic structure.');
+    parts.push('5. 100% Fact & Semantic Preservation: Keep all numbers, proper nouns, facts, and underlying intent completely accurate.');
     parts.push('');
 
     // Synonym level instructions
