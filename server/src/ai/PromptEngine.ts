@@ -2,36 +2,35 @@ import { AIRequest, ParaphraseMode } from '@rewritebot/shared';
 import { PARAPHRASE_MODES } from '@rewritebot/shared';
 
 /**
- * Prompt templates for different modes
+ * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text while preserving its original meaning and key information. Make it clear and natural, but avoid unnecessary changes to facts, names, numbers, or technical terms.`,
+  standard: `Rewrite the following text with balanced vocabulary changes and structural clause rearrangements while preserving its original meaning and key information. Vary the sentence architecture, clause order, and transitions without altering facts, names, or numbers.`,
 
-  fluency: `Improve the fluency and readability of the following text. Focus on:
-- Grammar and sentence structure
-- Natural flow and transitions
-- Clear expression
-- Professional tone
+  fluency: `Improve the grammatical flow, sentence structure, and coherence of the following text. Focus on:
+- Reorganizing clause order and sentence structure for natural cadence
+- Varied sentence transitions and openings
+- Eliminating awkward phrasing, repetition, and passive monotony
+- Smooth, professional readability
 Preserve all factual information, names, numbers, and technical terms.`,
 
-  humanize: `Rewrite the following text to sound more natural and human. Use:
-- Varied sentence structures
-- Natural transitions
-- Appropriate vocabulary
-- Clear and engaging expression
+  humanize: `Rewrite the following text with human-like structural variety and dynamic cadence. Use:
+- Varied sentence lengths (mix punchy short statements with compound clauses)
+- Alternating clause structures and natural human discourse flow
+- Natural transitions and conversational clarity
 Keep all facts, names, numbers, and technical terms unchanged.`,
 
-  formal: `Rewrite the following text in a formal, professional style. Use formal language and structure while preserving all original meaning and information.`,
+  formal: `Rewrite the following text in an authoritative, sophisticated professional style. Restructure sentences to use polished syntax, formal transitions, and elevated grammatical construction while preserving all original facts and information.`,
 
-  academic: `Rewrite the following text in an academic style appropriate for research papers and scholarly work. Use precise, formal language. Do not invent references, citations, or facts. Preserve all existing information accurately.`,
+  academic: `Rewrite the following text in an academic scholarly style. Reframe sentences using precise syntactic structure, scholarly discourse markers, and clear conceptual hierarchy. Do not invent references or alter data.`,
 
-  simple: `Simplify the following text to make it easier to understand. Use simpler vocabulary and shorter sentences while keeping the meaning accurate.`,
+  simple: `Simplify the following text to make it effortless to read. Restructure complex, convoluted clauses into clean, direct sentences with clear subject-verb order while keeping meaning accurate.`,
 
-  creative: `Rewrite the following text with more creative and engaging expression. Use varied language and stylistic flourishes while preserving the core meaning and all factual information.`,
+  creative: `Rewrite the following text with expressive, imaginative phrasing and dynamic sentence pacing. Vary syntax, use engaging sentence rhythms, and employ descriptive clause structures while preserving the core meaning.`,
 
-  expand: `Expand the following text with useful detail and elaboration. Add explanatory content and context where appropriate, but do not invent unsupported facts or claims.`,
+  expand: `Expand the following text with contextual detail, descriptive nuance, and elaborated sentence structures without inventing unsupported claims.`,
 
-  shorten: `Condense the following text to be more concise. Remove redundancy and unnecessary words while keeping all key information and meaning.`,
+  shorten: `Condense the following text into concise, high-impact phrasing. Merge redundant clauses and strip filler while keeping every essential fact and meaning.`,
 
   custom: `Follow these instructions to rewrite the text:
 
@@ -55,6 +54,18 @@ export class PromptEngine {
     // Mode-specific instructions
     const modePrompt = this.getModePrompt(request.mode, request.customInstruction);
     parts.push(modePrompt);
+    parts.push('');
+
+    // QuillBot-grade Syntactic & Structural Restructuring Directive
+    parts.push('SYNTACTIC & CLAUSE RESTRUCTURING DIRECTIVE:');
+    parts.push('- Do NOT merely replace words with synonyms in-place (patchwriting).');
+    parts.push('- Actively restructure the sentence syntax and grammar:');
+    parts.push('  * Invert dependent and independent clauses (e.g. lead with conditions, results, or contextual clauses).');
+    parts.push('  * Shift between active and passive constructions where natural to improve flow.');
+    parts.push('  * Combine short, choppy sentences into compound clauses, or split long run-on sentences into crisp units.');
+    parts.push('  * Re-position adverbial modifiers, prepositional phrases, and transitional discourse connectors.');
+    parts.push('  * Vary sentence openings (use participial phrases, prepositional openers, or dependent clause starters).');
+    parts.push('- Retain 100% of factual accuracy, numbers, proper nouns, and core semantic meaning.');
     parts.push('');
 
     // Synonym level instructions

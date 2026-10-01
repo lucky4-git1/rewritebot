@@ -168,6 +168,7 @@ export interface DiffToken {
 }
 
 const STRUCTURAL_MARKERS = new Set([
+  // Discourse transitions & logical conjunctions
   'furthermore', 'moreover', 'however', 'although', 'whereas', 'consequently',
   'therefore', 'nevertheless', 'nonetheless', 'meanwhile', 'subsequently',
   'accordingly', 'conversely', 'incidentally', 'specifically', 'namely',
@@ -176,15 +177,24 @@ const STRUCTURAL_MARKERS = new Set([
   'because', 'since', 'while', 'whilst', 'unless', 'though',
   'despite', 'regarding', 'concerning', 'provided', 'assuming',
   'leading', 'resulting', 'causing', 'enabling', 'allowing',
-  'which', 'whose', 'where', 'thereby', 'in order to'
+  'which', 'whose', 'where', 'thereby', 'in order to',
+
+  // Syntactic prepositions & relational binders
+  'through', 'throughout', 'across', 'within', 'along', 'amid', 'amidst',
+  'via', 'among', 'between', 'against', 'towards', 'upon', 'onto',
+  'beyond', 'besides', 'except', 'in spite of',
+
+  // Passive voice & grammatical restructuring auxiliaries
+  'was', 'were', 'been', 'being', 'having',
+  'by', 'became', 'become', 'served', 'acted'
 ]);
 
 /**
  * Tokenize text into words and punctuation with QuillBot-style 3-color diffing:
  * - 🟡 changed: Vocabulary / synonym replacement
  * - 🔵 longest-unchanged: Verbatim preserved multi-word sequences from original
- * - 🔴 structural: Syntax rearrangement, newly inserted clause connectors / transitions
- * - unchanged: Neutral isolated punctuation & common filler
+ * - 🔴 structural: Syntax rearrangement, clause inversion, relocated tokens, auxiliary shifts
+ * - unchanged: Neutral isolated punctuation & preserved words
  */
 export function computeWordDiff(original: string, modified: string): DiffToken[] {
   if (!original.trim() || !modified.trim()) {
@@ -198,21 +208,31 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
   const origSet = new Set(origWords);
   const origWordString = ' ' + origWords.join(' ') + ' ';
 
+  // Map each original word to its relative positions (0.0 to 1.0)
+  const origWordPositions = new Map<string, number[]>();
+  origWords.forEach((w, i) => {
+    const list = origWordPositions.get(w) || [];
+    list.push(origWords.length > 1 ? i / (origWords.length - 1) : 0);
+    origWordPositions.set(w, list);
+  });
+
   // Split modified text keeping whitespace and punctuation
   const tokens = modified.split(/(\s+|[^\w\s'-]+)/);
 
   // Extract clean word tokens with their indices
   interface WordInfo {
     tokenIndex: number;
+    wordOrderIndex: number;
     clean: string;
   }
   const wordTokens: WordInfo[] = [];
 
+  let wordCount = 0;
   tokens.forEach((token, index) => {
     if (!/^\s+$/.test(token) && !/^[^\w\s'-]+$/.test(token) && token) {
       const clean = token.toLowerCase().replace(/^[^\w]+|[^\w]+$/g, '');
       if (clean) {
-        wordTokens.push({ tokenIndex: index, clean });
+        wordTokens.push({ tokenIndex: index, wordOrderIndex: wordCount++, clean });
       }
     }
   });
@@ -236,6 +256,10 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     }
   }
 
+  // Map token index to word order index for position checking
+  const tokenToWordOrder = new Map<number, number>();
+  wordTokens.forEach((wt) => tokenToWordOrder.set(wt.tokenIndex, wt.wordOrderIndex));
+
   return tokens.map((token, index) => {
     // If whitespace or punctuation, return unchanged
     if (/^\s+$/.test(token) || /^[^\w\s'-]+$/.test(token) || !token) {
@@ -250,7 +274,7 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     const lookupKey = cleanWord;
     const synonyms = COMMON_SYNONYMS[lookupKey] || undefined;
 
-    // 1. 🔵 Longest Unchanged Words (preserved sequences)
+    // 1. 🔵 Longest Unchanged Words (preserved multi-word sequences)
     if (longestUnchangedTokens.has(index)) {
       return {
         text: token,
@@ -259,9 +283,9 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
       };
     }
 
-    // 2. Not present in original text
+    // 2. Newly inserted tokens (not in original text)
     if (!isPresentInOriginal) {
-      // Check if it's a structural connector / syntax modifier (🔴 Red)
+      // Check if it's a structural connector, voice shift, or syntax modifier (🔴 Red)
       if (STRUCTURAL_MARKERS.has(cleanWord)) {
         return {
           text: token,
@@ -270,7 +294,7 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
         };
       }
 
-      // Check if it replaces an original word with a synonym or content word (🟡 Yellow)
+      // Semantic content word / synonym substitution (🟡 Yellow)
       return {
         text: token,
         type: 'changed',
@@ -278,14 +302,33 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
       };
     }
 
-    // 3. Present in original, but single isolated occurrence
-    // If it's a structural connector that was re-positioned, mark as structural
+    // 3. Word was present in original text, but NOT part of an unchanged phrase sequence:
+    // Check if it is a structural marker that was retained/repositioned
     if (STRUCTURAL_MARKERS.has(cleanWord)) {
       return {
         text: token,
         type: 'structural',
         synonyms,
       };
+    }
+
+    // Check for Syntactic Relocation (Clause Inversion / Word Re-ordering):
+    // If this word moved significantly in relative position across sentences/clauses
+    const wordOrder = tokenToWordOrder.get(index);
+    if (wordOrder !== undefined && wordTokens.length > 2 && origWords.length > 2) {
+      const currentRatio = wordOrder / (wordTokens.length - 1);
+      const originalPositions = origWordPositions.get(cleanWord) || [];
+      // Check distance to closest original occurrence
+      const minDistance = Math.min(...originalPositions.map((pos) => Math.abs(pos - currentRatio)));
+      
+      // If moved across clauses (>= 28% shift in relative document flow)
+      if (minDistance >= 0.28) {
+        return {
+          text: token,
+          type: 'structural',
+          synonyms,
+        };
+      }
     }
 
     // Default neutral unchanged word
