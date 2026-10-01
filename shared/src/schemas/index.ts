@@ -66,6 +66,7 @@ export const paraphraseSchema = z.object({
   customInstruction: z.string().optional(),
   providerId: z.string().uuid(),
   modelId: z.string().min(1),
+  plagiarismGuard: z.boolean().optional().default(true),
   options: z
     .object({
       temperature: z.number().min(0).max(2).optional(),

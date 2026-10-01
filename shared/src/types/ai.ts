@@ -46,6 +46,7 @@ export interface AIRequest {
   customInstruction?: string;
   providerId: string;
   modelId: string;
+  plagiarismGuard?: boolean;
   options?: AIRequestOptions;
 }
 

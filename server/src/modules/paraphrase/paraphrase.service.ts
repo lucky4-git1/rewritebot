@@ -33,6 +33,7 @@ export class ParaphraseService {
         customInstruction: input.customInstruction,
         providerId: input.providerId,
         modelId: input.modelId,
+        plagiarismGuard: input.plagiarismGuard ?? true,
         options: input.options,
       };
 

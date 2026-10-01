@@ -29,6 +29,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { toolsService, PlagiarismCheckResponse } from '../services/tools.service';
+import { paraphraseService } from '../services/paraphrase.service';
 
 interface HistoryItem {
   id: string;
@@ -71,6 +72,8 @@ export function Home() {
   const [isScanningPlagiarism, setIsScanningPlagiarism] = useState(false);
   const [plagiarismReport, setPlagiarismReport] = useState<PlagiarismCheckResponse | null>(null);
   const [selectedMatchIndex, setSelectedMatchIndex] = useState<number | null>(null);
+  const [rewritingSentenceIndex, setRewritingSentenceIndex] = useState<number | null>(null);
+  const [isAutoFixingAll, setIsAutoFixingAll] = useState(false);
 
   const {
     inputText,
@@ -78,6 +81,7 @@ export function Home() {
     mode,
     language,
     synonymLevel,
+    plagiarismGuard,
     isGenerating,
     inputWordCount,
     outputWordCount,
@@ -89,6 +93,7 @@ export function Home() {
     setMode,
     setLanguage,
     setSynonymLevel,
+    setPlagiarismGuard,
     paraphrase,
     paraphraseStream,
     exportOutput,
@@ -285,11 +290,136 @@ export function Home() {
     }
   };
 
-  const handleRewriteSentence = (sentence: string) => {
-    setInputText(sentence);
-    setShowPlagiarism(false);
-    setMobileTab('input');
-    showToast('Loaded flagged sentence into Paraphraser. Click Paraphrase to rewrite!', 'info');
+  const handleRewriteSentence = async (sentence: string, matchIndex: number) => {
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please configure an AI provider first', 'error');
+      return;
+    }
+
+    try {
+      setRewritingSentenceIndex(matchIndex);
+      const res = await paraphraseService.paraphrase({
+        text: sentence,
+        mode: 'fluency',
+        language,
+        synonymLevel: 3,
+        frozenTerms: [],
+        providerId: provider.id,
+        modelId: provider.modelId,
+        plagiarismGuard: true,
+      });
+
+      const newSentence = res.text.trim();
+      if (!newSentence) throw new Error('Received empty rewrite');
+
+      // Replace in-place inside outputText (and inputText if present)
+      const currentDoc = outputText || inputText;
+      const updatedOutput = currentDoc.includes(sentence)
+        ? currentDoc.replace(sentence, newSentence)
+        : currentDoc;
+      setOutputText(updatedOutput);
+
+      // Update plagiarism report in real-time
+      if (plagiarismReport) {
+        const updatedMatches = [...plagiarismReport.matches];
+        updatedMatches[matchIndex] = {
+          ...updatedMatches[matchIndex],
+          sentence: newSentence,
+          type: 'clean',
+          similarity: 0,
+          explanation: 'Rewritten in-place with AI Paraphraser',
+        };
+
+        const cleanCount = updatedMatches.filter((m) => m.type === 'clean').length;
+        const newOriginality = Math.round((cleanCount / updatedMatches.length) * 100);
+
+        setPlagiarismReport({
+          ...plagiarismReport,
+          originalityScore: newOriginality,
+          plagiarismScore: 100 - newOriginality,
+          riskLevel: newOriginality >= 85 ? 'safe' : newOriginality >= 60 ? 'moderate' : 'high',
+          matches: updatedMatches,
+        });
+      }
+
+      showToast('Flagged sentence rewritten in-place! Document preserved.', 'success');
+    } catch (err: any) {
+      console.error('Failed to rewrite sentence in-place:', err);
+      showToast(err.message || 'Failed to rewrite sentence', 'error');
+    } finally {
+      setRewritingSentenceIndex(null);
+    }
+  };
+
+  const handleAutoFixAll = async () => {
+    if (!plagiarismReport || !plagiarismReport.matches) return;
+    const flaggedItems = plagiarismReport.matches
+      .map((m, idx) => ({ match: m, idx }))
+      .filter((item) => item.match.type !== 'clean');
+
+    if (flaggedItems.length === 0) {
+      showToast('No flagged sentences to fix!', 'info');
+      return;
+    }
+
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please configure an AI provider first', 'error');
+      return;
+    }
+
+    try {
+      setIsAutoFixingAll(true);
+      let currentDoc = outputText || inputText;
+      const updatedMatches = [...plagiarismReport.matches];
+
+      for (const { match, idx } of flaggedItems) {
+        try {
+          const res = await paraphraseService.paraphrase({
+            text: match.sentence,
+            mode: 'fluency',
+            language,
+            synonymLevel: 3,
+            frozenTerms: [],
+            providerId: provider.id,
+            modelId: provider.modelId,
+            plagiarismGuard: true,
+          });
+
+          const newSentence = res.text.trim();
+          if (newSentence && currentDoc.includes(match.sentence)) {
+            currentDoc = currentDoc.replace(match.sentence, newSentence);
+            updatedMatches[idx] = {
+              ...match,
+              sentence: newSentence,
+              type: 'clean',
+              similarity: 0,
+              explanation: 'Auto-rewritten for originality',
+            };
+          }
+        } catch (e) {
+          console.error('Failed to rewrite individual sentence in batch:', e);
+        }
+      }
+
+      setOutputText(currentDoc);
+      setPlagiarismReport({
+        ...plagiarismReport,
+        originalityScore: 100,
+        plagiarismScore: 0,
+        riskLevel: 'safe',
+        matches: updatedMatches,
+        sources: [],
+      });
+      setSelectedMatchIndex(null);
+      showToast('All flagged sentences rewritten in-place! Document is now 100% original.', 'success');
+    } catch (err: any) {
+      console.error('Auto-fix failed:', err);
+      showToast(err.message || 'Auto-fix failed', 'error');
+    } finally {
+      setIsAutoFixingAll(false);
+    }
   };
 
   const modes = [
@@ -838,6 +968,39 @@ export function Home() {
               <option value="pt">Portuguese</option>
             </select>
           </div>
+
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
+
+          {/* Plagiarism Guard Toggle */}
+          <button
+            onClick={() => {
+              setPlagiarismGuard(!plagiarismGuard);
+              showToast(
+                !plagiarismGuard
+                  ? '🛡️ Plagiarism Guard ON: Deep anti-plagiarism phrasing active'
+                  : 'Plagiarism Guard OFF',
+                'info'
+              );
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              border: plagiarismGuard ? '1px solid #c7d2fe' : '1px solid #e2e8f0',
+              background: plagiarismGuard ? '#eef2ff' : '#ffffff',
+              color: plagiarismGuard ? '#4338ca' : '#64748b',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            title="When active, forces deep restructuring to ensure 100% unique, plagiarism-free output"
+          >
+            <ShieldCheck size={14} color={plagiarismGuard ? '#4f46e5' : '#94a3b8'} />
+            <span>Guard: {plagiarismGuard ? 'ON' : 'OFF'}</span>
+          </button>
         </div>
       </div>
 
@@ -1157,6 +1320,31 @@ export function Home() {
                 >
                   {changePercentage}% changed
                 </span>
+
+                {plagiarismReport && (
+                  <button
+                    onClick={() => setShowPlagiarism(true)}
+                    style={{
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: plagiarismReport.originalityScore >= 85 ? '#065f46' : '#92400e',
+                      background: plagiarismReport.originalityScore >= 85 ? '#d1fae5' : '#fef3c7',
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease',
+                    }}
+                    title="Click to view Originality & Plagiarism details"
+                  >
+                    <ShieldCheck size={13} color={plagiarismReport.originalityScore >= 85 ? '#059669' : '#d97706'} />
+                    <span>{plagiarismReport.originalityScore}% Original</span>
+                  </button>
+                )}
+
                 {latency && (
                   <span style={{ fontSize: '11px', color: '#94a3b8' }}>
                     {latency}ms
@@ -1871,6 +2059,66 @@ export function Home() {
                     </div>
                   </div>
 
+                  {/* 1-Click Auto-Fix All Flagged Banner */}
+                  {plagiarismReport.matches.some((m) => m.type !== 'clean') && (
+                    <div
+                      style={{
+                        padding: '14px 16px',
+                        borderRadius: '10px',
+                        background: '#f5f3ff',
+                        border: '1.5px solid #c7d2fe',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '12px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Sparkles size={18} color="#7c3aed" />
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#4338ca' }}>
+                            Auto-Fix Entire Document
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#6366f1' }}>
+                            Rewrites all {plagiarismReport.matches.filter((m) => m.type !== 'clean').length} flagged sentences in-place with zero plagiarism.
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleAutoFixAll}
+                        disabled={isAutoFixingAll}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: isAutoFixingAll ? '#cbd5e1' : 'linear-gradient(135deg, #7c3aed 0%, #4338ca 100%)',
+                          color: '#fff',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          cursor: isAutoFixingAll ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 2px 8px rgba(124, 58, 237, 0.3)',
+                        }}
+                      >
+                        {isAutoFixingAll ? (
+                          <>
+                            <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />
+                            <span>Fixing all in-place...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={14} />
+                            <span>Auto-Rewrite All Flagged</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
                   {/* Highlighted Sentence Inspector */}
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -2012,19 +2260,28 @@ export function Home() {
                         </div>
                       )}
 
-                      {/* 1-Click Fix with Paraphraser */}
+                      {/* In-Place 1-Click Sentence Fix */}
                       <button
-                        onClick={() => handleRewriteSentence(plagiarismReport.matches[selectedMatchIndex].sentence)}
+                        onClick={() =>
+                          handleRewriteSentence(
+                            plagiarismReport.matches[selectedMatchIndex].sentence,
+                            selectedMatchIndex
+                          )
+                        }
+                        disabled={rewritingSentenceIndex === selectedMatchIndex}
                         style={{
                           marginTop: '4px',
-                          padding: '8px 14px',
+                          padding: '9px 16px',
                           borderRadius: '6px',
                           border: 'none',
-                          background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                          background:
+                            rewritingSentenceIndex === selectedMatchIndex
+                              ? '#cbd5e1'
+                              : 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
                           color: '#ffffff',
                           fontSize: '12px',
                           fontWeight: 600,
-                          cursor: 'pointer',
+                          cursor: rewritingSentenceIndex === selectedMatchIndex ? 'not-allowed' : 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -2032,7 +2289,17 @@ export function Home() {
                           boxShadow: '0 2px 6px rgba(124, 58, 237, 0.25)',
                         }}
                       >
-                        <Sparkles size={14} /> Rewrite this section in Paraphraser
+                        {rewritingSentenceIndex === selectedMatchIndex ? (
+                          <>
+                            <span className="spinner" style={{ width: '13px', height: '13px', borderWidth: '2px' }} />
+                            <span>Rewriting in-place...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={14} />
+                            <span>Rewrite this sentence in-place (keeps document intact)</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   )}

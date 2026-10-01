@@ -61,6 +61,7 @@ export class ParaphraseController {
         language: input.language || 'auto',
         synonymLevel: input.synonymLevel ?? 2,
         frozenTerms: input.frozenTerms || [],
+        plagiarismGuard: input.plagiarismGuard ?? true,
         options: {
           ...input.options,
           signal: abortController.signal,
@@ -118,6 +119,7 @@ export class ParaphraseController {
       customInstruction: input.customInstruction,
       providerId: input.providerId,
       modelId: input.modelId,
+      plagiarismGuard: input.plagiarismGuard ?? true,
       options: {
         ...input.options,
         signal: streamAbortController.signal,

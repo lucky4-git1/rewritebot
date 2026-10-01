@@ -14,6 +14,7 @@ interface EditorState {
   language: string;
   frozenTerms: string[];
   customInstruction: string;
+  plagiarismGuard: boolean;
   
   // Generation state
   isGenerating: boolean;
@@ -44,6 +45,7 @@ interface EditorState {
   removeFrozenTerm: (term: string) => void;
   clearFrozenTerms: () => void;
   setCustomInstruction: (instruction: string) => void;
+  setPlagiarismGuard: (guard: boolean) => void;
   
   // Generation
   paraphrase: (providerId: string, modelId: string) => Promise<any>;
@@ -72,6 +74,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   language: 'auto',
   frozenTerms: [],
   customInstruction: '',
+  plagiarismGuard: true,
   isGenerating: false,
   isStreaming: false,
   error: null,
@@ -115,9 +118,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setCustomInstruction: (instruction) => set({ customInstruction: instruction }),
 
+  setPlagiarismGuard: (guard) => set({ plagiarismGuard: guard }),
+
   // Paraphrase (non-streaming)
   paraphrase: async (providerId, modelId) => {
-    const { inputText, mode, language, synonymLevel, frozenTerms, customInstruction } = get();
+    const { inputText, mode, language, synonymLevel, frozenTerms, customInstruction, plagiarismGuard } = get();
     
     if (!inputText.trim()) {
       const error = 'Please enter some text to paraphrase';
@@ -143,6 +148,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         customInstruction: customInstruction || undefined,
         providerId,
         modelId,
+        plagiarismGuard,
       }, signal);
 
       // Validate response has actual content
@@ -177,7 +183,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   // Paraphrase with streaming
   paraphraseStream: async (providerId, modelId) => {
-    const { inputText, mode, language, synonymLevel, frozenTerms, customInstruction } = get();
+    const { inputText, mode, language, synonymLevel, frozenTerms, customInstruction, plagiarismGuard } = get();
     
     if (!inputText.trim()) {
       set({ error: 'Please enter some text to paraphrase' });
@@ -204,6 +210,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         customInstruction: customInstruction || undefined,
         providerId,
         modelId,
+        plagiarismGuard,
       }, signal)) {
         if (chunk.type === 'token' && chunk.content) {
           accumulatedText += chunk.content;

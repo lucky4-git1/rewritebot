@@ -79,6 +79,14 @@ export class PromptEngine {
     parts.push('IMPORTANT: Return ONLY the rewritten text. Do not include explanations, notes, or meta-commentary.');
     parts.push('');
 
+    // Plagiarism Guard instructions (default active)
+    if (request.plagiarismGuard !== false) {
+      parts.push('ORIGINALITY & ANTI-PLAGIARISM DIRECTIVE:');
+      parts.push('- Ensure the output text is completely original with zero verbatim plagiarism or patchwriting.');
+      parts.push('- Reorganize clause order, vary syntax structures, and substitute fresh vocabulary while preserving 100% of facts and meaning.');
+      parts.push('');
+    }
+
     // Input text
     parts.push('TEXT TO REWRITE:');
     parts.push('---');
