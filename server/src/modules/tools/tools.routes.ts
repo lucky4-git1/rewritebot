@@ -47,4 +47,11 @@ export async function toolsRoutes(fastify: FastifyInstance) {
   }, async (request, reply) => {
     return controller.generateCitation(request as any, reply);
   });
+
+  // Plagiarism check
+  fastify.post('/plagiarism', {
+    preHandler: [apiRateLimit],
+  }, async (request, reply) => {
+    return controller.checkPlagiarism(request as any, reply);
+  });
 }

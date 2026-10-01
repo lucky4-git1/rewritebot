@@ -109,7 +109,8 @@ export type ToolOperation =
   | 'humanize'
   | 'summarize'
   | 'translate'
-  | 'cite';
+  | 'cite'
+  | 'plagiarism';
 
 export type CitationStyle = 
   | 'apa'
@@ -215,6 +216,46 @@ export interface CitationResponse {
   citation: string;
   inText: string;
   style: CitationStyle;
+  provider: string;
+  model: string;
+  latency: number;
+}
+
+export interface PlagiarismCheckRequest {
+  text: string;
+  providerId: string;
+  modelId: string;
+  language?: string;
+}
+
+export interface PlagiarismMatch {
+  sentence: string;
+  type: 'exact' | 'paraphrased' | 'clean';
+  similarity: number; // 0-100
+  sourceUrl?: string;
+  sourceTitle?: string;
+  startIndex?: number;
+  endIndex?: number;
+  explanation?: string;
+}
+
+export interface PlagiarismSource {
+  title: string;
+  url: string;
+  domain: string;
+  snippet?: string;
+  similarity: number; // 0-100
+  matchCount: number;
+}
+
+export interface PlagiarismCheckResponse {
+  originalityScore: number; // 0-100
+  plagiarismScore: number;  // 0-100
+  riskLevel: 'safe' | 'moderate' | 'high';
+  matches: PlagiarismMatch[];
+  sources: PlagiarismSource[];
+  wordCount: number;
+  characterCount: number;
   provider: string;
   model: string;
   latency: number;

@@ -35,6 +35,13 @@ interface TranslateInput {
   modelId: string;
 }
 
+interface PlagiarismInput {
+  text: string;
+  language?: string;
+  providerId: string;
+  modelId: string;
+}
+
 export class ToolsService {
   /**
    * Grammar check and correction
@@ -341,6 +348,75 @@ export class ToolsService {
           statistics: {} as any,
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
         },
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Check plagiarism and originality
+   */
+  async checkPlagiarism(userId: string, input: PlagiarismInput) {
+    const startTime = Date.now();
+
+    try {
+      const response = await aiOrchestrator.checkPlagiarism({
+        text: input.text,
+        providerId: input.providerId,
+        modelId: input.modelId,
+        language: input.language || 'auto',
+      });
+
+      const latency = Date.now() - startTime;
+      const statistics = calculateStatistics(input.text, '');
+
+      // Asynchronously record in history (fire and forget)
+      prisma.historyEvent.create({
+        data: {
+          userId,
+          operation: 'plagiarism',
+          mode: `${response.originalityScore}%-original`,
+          providerId: input.providerId,
+          modelId: input.modelId,
+          input: input.text,
+          output: JSON.stringify({
+            originalityScore: response.originalityScore,
+            plagiarismScore: response.plagiarismScore,
+            riskLevel: response.riskLevel,
+            matchCount: response.matches.length,
+            sourcesCount: response.sources.length,
+          }),
+          success: true,
+          latency,
+          statistics: statistics as any,
+        },
+      }).catch((err) => {
+        logger.error('Failed to record plagiarism check history:', err);
+      });
+
+      logger.info(`Plagiarism check completed for user ${userId}, originality: ${response.originalityScore}%`);
+
+      return response;
+    } catch (error) {
+      const latency = Date.now() - startTime;
+
+      prisma.historyEvent.create({
+        data: {
+          userId,
+          operation: 'plagiarism',
+          mode: 'failed',
+          providerId: input.providerId,
+          modelId: input.modelId,
+          input: input.text,
+          output: '',
+          success: false,
+          latency,
+          statistics: {} as any,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        },
+      }).catch((err) => {
+        logger.error('Failed to record failed plagiarism check history:', err);
       });
 
       throw error;

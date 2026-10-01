@@ -44,7 +44,7 @@ const envSchema = z.object({
   TRANSLATOR_ENABLED: z.string().transform(v => v === 'true').default('true'),
   CITATIONS_ENABLED: z.string().transform(v => v === 'true').default('true'),
   AI_DETECTOR_ENABLED: z.string().transform(v => v === 'true').default('true'),
-  PLAGIARISM_ENABLED: z.string().transform(v => v === 'true').default('false'),
+  PLAGIARISM_ENABLED: z.string().transform(v => v === 'true').default('true'),
   
   // Logging
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),

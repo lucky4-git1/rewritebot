@@ -1,4 +1,17 @@
 import { apiClient } from './api';
+import {
+  PlagiarismCheckRequest,
+  PlagiarismCheckResponse,
+  PlagiarismMatch,
+  PlagiarismSource,
+} from '@rewritebot/shared';
+
+export type {
+  PlagiarismCheckRequest,
+  PlagiarismCheckResponse,
+  PlagiarismMatch,
+  PlagiarismSource,
+};
 
 export interface GrammarCheckRequest {
   text: string;
@@ -104,6 +117,10 @@ class ToolsService {
 
   async generateCitation(request: CitationRequest): Promise<CitationResponse> {
     return apiClient.post<CitationResponse>('/tools/cite', request);
+  }
+
+  async checkPlagiarism(request: PlagiarismCheckRequest): Promise<PlagiarismCheckResponse> {
+    return apiClient.post<PlagiarismCheckResponse>('/tools/plagiarism', request);
   }
 }
 

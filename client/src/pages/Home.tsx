@@ -25,7 +25,10 @@ import {
   Menu,
   X,
   ArrowLeft,
+  ShieldCheck,
+  ExternalLink,
 } from 'lucide-react';
+import { toolsService, PlagiarismCheckResponse } from '../services/tools.service';
 
 interface HistoryItem {
   id: string;
@@ -64,6 +67,10 @@ export function Home() {
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(null);
   const [thesaurusPos, setThesaurusPos] = useState<{ top: number; left: number } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [showPlagiarism, setShowPlagiarism] = useState(false);
+  const [isScanningPlagiarism, setIsScanningPlagiarism] = useState(false);
+  const [plagiarismReport, setPlagiarismReport] = useState<PlagiarismCheckResponse | null>(null);
+  const [selectedMatchIndex, setSelectedMatchIndex] = useState<number | null>(null);
 
   const {
     inputText,
@@ -240,6 +247,49 @@ export function Home() {
     setOutputText(reconstructed);
     setSelectedTokenIndex(null);
     showToast(`Replaced with "${newWord}"`, 'info');
+  };
+
+  const handleCheckPlagiarism = async () => {
+    const textToScan = outputText.trim() || inputText.trim();
+    if (!textToScan) {
+      showToast('Please enter or paraphrase some text to scan for plagiarism', 'info');
+      return;
+    }
+
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please configure an AI provider in Providers settings', 'error');
+      navigate('/providers');
+      return;
+    }
+
+    try {
+      setShowPlagiarism(true);
+      setIsScanningPlagiarism(true);
+      setSelectedMatchIndex(null);
+
+      const res = await toolsService.checkPlagiarism({
+        text: textToScan,
+        providerId: provider.id,
+        modelId: provider.modelId,
+        language,
+      });
+
+      setPlagiarismReport(res);
+      showToast(`Plagiarism scan complete! ${res.originalityScore}% Original`, 'success');
+    } catch (err: any) {
+      console.error('Plagiarism check error:', err);
+      showToast(err.message || 'Plagiarism scan failed. Check provider credentials.', 'error');
+    } finally {
+      setIsScanningPlagiarism(false);
+    }
+  };
+
+  const handleRewriteSentence = (sentence: string) => {
+    setInputText(sentence);
+    setShowPlagiarism(false);
+    setMobileTab('input');
+    showToast('Loaded flagged sentence into Paraphraser. Click Paraphrase to rewrite!', 'info');
   };
 
   const modes = [
@@ -1329,6 +1379,29 @@ export function Home() {
               </button>
 
               <button
+                onClick={handleCheckPlagiarism}
+                disabled={!outputText && !inputText.trim()}
+                title="Scan text for plagiarism and originality"
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: '6px',
+                  border: '1px solid #c7d2fe',
+                  background: '#eef2ff',
+                  color: '#4338ca',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: outputText || inputText.trim() ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <ShieldCheck size={15} color="#4f46e5" />
+                <span>Plagiarism</span>
+              </button>
+
+              <button
                 onClick={handleParaphrase}
                 disabled={!inputText.trim() || isGenerating}
                 title="Paraphrase again"
@@ -1570,6 +1643,490 @@ export function Home() {
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Plagiarism Checker Slide-Over Drawer */}
+        {showPlagiarism && (
+          <div
+            className="plagiarism-drawer-responsive animate-slide-in-right"
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              background: '#ffffff',
+              borderLeft: '1px solid #e2e8f0',
+              boxShadow: '-4px 0 25px rgba(0,0,0,0.12)',
+              zIndex: 310,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {/* Drawer Header */}
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid #e2e8f0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: '#faf5ff',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px', color: '#581c87' }}>
+                <ShieldCheck size={20} color="#7c3aed" /> Originality & Plagiarism Report
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={handleCheckPlagiarism}
+                  disabled={isScanningPlagiarism}
+                  title="Scan again"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #ddd6fe',
+                    background: '#fff',
+                    color: '#6d28d9',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    cursor: isScanningPlagiarism ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <RotateCw size={13} className={isScanningPlagiarism ? 'animate-spin' : ''} />
+                  <span>Re-scan</span>
+                </button>
+                <button
+                  onClick={() => setShowPlagiarism(false)}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px', padding: '4px' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Drawer Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {isScanningPlagiarism ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                  <div
+                    className="spinner"
+                    style={{ width: '40px', height: '40px', borderWidth: '3px', borderColor: '#7c3aed', borderTopColor: 'transparent' }}
+                  />
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>
+                    Scanning text for plagiarism...
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#64748b', maxWidth: '320px', lineHeight: 1.5 }}>
+                    Analyzing sentence structures, academic borrows, and matching against indexed web publications.
+                  </div>
+                </div>
+              ) : plagiarismReport ? (
+                <>
+                  {/* Score Card Banner */}
+                  <div
+                    style={{
+                      padding: '18px',
+                      borderRadius: '12px',
+                      background:
+                        plagiarismReport.riskLevel === 'safe'
+                          ? 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)'
+                          : plagiarismReport.riskLevel === 'moderate'
+                          ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)'
+                          : 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                      border: `1.5px solid ${
+                        plagiarismReport.riskLevel === 'safe'
+                          ? '#a7f3d0'
+                          : plagiarismReport.riskLevel === 'moderate'
+                          ? '#fde68a'
+                          : '#fecaca'
+                      }`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '20px',
+                    }}
+                  >
+                    {/* Circular Score Badge */}
+                    <div
+                      style={{
+                        width: '74px',
+                        height: '74px',
+                        borderRadius: '50%',
+                        background: '#ffffff',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                        border: `3px solid ${
+                          plagiarismReport.riskLevel === 'safe'
+                            ? '#10b981'
+                            : plagiarismReport.riskLevel === 'moderate'
+                            ? '#f59e0b'
+                            : '#ef4444'
+                        }`,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '20px',
+                          fontWeight: 800,
+                          color:
+                            plagiarismReport.riskLevel === 'safe'
+                              ? '#059669'
+                              : plagiarismReport.riskLevel === 'moderate'
+                              ? '#d97706'
+                              : '#dc2626',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {plagiarismReport.originalityScore}%
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                        ORIGINAL
+                      </div>
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <span
+                          style={{
+                            padding: '3px 10px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            background:
+                              plagiarismReport.riskLevel === 'safe'
+                                ? '#d1fae5'
+                                : plagiarismReport.riskLevel === 'moderate'
+                                ? '#fef3c7'
+                                : '#fee2e2',
+                            color:
+                              plagiarismReport.riskLevel === 'safe'
+                                ? '#065f46'
+                                : plagiarismReport.riskLevel === 'moderate'
+                                ? '#92400e'
+                                : '#991b1b',
+                          }}
+                        >
+                          {plagiarismReport.riskLevel === 'safe'
+                            ? '✓ Clean / Original'
+                            : plagiarismReport.riskLevel === 'moderate'
+                            ? '⚠ Moderate Similarity'
+                            : '✕ High Plagiarism Risk'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#334155', lineHeight: 1.4 }}>
+                        {plagiarismReport.riskLevel === 'safe'
+                          ? 'Great job! Your text shows very high originality and is safe for academic or publication use.'
+                          : plagiarismReport.riskLevel === 'moderate'
+                          ? 'Some phrases or structures overlap with existing publications. Consider rephrasing flagged sections.'
+                          : 'Significant text similarity detected. Rephrasing is strongly recommended to avoid plagiarism.'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats Grid */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Words Checked</div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
+                        {plagiarismReport.wordCount}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Flagged Parts</div>
+                      <div
+                        style={{
+                          fontSize: '16px',
+                          fontWeight: 700,
+                          color: plagiarismReport.matches.filter((m) => m.type !== 'clean').length > 0 ? '#d97706' : '#059669',
+                          marginTop: '2px',
+                        }}
+                      >
+                        {plagiarismReport.matches.filter((m) => m.type !== 'clean').length}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Sources Matched</div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
+                        {plagiarismReport.sources.length}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Highlighted Sentence Inspector */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
+                        Sentence-by-Sentence Breakdown
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        Click flagged sentences to view details & fix
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: '14px',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        background: '#ffffff',
+                        fontSize: '14px',
+                        lineHeight: '1.8',
+                        color: '#1e293b',
+                        maxHeight: '260px',
+                        overflowY: 'auto',
+                      }}
+                    >
+                      {plagiarismReport.matches && plagiarismReport.matches.length > 0 ? (
+                        plagiarismReport.matches.map((match, idx) => {
+                          const isFlagged = match.type !== 'clean';
+                          const isExact = match.type === 'exact';
+                          const isSelected = selectedMatchIndex === idx;
+
+                          return (
+                            <span
+                              key={idx}
+                              onClick={() => setSelectedMatchIndex(idx)}
+                              style={{
+                                display: 'inline',
+                                background: isSelected
+                                  ? '#ddd6fe'
+                                  : isExact
+                                  ? '#fee2e2'
+                                  : isFlagged
+                                  ? '#fef3c7'
+                                  : 'transparent',
+                                color: isExact ? '#991b1b' : isFlagged ? '#92400e' : 'inherit',
+                                borderBottom: isExact
+                                  ? '2px solid #ef4444'
+                                  : isFlagged
+                                  ? '2px dashed #f59e0b'
+                                  : 'none',
+                                cursor: isFlagged ? 'pointer' : 'text',
+                                padding: isFlagged ? '1px 3px' : '0',
+                                borderRadius: isFlagged ? '3px' : '0',
+                                fontWeight: isFlagged ? 500 : 400,
+                                marginRight: '4px',
+                                transition: 'background 0.15s ease',
+                              }}
+                              title={
+                                isFlagged
+                                  ? `${match.type.toUpperCase()}: ${match.similarity}% match. Click to inspect.`
+                                  : 'Original'
+                              }
+                            >
+                              {match.sentence}{' '}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <div style={{ color: '#64748b' }}>No sentence breakdown available.</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Selected Match Action Box */}
+                  {selectedMatchIndex !== null && plagiarismReport.matches[selectedMatchIndex] && (
+                    <div
+                      style={{
+                        padding: '14px',
+                        borderRadius: '8px',
+                        border: '1.5px solid #c7d2fe',
+                        background: '#f5f3ff',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            background:
+                              plagiarismReport.matches[selectedMatchIndex].type === 'exact'
+                                ? '#fee2e2'
+                                : plagiarismReport.matches[selectedMatchIndex].type === 'paraphrased'
+                                ? '#fef3c7'
+                                : '#d1fae5',
+                            color:
+                              plagiarismReport.matches[selectedMatchIndex].type === 'exact'
+                                ? '#991b1b'
+                                : plagiarismReport.matches[selectedMatchIndex].type === 'paraphrased'
+                                ? '#92400e'
+                                : '#065f46',
+                          }}
+                        >
+                          {plagiarismReport.matches[selectedMatchIndex].type === 'exact'
+                            ? 'Exact Match'
+                            : plagiarismReport.matches[selectedMatchIndex].type === 'paraphrased'
+                            ? 'Paraphrased / Patchwriting'
+                            : 'Original Phrasing'}
+                          {' • '}
+                          {plagiarismReport.matches[selectedMatchIndex].similarity}% Similarity
+                        </span>
+
+                        <button
+                          onClick={() => setSelectedMatchIndex(null)}
+                          style={{ border: 'none', background: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div style={{ fontSize: '13px', fontStyle: 'italic', color: '#334155' }}>
+                        "{plagiarismReport.matches[selectedMatchIndex].sentence}"
+                      </div>
+
+                      {plagiarismReport.matches[selectedMatchIndex].explanation && (
+                        <div style={{ fontSize: '12px', color: '#475569' }}>
+                          <strong>Analysis:</strong> {plagiarismReport.matches[selectedMatchIndex].explanation}
+                        </div>
+                      )}
+
+                      {plagiarismReport.matches[selectedMatchIndex].sourceTitle && (
+                        <div style={{ fontSize: '12px', color: '#6d28d9', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <ExternalLink size={12} />
+                          <span>Likely Source: {plagiarismReport.matches[selectedMatchIndex].sourceTitle}</span>
+                        </div>
+                      )}
+
+                      {/* 1-Click Fix with Paraphraser */}
+                      <button
+                        onClick={() => handleRewriteSentence(plagiarismReport.matches[selectedMatchIndex].sentence)}
+                        style={{
+                          marginTop: '4px',
+                          padding: '8px 14px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                          color: '#ffffff',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          boxShadow: '0 2px 6px rgba(124, 58, 237, 0.25)',
+                        }}
+                      >
+                        <Sparkles size={14} /> Rewrite this section in Paraphraser
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Sources List */}
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>
+                      Identified Sources ({plagiarismReport.sources.length})
+                    </div>
+
+                    {plagiarismReport.sources && plagiarismReport.sources.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {plagiarismReport.sources.map((src, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              padding: '12px',
+                              borderRadius: '8px',
+                              border: '1px solid #e2e8f0',
+                              background: '#f8fafc',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '4px',
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span
+                                style={{
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  color: '#059669',
+                                  background: '#ecfdf5',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                }}
+                              >
+                                {src.domain || 'web source'}
+                              </span>
+                              <span style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>
+                                {src.similarity}% match
+                              </span>
+                            </div>
+
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+                              {src.title}
+                            </div>
+
+                            {src.snippet && (
+                              <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>
+                                "{src.snippet}"
+                              </div>
+                            )}
+
+                            {src.url && (
+                              <a
+                                href={src.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  fontSize: '11px',
+                                  color: '#6366f1',
+                                  textDecoration: 'none',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  marginTop: '2px',
+                                }}
+                              >
+                                View Source <ExternalLink size={10} />
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          padding: '16px',
+                          borderRadius: '8px',
+                          background: '#ecfdf5',
+                          border: '1px solid #a7f3d0',
+                          color: '#065f46',
+                          fontSize: '13px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        ✓ No matching external sources detected. Your text is original!
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 10px', color: '#94a3b8', fontSize: '14px' }}>
+                  No report yet. Click "Plagiarism" on the toolbar to scan your text.
                 </div>
               )}
             </div>

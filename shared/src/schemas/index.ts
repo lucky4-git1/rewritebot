@@ -109,6 +109,13 @@ export const translateSchema = z.object({
   modelId: z.string().min(1),
 });
 
+export const plagiarismCheckSchema = z.object({
+  text: z.string().min(1, 'Text is required').max(50000, 'Text is too long'),
+  providerId: z.string().uuid(),
+  modelId: z.string().min(1),
+  language: z.string().default('auto'),
+});
+
 // Document Schemas
 export const createDocumentSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
@@ -149,6 +156,7 @@ export type GrammarCheckInput = z.infer<typeof grammarCheckSchema>;
 export type HumanizeInput = z.infer<typeof humanizeSchema>;
 export type SummarizeInput = z.infer<typeof summarizeSchema>;
 export type TranslateInput = z.infer<typeof translateSchema>;
+export type PlagiarismCheckInput = z.infer<typeof plagiarismCheckSchema>;
 export type CreateDocumentInput = z.infer<typeof createDocumentSchema>;
 export type UpdateDocumentInput = z.infer<typeof updateDocumentSchema>;
 export type CreateCustomModeInput = z.infer<typeof createCustomModeSchema>;

@@ -7,6 +7,7 @@ import {
   humanizeSchema,
   summarizeSchema,
   translateSchema,
+  plagiarismCheckSchema,
 } from '@rewritebot/shared';
 import { z } from 'zod';
 
@@ -130,6 +131,25 @@ export class ToolsController {
       input.providerId,
       input.modelId
     );
+
+    successResponse(reply, result);
+  }
+
+  /**
+   * Check plagiarism and originality
+   * POST /api/v1/tools/plagiarism
+   */
+  async checkPlagiarism(
+    request: FastifyRequest<{ Body: unknown }>,
+    reply: FastifyReply
+  ): Promise<void> {
+    const userId = (request as any).user?.id;
+    const input = validateSchema(plagiarismCheckSchema, request.body);
+
+    const result = await this.toolsService.checkPlagiarism(userId, {
+      ...input,
+      language: input.language || 'auto',
+    });
 
     successResponse(reply, result);
   }
