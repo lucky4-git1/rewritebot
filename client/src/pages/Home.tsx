@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useEditorStore } from '../stores/editorStore';
 import { apiClient } from '../services/api';
-import { computeWordDiff, DiffToken } from '../utils/wordDiff';
+import { computeWordDiff, DiffToken, lookupSynonyms } from '../utils/wordDiff';
 import { ExportFormat, exportPlagiarismAuditPdf } from '../utils/export';
 import {
   Sparkles,
@@ -75,6 +75,9 @@ export function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(null);
   const [thesaurusPos, setThesaurusPos] = useState<{ top: number; left: number } | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string>('');
+  const [wordSynonyms, setWordSynonyms] = useState<string[]>([]);
+  const [isLoadingWordSynonyms, setIsLoadingWordSynonyms] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [showPlagiarism, setShowPlagiarism] = useState(false);
   const [isScanningPlagiarism, setIsScanningPlagiarism] = useState(false);
@@ -316,23 +319,68 @@ export function Home() {
     }
   };
 
-  const handleWordClick = (token: DiffToken, index: number, event: React.MouseEvent) => {
-    if (!token.synonyms || token.synonyms.length === 0) return;
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
-    setThesaurusPos({
-      top: rect.bottom + window.scrollY + 6,
-      left: Math.max(16, rect.left + window.scrollX - 40),
-    });
+  const handleWordClick = async (token: DiffToken, index: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    const rawWord = token.text.trim();
+    const cleanWord = rawWord.toLowerCase().replace(/^[^\w]+|[^\w]+$/g, '');
+    if (!cleanWord || cleanWord.length < 2) return;
+
+    if (outputContainerRef.current) {
+      const containerRect = outputContainerRef.current.getBoundingClientRect();
+      const targetRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      const top = targetRect.bottom - containerRect.top + 6;
+      const idealLeft = targetRect.left - containerRect.left + (targetRect.width / 2) - 110;
+      const left = Math.max(10, Math.min(idealLeft, containerRect.width - 250));
+      setThesaurusPos({ top, left });
+    }
+
     setSelectedTokenIndex(index);
+    setSelectedWord(rawWord);
+
+    // If token already has precomputed synonyms, populate immediately
+    if (token.synonyms && token.synonyms.length > 0) {
+      setWordSynonyms(token.synonyms);
+    } else {
+      setWordSynonyms([]);
+    }
+
+    // Dynamic lookup (combining local dictionary + Datamuse API)
+    setIsLoadingWordSynonyms(true);
+    try {
+      const syns = await lookupSynonyms(cleanWord);
+      if (syns && syns.length > 0) {
+        setWordSynonyms(syns);
+      }
+    } catch (e) {
+      console.error('Synonym lookup failed:', e);
+    } finally {
+      setIsLoadingWordSynonyms(false);
+    }
   };
 
   const replaceWord = (newWord: string, tokenIndex: number) => {
     const diff = computeWordDiff(inputText, outputText);
-    diff[tokenIndex].text = newWord;
+    if (!diff[tokenIndex]) return;
+
+    const orig = diff[tokenIndex].text;
+    const isAllUpper = orig.length > 1 && orig === orig.toUpperCase();
+    const isFirstUpper = orig.length > 0 && orig[0] === orig[0].toUpperCase();
+
+    let formattedWord = newWord;
+    if (isAllUpper) {
+      formattedWord = newWord.toUpperCase();
+    } else if (isFirstUpper) {
+      formattedWord = newWord.charAt(0).toUpperCase() + newWord.slice(1);
+    } else {
+      formattedWord = newWord.toLowerCase();
+    }
+
+    diff[tokenIndex].text = formattedWord;
     const reconstructed = diff.map((t) => t.text).join('');
     setOutputText(reconstructed);
     setSelectedTokenIndex(null);
-    showToast(`Replaced with "${newWord}"`, 'info');
+    setThesaurusPos(null);
+    showToast(`Replaced with "${formattedWord}"`, 'info');
   };
 
   // ❄️ Freeze terms handler
@@ -351,17 +399,26 @@ export function Home() {
 
   // 📝 Sentence Alternative Selector (< 1 of 3 >)
   const handleSentenceClick = async (sentence: string, event: React.MouseEvent) => {
+    event.stopPropagation();
     const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
     if (!provider) {
       showToast('Please configure a provider first', 'error');
       return;
     }
 
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
-    setSentenceWidgetPos({
-      top: Math.max(10, rect.top - 80 + window.scrollY),
-      left: Math.max(16, Math.min(rect.left + window.scrollX - 20, window.innerWidth - 380)),
-    });
+    if (outputContainerRef.current) {
+      const containerRect = outputContainerRef.current.getBoundingClientRect();
+      const targetRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      let top = targetRect.bottom - containerRect.top + 8;
+      // If widget would extend past container bottom and there's room above, position above
+      if (top > containerRect.height - 180 && targetRect.top - containerRect.top > 160) {
+        top = targetRect.top - containerRect.top - 150;
+      }
+      const idealLeft = targetRect.left - containerRect.left;
+      const left = Math.max(10, Math.min(idealLeft, containerRect.width - 380));
+      setSentenceWidgetPos({ top, left });
+    }
+
     setSelectedSentence(sentence);
     setIsLoadingAlternatives(true);
     setCurrentAltIndex(0);
@@ -1932,62 +1989,127 @@ export function Home() {
                   )}
                 </div>
               ) : activeTab === 'sentences' ? (
-                <div style={{ whiteSpace: 'pre-wrap', lineHeight: '2' }}>
-                  {(outputText.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [outputText]).map((sentence, sIdx) => {
-                    const isSelected = selectedSentence === sentence;
-                    return (
-                      <span
-                        key={sIdx}
-                        onClick={(e) => handleSentenceClick(sentence, e)}
-                        style={{
-                          display: 'inline',
-                          padding: '3px 6px',
-                          borderRadius: '6px',
-                          background: isSelected ? '#dbeafe' : 'transparent',
-                          border: isSelected ? '1.5px solid #3b82f6' : '1px solid transparent',
-                          color: '#1e293b',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                          marginRight: '4px',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isSelected) {
-                            e.currentTarget.style.background = '#f1f5f9';
-                            e.currentTarget.style.border = '1px solid #cbd5e1';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isSelected) {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.border = '1px solid transparent';
-                          }
-                        }}
-                        title="Click to view 3 alternative rephrasings for this sentence"
-                      >
-                        {sentence}
-                      </span>
-                    );
-                  })}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 12px',
+                      background: '#f0f9ff',
+                      border: '1px solid #bae6fd',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      color: '#0369a1',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <Wand2 size={15} style={{ flexShrink: 0 }} />
+                    <span>
+                      <strong>Sentence Mode:</strong> Click any highlighted sentence below to cycle through alternative rephrasings and swap it in-place.
+                    </span>
+                  </div>
+
+                  <div style={{ lineHeight: '2.2', fontSize: '16px' }}>
+                    {(outputText.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [outputText]).map((sentence, sIdx) => {
+                      const isSelected = selectedSentence === sentence;
+                      // Distinct alternating soft tints for easy reading and demarcated boundaries
+                      const bgTints = ['#f8fafc', '#eff6ff', '#f0fdf4', '#fdf4ff'];
+                      const borderTints = ['#cbd5e1', '#bfdbfe', '#bbf7d0', '#f5d0fe'];
+                      const defaultBg = bgTints[sIdx % bgTints.length];
+                      const defaultBorder = borderTints[sIdx % borderTints.length];
+
+                      return (
+                        <span
+                          key={sIdx}
+                          onClick={(e) => handleSentenceClick(sentence, e)}
+                          style={{
+                            display: 'inline',
+                            padding: '4px 8px',
+                            marginRight: '6px',
+                            borderRadius: '6px',
+                            background: isSelected ? '#dbeafe' : defaultBg,
+                            border: isSelected ? '2px solid #2563eb' : `1.5px solid ${defaultBorder}`,
+                            boxShadow: isSelected ? '0 4px 12px rgba(37,99,235,0.22)' : '0 1px 2px rgba(0,0,0,0.04)',
+                            color: isSelected ? '#1e3a8a' : '#1e293b',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            boxDecorationBreak: 'clone',
+                            WebkitBoxDecorationBreak: 'clone',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.background = '#e0f2fe';
+                              e.currentTarget.style.borderColor = '#38bdf8';
+                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(56,189,248,0.2)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) {
+                              e.currentTarget.style.background = defaultBg;
+                              e.currentTarget.style.borderColor = defaultBorder;
+                              e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)';
+                            }
+                          }}
+                          title={`Sentence #${sIdx + 1}: Click to view rephrase alternatives`}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '18px',
+                              height: '18px',
+                              borderRadius: '50%',
+                              background: isSelected ? '#2563eb' : '#64748b',
+                              color: '#ffffff',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              marginRight: '6px',
+                              verticalAlign: 'text-top',
+                              userSelect: 'none',
+                            }}
+                          >
+                            {sIdx + 1}
+                          </span>
+                          {sentence}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
-                <div style={{ whiteSpace: 'pre-wrap' }}>
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
                   {diffTokens.map((token, idx) => {
                     const isChanged = token.type === 'changed';
+                    const isWord = /[\w]/.test(token.text);
                     return (
                       <span
                         key={idx}
-                        onClick={(e) => isChanged && handleWordClick(token, idx, e)}
+                        onClick={(e) => isWord && handleWordClick(token, idx, e)}
                         style={{
-                          color: isChanged ? '#d97706' : '#1e293b',
+                          color: isChanged ? '#b45309' : '#1e293b',
                           background: isChanged ? '#fef3c7' : 'transparent',
-                          borderRadius: isChanged ? '3px' : '0',
-                          padding: isChanged ? '1px 2px' : '0',
+                          borderRadius: isChanged ? '4px' : '2px',
+                          padding: isChanged ? '1px 4px' : '1px 0px',
                           fontWeight: isChanged ? 600 : 400,
-                          cursor: isChanged ? 'pointer' : 'text',
-                          transition: 'background 0.15s ease',
+                          cursor: isWord ? 'pointer' : 'default',
+                          transition: 'all 0.15s ease',
                           borderBottom: isChanged ? '1.5px dashed #f59e0b' : 'none',
                         }}
-                        title={isChanged ? 'Click for alternative synonyms' : undefined}
+                        onMouseEnter={(e) => {
+                          if (isWord && !isChanged) {
+                            e.currentTarget.style.background = '#f1f5f9';
+                            e.currentTarget.style.borderBottom = '1px dotted #94a3b8';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (isWord && !isChanged) {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderBottom = 'none';
+                          }
+                        }}
+                        title={isWord ? (isChanged ? 'Rewritten word - click for synonyms' : 'Click for synonyms') : undefined}
                       >
                         {token.text}
                       </span>
@@ -2038,64 +2160,124 @@ export function Home() {
             <div
               style={{
                 position: 'absolute',
-                top: thesaurusPos.top - 60,
-                left: Math.min(thesaurusPos.left, 350),
-                zIndex: 100,
+                top: `${thesaurusPos.top}px`,
+                left: `${thesaurusPos.left}px`,
+                zIndex: 200,
                 background: '#ffffff',
-                border: '1px solid #e2e8f0',
+                border: '1.5px solid #cbd5e1',
                 borderRadius: '8px',
-                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.15)',
-                padding: '8px',
-                minWidth: '180px',
-                maxWidth: '240px',
+                boxShadow: '0 12px 28px -5px rgba(0,0,0,0.2)',
+                padding: '8px 10px',
+                minWidth: '200px',
+                maxWidth: '260px',
               }}
             >
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', padding: '4px 8px', borderBottom: '1px solid #f1f5f9' }}>
-                SUGGESTED SYNONYMS
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
-                {diffTokens[selectedTokenIndex]?.synonyms?.map((syn, sIdx) => (
-                  <button
-                    key={sIdx}
-                    onClick={() => replaceWord(syn, selectedTokenIndex)}
-                    style={{
-                      textAlign: 'left',
-                      padding: '6px 8px',
-                      borderRadius: '4px',
-                      border: 'none',
-                      background: 'transparent',
-                      color: '#0f172a',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <span>{syn}</span>
-                    <span style={{ fontSize: '10px', color: '#10b981' }}>Select</span>
-                  </button>
-                )) || <div style={{ padding: '8px', fontSize: '12px', color: '#94a3b8' }}>No alternatives found</div>}
-              </div>
-              <button
-                onClick={() => setSelectedTokenIndex(null)}
+              <div
                 style={{
-                  width: '100%',
-                  marginTop: '6px',
-                  padding: '4px',
-                  border: 'none',
-                  background: '#f8fafc',
-                  color: '#64748b',
-                  fontSize: '11px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '2px 4px 6px',
+                  borderBottom: '1px solid #f1f5f9',
                 }}
               >
-                Close
-              </button>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: '#64748b',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Synonyms: <strong style={{ color: '#0f172a' }}>{selectedWord}</strong>
+                </span>
+                <button
+                  onClick={() => {
+                    setSelectedTokenIndex(null);
+                    setThesaurusPos(null);
+                  }}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    fontSize: '14px',
+                    padding: '0 2px',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {isLoadingWordSynonyms && wordSynonyms.length === 0 ? (
+                <div
+                  style={{
+                    padding: '14px 8px',
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    color: '#64748b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span
+                    className="spinner"
+                    style={{
+                      width: '14px',
+                      height: '14px',
+                      borderWidth: '2px',
+                      borderColor: '#d97706',
+                      borderTopColor: 'transparent',
+                    }}
+                  />
+                  <span>Finding synonyms…</span>
+                </div>
+              ) : wordSynonyms.length > 0 ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    marginTop: '6px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  {wordSynonyms.map((syn, sIdx) => (
+                    <button
+                      key={sIdx}
+                      onClick={() => replaceWord(syn, selectedTokenIndex)}
+                      style={{
+                        textAlign: 'left',
+                        padding: '6px 8px',
+                        borderRadius: '4px',
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#0f172a',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        transition: 'background 0.12s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#fef3c7')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <span>{syn}</span>
+                      <span style={{ fontSize: '10px', color: '#d97706', fontWeight: 600 }}>Swap</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: '12px 8px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                  No alternative synonyms found
+                </div>
+              )}
             </div>
           )}
 
@@ -2104,9 +2286,10 @@ export function Home() {
             <div
               style={{
                 position: 'absolute',
-                top: Math.max(10, sentenceWidgetPos.top - 60),
-                left: Math.min(sentenceWidgetPos.left, 280),
+                top: `${sentenceWidgetPos.top}px`,
+                left: `${sentenceWidgetPos.left}px`,
                 zIndex: 120,
+
                 background: '#ffffff',
                 border: '1.5px solid #93c5fd',
                 borderRadius: '10px',
