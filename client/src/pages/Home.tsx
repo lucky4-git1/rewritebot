@@ -1719,7 +1719,11 @@ export function Home() {
           {/* Input Footer */}
           <div
             style={{
-              padding: '14px 20px',
+              height: '60px',
+              minHeight: '60px',
+              maxHeight: '60px',
+              boxSizing: 'border-box',
+              padding: '0 20px',
               borderTop: '1px solid var(--rb-border)',
               display: 'flex',
               justifyContent: 'space-between',
@@ -1727,13 +1731,13 @@ export function Home() {
               background: 'var(--rb-surface-cream)',
             }}
           >
-            <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', gap: '12px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', display: 'flex', gap: '12px', alignItems: 'center' }}>
               <span>
-                <strong>{inputWordCount}</strong> words
+                <strong style={{ color: 'var(--rb-text)' }}>{inputWordCount}</strong> words
               </span>
               <span>•</span>
               <span>
-                <strong>{inputText.length}</strong> chars
+                <strong style={{ color: 'var(--rb-text)' }}>{inputText.length}</strong> chars
               </span>
             </div>
 
@@ -1742,7 +1746,8 @@ export function Home() {
               disabled={isGenerating || isAutoScanRunning || !inputText.trim()}
               className="touch-target"
               style={{
-                padding: '10px 28px',
+                height: '38px',
+                padding: '0 24px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isGenerating || isAutoScanRunning || !inputText.trim() ? 'var(--rb-border)' : 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
@@ -1874,16 +1879,16 @@ export function Home() {
             </div>
 
             {outputText && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span
                   style={{
-                    fontSize: '11px',
+                    fontSize: '12px',
                     fontWeight: 600,
                     color: isDark ? '#cbe6ac' : '#2d5a1e',
-                    background: isDark ? 'rgba(186, 215, 151, 0.16)' : '#ecfdf5',
-                    padding: '2px 8px',
-                    borderRadius: '10px',
-                    border: `1px solid ${isDark ? 'rgba(186, 215, 151, 0.35)' : '#a7f3d0'}`,
+                    background: isDark ? 'rgba(186, 215, 151, 0.14)' : 'var(--rb-surface-cream)',
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    border: `1px solid ${isDark ? 'rgba(186, 215, 151, 0.35)' : 'var(--rb-border)'}`,
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '4px',
@@ -1894,17 +1899,15 @@ export function Home() {
                 >
                   <span
                     style={{
-                      width: '5px',
-                      height: '5px',
+                      width: '6px',
+                      height: '6px',
                       borderRadius: '50%',
                       background: isDark ? '#BAD797' : '#10b981',
                       display: 'inline-block',
                       flexShrink: 0,
                     }}
                   />
-                  <span>
-                    {changePercentage}% <span className="hide-on-mobile">changed</span>
-                  </span>
+                  <span>{changePercentage}%</span>
                 </span>
 
                 {plagiarismReport && (
@@ -1912,45 +1915,49 @@ export function Home() {
                     <button
                       onClick={() => setShowPlagiarism(true)}
                       style={{
-                        border: isDark ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid #d1fae5',
-                        fontSize: '11px',
+                        border: isDark ? '1px solid rgba(34, 197, 94, 0.35)' : '1px solid var(--rb-border)',
+                        fontSize: '12px',
                         fontWeight: 600,
                         color: isDark ? '#86efac' : (plagiarismReport.originalityScore >= 85 ? '#065f46' : '#92400e'),
-                        background: isDark ? 'rgba(34, 197, 94, 0.14)' : (plagiarismReport.originalityScore >= 85 ? '#d1fae5' : '#fef3c7'),
-                        padding: '2px 8px',
-                        borderRadius: '10px',
+                        background: isDark ? 'rgba(34, 197, 94, 0.14)' : 'var(--rb-surface-cream)',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
                         cursor: 'pointer',
-                        display: 'flex',
+                        display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
+                        lineHeight: '1.2',
                         transition: 'all 0.15s ease',
+                        flexShrink: 0,
                       }}
-                      title="Click to view Originality details"
+                      title={`Originality: ${plagiarismReport.originalityScore}% (Click to view details)`}
                     >
-                      <ShieldCheck size={12} color={isDark ? '#86efac' : (plagiarismReport.originalityScore >= 85 ? '#059669' : '#d97706')} />
-                      <span>{plagiarismReport.originalityScore}% <span className="hide-on-mobile">Original</span></span>
+                      <ShieldCheck size={13} color={isDark ? '#86efac' : (plagiarismReport.originalityScore >= 85 ? '#059669' : '#d97706')} />
+                      <span>{plagiarismReport.originalityScore}%</span>
                     </button>
 
                     <button
                       onClick={() => setShowPlagiarism(true)}
                       style={{
-                        border: isDark ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid #e0e7ff',
-                        fontSize: '11px',
+                        border: isDark ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid var(--rb-border)',
+                        fontSize: '12px',
                         fontWeight: 600,
                         color: isDark ? '#c7d2fe' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#3730a3' : '#991b1b'),
-                        background: isDark ? 'rgba(99, 102, 241, 0.14)' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#e0e7ff' : '#fee2e2'),
-                        padding: '2px 8px',
-                        borderRadius: '10px',
+                        background: isDark ? 'rgba(99, 102, 241, 0.14)' : 'var(--rb-surface-cream)',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
                         cursor: 'pointer',
-                        display: 'flex',
+                        display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
+                        lineHeight: '1.2',
                         transition: 'all 0.15s ease',
+                        flexShrink: 0,
                       }}
-                      title="Estimated human content score (AI detection resilience)"
+                      title={`Human Content Score: ${plagiarismReport.humanScore ?? 95}% (Click to view details)`}
                     >
-                      <BrainCircuit size={12} color={isDark ? '#a5b4fc' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#4f46e5' : '#dc2626')} />
-                      <span>{plagiarismReport.humanScore ?? 95}% <span className="hide-on-mobile">Human</span></span>
+                      <BrainCircuit size={13} color={isDark ? '#a5b4fc' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#4f46e5' : '#dc2626')} />
+                      <span>{plagiarismReport.humanScore ?? 95}%</span>
                     </button>
                   </div>
                 )}
@@ -2529,7 +2536,11 @@ export function Home() {
           {/* Output Footer Toolbar */}
           <div
             style={{
-              padding: '14px 20px',
+              height: '60px',
+              minHeight: '60px',
+              maxHeight: '60px',
+              boxSizing: 'border-box',
+              padding: '0 20px',
               borderTop: '1px solid var(--rb-border)',
               display: 'flex',
               justifyContent: 'space-between',
@@ -2539,7 +2550,7 @@ export function Home() {
           >
             <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', display: 'flex', gap: '12px', alignItems: 'center' }}>
               <span>
-                <strong>{outputWordCount}</strong> words
+                <strong style={{ color: 'var(--rb-text)' }}>{outputWordCount}</strong> words
               </span>
               {currentProvider && currentModel && (
                 <>
@@ -2551,12 +2562,13 @@ export function Home() {
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 onClick={() => outputText && handleCopy(outputText)}
                 disabled={!outputText}
                 style={{
-                  padding: '8px 16px',
+                  height: '36px',
+                  padding: '0 14px',
                   borderRadius: '6px',
                   border: '1px solid var(--rb-border)',
                   background: copied ? (isDark ? 'rgba(34, 197, 94, 0.2)' : '#ecfdf5') : 'var(--rb-surface)',
@@ -2579,7 +2591,8 @@ export function Home() {
                 disabled={!outputText && !inputText.trim()}
                 title="Scan text for plagiarism and originality"
                 style={{
-                  padding: '8px 14px',
+                  height: '36px',
+                  padding: '0 12px',
                   borderRadius: '6px',
                   border: isDark ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid #c7d2fe',
                   background: isDark ? 'rgba(99, 102, 241, 0.15)' : '#eef2ff',
@@ -2602,7 +2615,8 @@ export function Home() {
                 disabled={!inputText.trim() || isGenerating}
                 title="Paraphrase again"
                 style={{
-                  padding: '8px 12px',
+                  height: '36px',
+                  padding: '0 10px',
                   borderRadius: '6px',
                   border: '1px solid var(--rb-border)',
                   background: 'var(--rb-surface)',
@@ -2610,7 +2624,7 @@ export function Home() {
                   cursor: inputText.trim() && !isGenerating ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  justifyContent: 'center',
                 }}
               >
                 <RotateCw size={15} />
@@ -2622,7 +2636,8 @@ export function Home() {
                   onClick={() => setExportOpen(!exportOpen)}
                   disabled={!outputText}
                   style={{
-                    padding: '8px 14px',
+                    height: '36px',
+                    padding: '0 12px',
                     borderRadius: '6px',
                     border: '1px solid var(--rb-border)',
                     background: 'var(--rb-surface)',
@@ -2632,7 +2647,7 @@ export function Home() {
                     cursor: outputText ? 'pointer' : 'not-allowed',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
+                    gap: '4px',
                   }}
                 >
                   <Download size={15} /> Export <ChevronDown size={14} />
