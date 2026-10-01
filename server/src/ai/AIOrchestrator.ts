@@ -381,12 +381,17 @@ export class AIOrchestrator {
       Math.min(100, Math.round(parsed.originalityScore ?? (100 - (parsed.plagiarismScore || 0))))
     );
     const plagiarismScore = Math.max(0, Math.min(100, 100 - originalityScore));
+    const humanScore = Math.max(
+      0,
+      Math.min(100, Math.round(parsed.humanScore ?? Math.min(100, originalityScore + 4)))
+    );
     const riskLevel: 'safe' | 'moderate' | 'high' =
       originalityScore >= 85 ? 'safe' : originalityScore >= 60 ? 'moderate' : 'high';
 
     return {
       originalityScore,
       plagiarismScore,
+      humanScore,
       riskLevel,
       matches: Array.isArray(parsed.matches) ? parsed.matches : [],
       sources: Array.isArray(parsed.sources) ? parsed.sources : [],

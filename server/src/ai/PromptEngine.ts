@@ -288,6 +288,7 @@ CRITICAL: Return ONLY a valid, compact JSON object matching this schema without 
 {
   "originalityScore": <0-100 integer: 100 is completely original, 0 is fully copied>,
   "plagiarismScore": <0-100 integer: 100 - originalityScore>,
+  "humanScore": <0-100 integer: human vs AI detector score, where 100 is completely natural human and 0 is synthetic AI>,
   "riskLevel": <"safe" | "moderate" | "high">,
   "summary": "<ultra-brief 1-sentence assessment>",
   "matches": [

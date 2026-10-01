@@ -252,9 +252,16 @@ export interface PlagiarismSource {
 export interface PlagiarismCheckResponse {
   originalityScore: number; // 0-100
   plagiarismScore: number;  // 0-100
+  humanScore?: number;      // 0-100 (Human vs AI content detector score)
   riskLevel: 'safe' | 'moderate' | 'high';
   matches: PlagiarismMatch[];
   sources: PlagiarismSource[];
+  aiAnalysis?: {
+    burstiness?: string;
+    perplexity?: string;
+    roboticPatternsDetected?: boolean;
+    summary?: string;
+  };
   wordCount: number;
   characterCount: number;
   provider: string;

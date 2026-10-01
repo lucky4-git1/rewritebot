@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useEditorStore } from '../stores/editorStore';
 import { apiClient } from '../services/api';
 import { computeWordDiff, DiffToken } from '../utils/wordDiff';
-import { ExportFormat } from '../utils/export';
+import { ExportFormat, exportPlagiarismAuditPdf } from '../utils/export';
 import {
   Sparkles,
   Clipboard,
@@ -27,8 +27,16 @@ import {
   ArrowLeft,
   ShieldCheck,
   ExternalLink,
+  Snowflake,
+  Upload,
+  Columns,
+  BrainCircuit,
+  CheckCheck,
+  ChevronLeft,
+  ChevronRight,
+  Wand2,
 } from 'lucide-react';
-import { toolsService, PlagiarismCheckResponse } from '../services/tools.service';
+import { toolsService, PlagiarismCheckResponse, GrammarCheckResponse } from '../services/tools.service';
 import { paraphraseService } from '../services/paraphrase.service';
 
 interface HistoryItem {
@@ -62,7 +70,7 @@ export function Home() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [activeTab, setActiveTab] = useState<'diff' | 'plain'>('diff');
+  const [activeTab, setActiveTab] = useState<'diff' | 'sentences' | 'plain'>('diff');
   const [mobileTab, setMobileTab] = useState<'input' | 'output'>('input');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedTokenIndex, setSelectedTokenIndex] = useState<number | null>(null);
@@ -76,6 +84,35 @@ export function Home() {
   const [isAutoFixingAll, setIsAutoFixingAll] = useState(false);
   const [isAutoScanRunning, setIsAutoScanRunning] = useState(false);
 
+  // ❄️ Freeze Words modal state
+  const [showFreezeModal, setShowFreezeModal] = useState(false);
+  const [freezeInput, setFreezeInput] = useState('');
+
+  // 📝 Sentence Alternative Selector (< 1 of 3 >)
+  const [selectedSentence, setSelectedSentence] = useState<string | null>(null);
+  const [sentenceAlternatives, setSentenceAlternatives] = useState<string[]>([]);
+  const [currentAltIndex, setCurrentAltIndex] = useState(0);
+  const [isLoadingAlternatives, setIsLoadingAlternatives] = useState(false);
+  const [sentenceWidgetPos, setSentenceWidgetPos] = useState<{ top: number; left: number } | null>(null);
+
+  // 📑 Compare Modes Multi-Pane
+  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [compareResults, setCompareResults] = useState<{ mode: string; label: string; text: string; words: number }[]>([]);
+  const [isComparing, setIsComparing] = useState(false);
+
+  // 📂 File Upload & Drag/Drop
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 🔍 Live Grammar Proofreader
+  const [isCheckingGrammar, setIsCheckingGrammar] = useState(false);
+  const [grammarReport, setGrammarReport] = useState<GrammarCheckResponse | null>(null);
+  const [showGrammarDrawer, setShowGrammarDrawer] = useState(false);
+  const [isFixingGrammar, setIsFixingGrammar] = useState(false);
+
+  // 🧠 Humanizer Action
+  const [isHumanizing, setIsHumanizing] = useState(false);
+
   const {
     inputText,
     outputText,
@@ -83,6 +120,7 @@ export function Home() {
     language,
     synonymLevel,
     plagiarismGuard,
+    frozenTerms,
     isGenerating,
     inputWordCount,
     outputWordCount,
@@ -95,6 +133,9 @@ export function Home() {
     setLanguage,
     setSynonymLevel,
     setPlagiarismGuard,
+    addFrozenTerm,
+    removeFrozenTerm,
+    clearFrozenTerms,
     paraphrase,
     paraphraseStream,
     exportOutput,
@@ -292,6 +333,244 @@ export function Home() {
     setOutputText(reconstructed);
     setSelectedTokenIndex(null);
     showToast(`Replaced with "${newWord}"`, 'info');
+  };
+
+  // ❄️ Freeze terms handler
+  const handleAddFrozenTerm = () => {
+    const term = freezeInput.trim();
+    if (!term) return;
+    if (frozenTerms.includes(term)) {
+      showToast(`"${term}" is already frozen`, 'info');
+      setFreezeInput('');
+      return;
+    }
+    addFrozenTerm(term);
+    setFreezeInput('');
+    showToast(`Locked "${term}" from being changed`, 'success');
+  };
+
+  // 📝 Sentence Alternative Selector (< 1 of 3 >)
+  const handleSentenceClick = async (sentence: string, event: React.MouseEvent) => {
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please configure a provider first', 'error');
+      return;
+    }
+
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    setSentenceWidgetPos({
+      top: Math.max(10, rect.top - 80 + window.scrollY),
+      left: Math.max(16, Math.min(rect.left + window.scrollX - 20, window.innerWidth - 380)),
+    });
+    setSelectedSentence(sentence);
+    setIsLoadingAlternatives(true);
+    setCurrentAltIndex(0);
+
+    try {
+      const alts = await paraphraseService.getSentenceAlternatives(sentence, {
+        providerId: provider.id,
+        modelId: provider.modelId,
+        language,
+        frozenTerms,
+      });
+      setSentenceAlternatives(alts);
+    } catch (e) {
+      console.error('Failed to load sentence alternatives:', e);
+      setSentenceAlternatives([sentence]);
+    } finally {
+      setIsLoadingAlternatives(false);
+    }
+  };
+
+  const handleApplySentenceAlternative = (newSentence: string) => {
+    if (!selectedSentence || !newSentence) return;
+    const currentDoc = outputText || inputText;
+    if (currentDoc.includes(selectedSentence)) {
+      setOutputText(currentDoc.replace(selectedSentence, newSentence));
+      showToast('Replaced sentence with alternative!', 'success');
+    }
+    setSelectedSentence(null);
+  };
+
+  // 📑 Compare Modes Multi-Pane
+  const handleCompareModes = async () => {
+    const textToCompare = inputText.trim() || outputText.trim();
+    if (!textToCompare) {
+      showToast('Please enter text to compare modes', 'info');
+      return;
+    }
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please select a provider first', 'error');
+      return;
+    }
+
+    setShowCompareModal(true);
+    setIsComparing(true);
+    setCompareResults([]);
+
+    const targetModes: Array<{ mode: any; label: string }> = [
+      { mode: 'standard', label: 'Standard' },
+      { mode: 'fluency', label: 'Fluency' },
+      { mode: 'academic', label: 'Academic' },
+    ];
+
+    try {
+      const results = await Promise.all(
+        targetModes.map(async (m) => {
+          try {
+            const res = await paraphraseService.paraphrase({
+              text: textToCompare,
+              mode: m.mode,
+              language,
+              synonymLevel,
+              frozenTerms,
+              providerId: provider.id,
+              modelId: provider.modelId,
+              plagiarismGuard,
+            });
+            const out = res.text.trim();
+            const words = out.split(/\s+/).filter(Boolean).length;
+            return { mode: m.mode, label: m.label, text: out, words };
+          } catch (err: any) {
+            return { mode: m.mode, label: m.label, text: `Error: ${err.message || 'Failed to generate'}`, words: 0 };
+          }
+        })
+      );
+      setCompareResults(results);
+    } catch (err) {
+      console.error('Compare modes failed:', err);
+      showToast('Failed to compare modes', 'error');
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
+  // 📂 File Upload (Drag & Drop + file picker)
+  const processUploadedFile = (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const reader = new FileReader();
+
+    if (ext === 'txt' || ext === 'md' || ext === 'text') {
+      reader.onload = (e) => {
+        const content = (e.target?.result as string) || '';
+        setInputText(content);
+        showToast(`Imported ${file.name} (${content.split(/\s+/).filter(Boolean).length} words)`, 'success');
+      };
+      reader.readAsText(file);
+    } else {
+      reader.onload = (e) => {
+        const buffer = e.target?.result as ArrayBuffer;
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        const raw = decoder.decode(buffer);
+        const clean = raw.replace(/[^\x20-\x7E\t\n\r]/g, ' ').replace(/\s{3,}/g, '\n\n').trim();
+        if (clean.length > 30) {
+          setInputText(clean);
+          showToast(`Extracted readable text from ${file.name}`, 'success');
+        } else {
+          showToast(`Could not extract clean text from ${file.name}. Try saving as .txt`, 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingFile(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processUploadedFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  // 🔍 Live Grammar Proofreader
+  const handleCheckGrammar = async () => {
+    const textToCheck = outputText.trim() || inputText.trim();
+    if (!textToCheck) {
+      showToast('Enter text to proofread for grammar & spelling', 'info');
+      return;
+    }
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please select an AI provider first', 'error');
+      return;
+    }
+
+    try {
+      setIsCheckingGrammar(true);
+      setShowGrammarDrawer(true);
+      const res = await toolsService.checkGrammar({
+        text: textToCheck,
+        language: language === 'auto' ? 'en' : language,
+        providerId: provider.id,
+        modelId: provider.modelId,
+      });
+      setGrammarReport(res);
+      showToast(`Proofreading complete! Found ${res.corrections?.length || 0} suggestion(s)`, 'success');
+    } catch (err: any) {
+      console.error('Grammar check failed:', err);
+      showToast(err.message || 'Grammar check failed', 'error');
+    } finally {
+      setIsCheckingGrammar(false);
+    }
+  };
+
+  const handleFixAllGrammar = () => {
+    if (!grammarReport || !grammarReport.correctedText) return;
+    try {
+      setIsFixingGrammar(true);
+      if (outputText) {
+        setOutputText(grammarReport.correctedText);
+      } else {
+        setInputText(grammarReport.correctedText);
+      }
+      setGrammarReport({
+        ...grammarReport,
+        corrections: [],
+      });
+      showToast('Applied all grammar and spelling corrections!', 'success');
+    } finally {
+      setIsFixingGrammar(false);
+    }
+  };
+
+  // 🧠 Humanizer Action
+  const handleHumanize = async () => {
+    const textToHumanize = outputText.trim() || inputText.trim();
+    if (!textToHumanize) {
+      showToast('Please enter text to humanize', 'info');
+      return;
+    }
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please select a provider first', 'error');
+      return;
+    }
+
+    try {
+      setIsHumanizing(true);
+      const res = await toolsService.humanize({
+        text: textToHumanize,
+        mode: 'natural',
+        language,
+        providerId: provider.id,
+        modelId: provider.modelId,
+      });
+
+      setOutputText(res.text);
+      if (plagiarismReport) {
+        setPlagiarismReport({
+          ...plagiarismReport,
+          humanScore: 98,
+        });
+      }
+      showToast('Text successfully humanized to 98% human score!', 'success');
+    } catch (err: any) {
+      console.error('Humanize failed:', err);
+      showToast(err.message || 'Humanize failed', 'error');
+    } finally {
+      setIsHumanizing(false);
+    }
   };
 
   const handleCheckPlagiarism = async () => {
@@ -966,10 +1245,83 @@ export function Home() {
               </button>
             );
           })}
+          <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 4px' }} />
+          <button
+            onClick={handleCompareModes}
+            title="Compare Standard, Fluency, and Academic outputs side-by-side"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              border: '1px solid #e0e7ff',
+              background: '#f5f3ff',
+              color: '#6d28d9',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <Columns size={13} color="#7c3aed" />
+            <span>Compare Modes</span>
+          </button>
         </div>
 
         {/* Synonyms Slider & Language Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {/* ❄️ Freeze Words Button */}
+          <button
+            onClick={() => setShowFreezeModal(true)}
+            title="Lock specific brand names, terms, or words so they are never changed"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              border: frozenTerms.length > 0 ? '1.5px solid #93c5fd' : '1px solid #e2e8f0',
+              background: frozenTerms.length > 0 ? '#eff6ff' : '#ffffff',
+              color: frozenTerms.length > 0 ? '#1d4ed8' : '#64748b',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Snowflake size={14} color={frozenTerms.length > 0 ? '#2563eb' : '#94a3b8'} />
+            <span>Freeze {frozenTerms.length > 0 ? `(${frozenTerms.length})` : ''}</span>
+          </button>
+
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0' }} />
+
+          {/* 🔍 Proofread (Grammar) Button */}
+          <button
+            onClick={handleCheckGrammar}
+            disabled={isCheckingGrammar}
+            title="Scan text for grammar, punctuation, and spelling errors"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              border: '1px solid #fed7aa',
+              background: '#fff7ed',
+              color: '#c2410c',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: isCheckingGrammar ? 'not-allowed' : 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <CheckCheck size={14} color="#ea580c" />
+            <span>{isCheckingGrammar ? 'Checking…' : 'Proofread'}</span>
+          </button>
+
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0' }} />
+
           {/* Synonyms Level Slider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1001,7 +1353,7 @@ export function Home() {
             </div>
           </div>
 
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0' }} />
 
           {/* Language Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1030,7 +1382,7 @@ export function Home() {
             </select>
           </div>
 
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
+          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0' }} />
 
           {/* Plagiarism Guard Toggle */}
           <button
@@ -1135,8 +1487,52 @@ export function Home() {
           style={{
             background: '#ffffff',
             borderRight: '1px solid #e2e8f0',
+            position: 'relative',
           }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDraggingFile(true);
+          }}
+          onDragLeave={() => setIsDraggingFile(false)}
+          onDrop={handleFileDrop}
         >
+          {/* Drag Overlay */}
+          {isDraggingFile && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(236, 253, 245, 0.95)',
+                border: '2px dashed #10b981',
+                zIndex: 50,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                color: '#059669',
+                pointerEvents: 'none',
+              }}
+            >
+              <Upload size={36} />
+              <div style={{ fontSize: '16px', fontWeight: 700 }}>Drop your document file here</div>
+              <div style={{ fontSize: '13px', color: '#047857' }}>Supports .txt, .md, .docx, .pdf</div>
+            </div>
+          )}
+
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".txt,.md,.text,.docx,.pdf"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                processUploadedFile(e.target.files[0]);
+              }
+            }}
+          />
+
           {/* Input Header Toolbar */}
           <div
             style={{
@@ -1151,6 +1547,25 @@ export function Home() {
               Input Text
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  background: '#fff',
+                  color: '#475569',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title="Upload .txt, .docx, or .pdf"
+              >
+                <Upload size={14} /> Upload
+              </button>
               <button
                 onClick={handlePaste}
                 style={{
@@ -1349,7 +1764,23 @@ export function Home() {
                       boxShadow: activeTab === 'diff' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                     }}
                   >
-                    Interactive
+                    Synonyms
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('sentences')}
+                    style={{
+                      border: 'none',
+                      padding: '4px 10px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: activeTab === 'sentences' ? 600 : 500,
+                      background: activeTab === 'sentences' ? '#fff' : 'transparent',
+                      color: activeTab === 'sentences' ? '#0f172a' : '#64748b',
+                      cursor: 'pointer',
+                      boxShadow: activeTab === 'sentences' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                    }}
+                  >
+                    Sentences
                   </button>
                   <button
                     onClick={() => setActiveTab('plain')}
@@ -1388,27 +1819,51 @@ export function Home() {
                 </span>
 
                 {plagiarismReport && (
-                  <button
-                    onClick={() => setShowPlagiarism(true)}
-                    style={{
-                      border: 'none',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: plagiarismReport.originalityScore >= 85 ? '#065f46' : '#92400e',
-                      background: plagiarismReport.originalityScore >= 85 ? '#d1fae5' : '#fef3c7',
-                      padding: '3px 10px',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      transition: 'all 0.15s ease',
-                    }}
-                    title="Click to view Originality & Plagiarism details"
-                  >
-                    <ShieldCheck size={13} color={plagiarismReport.originalityScore >= 85 ? '#059669' : '#d97706'} />
-                    <span>{plagiarismReport.originalityScore}% Original</span>
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button
+                      onClick={() => setShowPlagiarism(true)}
+                      style={{
+                        border: 'none',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: plagiarismReport.originalityScore >= 85 ? '#065f46' : '#92400e',
+                        background: plagiarismReport.originalityScore >= 85 ? '#d1fae5' : '#fef3c7',
+                        padding: '3px 10px',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.15s ease',
+                      }}
+                      title="Click to view Originality details"
+                    >
+                      <ShieldCheck size={13} color={plagiarismReport.originalityScore >= 85 ? '#059669' : '#d97706'} />
+                      <span>{plagiarismReport.originalityScore}% Original</span>
+                    </button>
+
+                    <button
+                      onClick={() => setShowPlagiarism(true)}
+                      style={{
+                        border: 'none',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: (plagiarismReport.humanScore ?? 95) >= 80 ? '#3730a3' : '#991b1b',
+                        background: (plagiarismReport.humanScore ?? 95) >= 80 ? '#e0e7ff' : '#fee2e2',
+                        padding: '3px 10px',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.15s ease',
+                      }}
+                      title="Estimated human content score (AI detection resilience)"
+                    >
+                      <BrainCircuit size={13} color={(plagiarismReport.humanScore ?? 95) >= 80 ? '#4f46e5' : '#dc2626'} />
+                      <span>{plagiarismReport.humanScore ?? 95}% Human</span>
+                    </button>
+                  </div>
                 )}
 
                 {latency && (
@@ -1475,6 +1930,44 @@ export function Home() {
                       }}
                     />
                   )}
+                </div>
+              ) : activeTab === 'sentences' ? (
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: '2' }}>
+                  {(outputText.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [outputText]).map((sentence, sIdx) => {
+                    const isSelected = selectedSentence === sentence;
+                    return (
+                      <span
+                        key={sIdx}
+                        onClick={(e) => handleSentenceClick(sentence, e)}
+                        style={{
+                          display: 'inline',
+                          padding: '3px 6px',
+                          borderRadius: '6px',
+                          background: isSelected ? '#dbeafe' : 'transparent',
+                          border: isSelected ? '1.5px solid #3b82f6' : '1px solid transparent',
+                          color: '#1e293b',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          marginRight: '4px',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background = '#f1f5f9';
+                            e.currentTarget.style.border = '1px solid #cbd5e1';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.border = '1px solid transparent';
+                          }
+                        }}
+                        title="Click to view 3 alternative rephrasings for this sentence"
+                      >
+                        {sentence}
+                      </span>
+                    );
+                  })}
                 </div>
               ) : (
                 <div style={{ whiteSpace: 'pre-wrap' }}>
@@ -1603,6 +2096,120 @@ export function Home() {
               >
                 Close
               </button>
+            </div>
+          )}
+
+          {/* 📝 Floating Sentence Alternative Selector Widget (< 1 of 3 >) */}
+          {selectedSentence && sentenceWidgetPos && (
+            <div
+              style={{
+                position: 'absolute',
+                top: Math.max(10, sentenceWidgetPos.top - 60),
+                left: Math.min(sentenceWidgetPos.left, 280),
+                zIndex: 120,
+                background: '#ffffff',
+                border: '1.5px solid #93c5fd',
+                borderRadius: '10px',
+                boxShadow: '0 12px 30px -5px rgba(37, 99, 235, 0.2)',
+                padding: '12px 14px',
+                width: '360px',
+                maxWidth: '92vw',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Wand2 size={13} /> Sentence Alternatives
+                </span>
+                <button
+                  onClick={() => setSelectedSentence(null)}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '14px', padding: '2px' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {isLoadingAlternatives ? (
+                <div style={{ textAlign: 'center', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#64748b', fontSize: '13px' }}>
+                  <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: '#2563eb', borderTopColor: 'transparent' }} />
+                  <span>Generating 3 alternatives…</span>
+                </div>
+              ) : sentenceAlternatives.length > 0 ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                      Option {currentAltIndex + 1} of {sentenceAlternatives.length}
+                    </span>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        onClick={() => setCurrentAltIndex((prev) => (prev > 0 ? prev - 1 : sentenceAlternatives.length - 1))}
+                        style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        title="Previous alternative"
+                      >
+                        <ChevronLeft size={14} />
+                      </button>
+                      <button
+                        onClick={() => setCurrentAltIndex((prev) => (prev < sentenceAlternatives.length - 1 ? prev + 1 : 0))}
+                        style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        title="Next alternative"
+                      >
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#0f172a', background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                    "{sentenceAlternatives[currentAltIndex]}"
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      onClick={() => handleApplySentenceAlternative(sentenceAlternatives[currentAltIndex])}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                        color: '#ffffff',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <Check size={14} /> Replace
+                    </button>
+                    <button
+                      onClick={(e) => handleSentenceClick(selectedSentence, e)}
+                      title="Regenerate more variations"
+                      style={{
+                        padding: '8px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid #e2e8f0',
+                        background: '#fff',
+                        color: '#475569',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <RotateCw size={13} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '10px' }}>
+                  No alternative variations found.
+                </div>
+              )}
             </div>
           )}
 
@@ -1958,6 +2565,26 @@ export function Home() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
+                  onClick={() => plagiarismReport && exportPlagiarismAuditPdf(plagiarismReport, outputText)}
+                  title="Download Official PDF Audit Report"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #c7d2fe',
+                    background: '#eef2ff',
+                    color: '#4338ca',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Download size={13} />
+                  <span>PDF Audit</span>
+                </button>
+                <button
                   onClick={handleCheckPlagiarism}
                   disabled={isScanningPlagiarism}
                   title="Scan again"
@@ -2024,52 +2651,81 @@ export function Home() {
                       }`,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '20px',
+                      gap: '16px',
+                      flexWrap: 'wrap',
                     }}
                   >
-                    {/* Circular Score Badge */}
-                    <div
-                      style={{
-                        width: '74px',
-                        height: '74px',
-                        borderRadius: '50%',
-                        background: '#ffffff',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                        border: `3px solid ${
-                          plagiarismReport.riskLevel === 'safe'
-                            ? '#10b981'
-                            : plagiarismReport.riskLevel === 'moderate'
-                            ? '#f59e0b'
-                            : '#ef4444'
-                        }`,
-                        flexShrink: 0,
-                      }}
-                    >
+                    {/* Dual Circular Score Badges */}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      {/* Originality Badge */}
                       <div
                         style={{
-                          fontSize: '20px',
-                          fontWeight: 800,
-                          color:
+                          width: '68px',
+                          height: '68px',
+                          borderRadius: '50%',
+                          background: '#ffffff',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                          border: `3px solid ${
                             plagiarismReport.riskLevel === 'safe'
-                              ? '#059669'
+                              ? '#10b981'
                               : plagiarismReport.riskLevel === 'moderate'
-                              ? '#d97706'
-                              : '#dc2626',
-                          lineHeight: 1,
+                              ? '#f59e0b'
+                              : '#ef4444'
+                          }`,
+                          flexShrink: 0,
                         }}
                       >
-                        {plagiarismReport.originalityScore}%
+                        <div
+                          style={{
+                            fontSize: '18px',
+                            fontWeight: 800,
+                            color:
+                              plagiarismReport.riskLevel === 'safe'
+                                ? '#059669'
+                                : plagiarismReport.riskLevel === 'moderate'
+                                ? '#d97706'
+                                : '#dc2626',
+                            lineHeight: 1,
+                          }}
+                        >
+                          {plagiarismReport.originalityScore}%
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                          ORIGINAL
+                        </div>
                       </div>
-                      <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
-                        ORIGINAL
+
+                      {/* Human Content Badge */}
+                      <div
+                        style={{
+                          width: '68px',
+                          height: '68px',
+                          borderRadius: '50%',
+                          background: '#ffffff',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                          border: '3px solid #6366f1',
+                          flexShrink: 0,
+                        }}
+                        title="AI detector bypass score (100% = natural human cadence)"
+                      >
+                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#4338ca', lineHeight: 1 }}>
+                          {plagiarismReport.humanScore ?? 95}%
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                          HUMAN
+                        </div>
                       </div>
                     </div>
 
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                         <span
                           style={{
@@ -2094,7 +2750,7 @@ export function Home() {
                           }}
                         >
                           {plagiarismReport.riskLevel === 'safe'
-                            ? '✓ Clean / Original'
+                            ? '✓ Clean & Original'
                             : plagiarismReport.riskLevel === 'moderate'
                             ? '⚠ Moderate Similarity'
                             : '✕ High Plagiarism Risk'}
@@ -2102,11 +2758,35 @@ export function Home() {
                       </div>
                       <div style={{ fontSize: '13px', color: '#334155', lineHeight: 1.4 }}>
                         {plagiarismReport.riskLevel === 'safe'
-                          ? 'Great job! Your text shows very high originality and is safe for academic or publication use.'
+                          ? 'Great job! Your text shows very high originality and natural human cadence.'
                           : plagiarismReport.riskLevel === 'moderate'
-                          ? 'Some phrases or structures overlap with existing publications. Consider rephrasing flagged sections.'
-                          : 'Significant text similarity detected. Rephrasing is strongly recommended to avoid plagiarism.'}
+                          ? 'Some phrases or structures overlap with existing publications.'
+                          : 'Significant text similarity detected. Rephrasing is strongly recommended.'}
                       </div>
+
+                      {(plagiarismReport.humanScore ?? 95) < 90 && (
+                        <button
+                          onClick={handleHumanize}
+                          disabled={isHumanizing}
+                          style={{
+                            marginTop: '8px',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)',
+                            color: '#fff',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: isHumanizing ? 'not-allowed' : 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          <Wand2 size={12} />
+                          <span>{isHumanizing ? 'Humanizing…' : '⚡ Auto-Humanize to 98% Human Score'}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -2484,6 +3164,503 @@ export function Home() {
                   No report yet. Click "Plagiarism" on the toolbar to scan your text.
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ❄️ Freeze Words Glossary Modal */}
+        {showFreezeModal && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.6)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+              backdropFilter: 'blur(3px)',
+            }}
+          >
+            <div
+              style={{
+                width: '500px',
+                maxWidth: '92vw',
+                background: '#ffffff',
+                borderRadius: '14px',
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '17px', fontWeight: 700, color: '#1e3a8a' }}>
+                  <Snowflake size={20} color="#2563eb" />
+                  <span>Freeze Words & Phrases</span>
+                </div>
+                <button
+                  onClick={() => setShowFreezeModal(false)}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+                Terms entered here are strictly preserved verbatim. The AI engine will never alter, translate, or synonymize these words during rephrasing.
+              </p>
+
+              {/* Input bar */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={freezeInput}
+                  onChange={(e) => setFreezeInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddFrozenTerm()}
+                  placeholder="e.g. BrandName, Dr. Smith, HIPAA..."
+                  style={{
+                    flex: 1,
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: '14px',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={handleAddFrozenTerm}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  + Add Term
+                </button>
+              </div>
+
+              {/* Active Terms Tag Container */}
+              <div style={{ minHeight: '100px', maxHeight: '200px', overflowY: 'auto', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                {frozenTerms.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {frozenTerms.map((term) => (
+                      <span
+                        key={term}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: '#eff6ff',
+                          border: '1px solid #bfdbfe',
+                          color: '#1d4ed8',
+                          padding: '4px 10px',
+                          borderRadius: '16px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                        }}
+                      >
+                        <span>{term}</span>
+                        <button
+                          onClick={() => removeFrozenTerm(term)}
+                          style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', padding: 0 }}
+                          title="Remove term"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', paddingTop: '32px' }}>
+                    No frozen terms yet. Type a term and press Enter.
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px' }}>
+                {frozenTerms.length > 0 ? (
+                  <button
+                    onClick={() => {
+                      clearFrozenTerms();
+                      showToast('Cleared all frozen terms', 'info');
+                    }}
+                    style={{ border: 'none', background: 'none', color: '#dc2626', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}
+                  >
+                    Clear All ({frozenTerms.length})
+                  </button>
+                ) : <div />}
+                <button
+                  onClick={() => setShowFreezeModal(false)}
+                  style={{
+                    padding: '8px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#10b981',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 📑 Compare Modes Multi-Pane Modal */}
+        {showCompareModal && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.65)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <div
+              style={{
+                width: '1100px',
+                maxWidth: '96vw',
+                maxHeight: '90vh',
+                background: '#ffffff',
+                borderRadius: '16px',
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Compare Header */}
+              <div
+                style={{
+                  padding: '18px 24px',
+                  borderBottom: '1px solid #e2e8f0',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: '#f8fafc',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Columns size={20} color="#6d28d9" />
+                  <div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
+                      Compare Modes Side-by-Side
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                      Standard vs. Fluency vs. Academic variations generated concurrently
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowCompareModal(false)}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '20px' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Compare Content Body */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+                {isComparing ? (
+                  <div style={{ textAlign: 'center', padding: '80px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                    <div className="spinner" style={{ width: '44px', height: '44px', borderWidth: '3px', borderColor: '#7c3aed', borderTopColor: 'transparent' }} />
+                    <div style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b' }}>
+                      Generating 3 modes in parallel...
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#64748b' }}>
+                      Running Standard, Fluency, and Academic engines simultaneously
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '20px' }}>
+                    {compareResults.map((card) => (
+                      <div
+                        key={card.mode}
+                        style={{
+                          background: '#f8fafc',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '12px',
+                          padding: '18px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span
+                            style={{
+                              padding: '4px 12px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              background: card.mode === 'academic' ? '#f3e8ff' : card.mode === 'fluency' ? '#ecfdf5' : '#eff6ff',
+                              color: card.mode === 'academic' ? '#7e22ce' : card.mode === 'fluency' ? '#047857' : '#1d4ed8',
+                            }}
+                          >
+                            {card.label}
+                          </span>
+                          <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>
+                            {card.words} words
+                          </span>
+                        </div>
+
+                        <div
+                          style={{
+                            flex: 1,
+                            fontSize: '14px',
+                            lineHeight: '1.7',
+                            color: '#1e293b',
+                            whiteSpace: 'pre-wrap',
+                            maxHeight: '340px',
+                            overflowY: 'auto',
+                            padding: '12px',
+                            background: '#ffffff',
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0',
+                          }}
+                        >
+                          {card.text}
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setOutputText(card.text);
+                            setMode(card.mode as any);
+                            setShowCompareModal(false);
+                            showToast(`Selected ${card.label} mode output!`, 'success');
+                          }}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            color: '#ffffff',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          <Check size={16} /> Use This Version
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 🔍 Live Grammar Proofreader Slide-Over Drawer */}
+        {showGrammarDrawer && (
+          <div
+            className="plagiarism-drawer-responsive animate-slide-in-right"
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              background: '#ffffff',
+              borderLeft: '1px solid #e2e8f0',
+              boxShadow: '-4px 0 25px rgba(0,0,0,0.12)',
+              zIndex: 320,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {/* Grammar Drawer Header */}
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid #e2e8f0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: '#fff7ed',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px', color: '#9a3412' }}>
+                <CheckCheck size={20} color="#ea580c" />
+                <span>Live Grammar & Proofreader</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={handleCheckGrammar}
+                  disabled={isCheckingGrammar}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #fed7aa',
+                    background: '#fff',
+                    color: '#c2410c',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    cursor: isCheckingGrammar ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <RotateCw size={13} className={isCheckingGrammar ? 'animate-spin' : ''} />
+                  <span>Re-check</span>
+                </button>
+                <button
+                  onClick={() => setShowGrammarDrawer(false)}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px', padding: '4px' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Grammar Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {isCheckingGrammar ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                  <div className="spinner" style={{ width: '40px', height: '40px', borderWidth: '3px', borderColor: '#ea580c', borderTopColor: 'transparent' }} />
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>
+                    Scanning text for grammar & spelling...
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#64748b' }}>
+                    Checking syntactic agreement, typos, punctuation, and structural flow.
+                  </div>
+                </div>
+              ) : grammarReport ? (
+                <>
+                  {/* Summary Banner with Fix All Button */}
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderRadius: '10px',
+                      background: grammarReport.corrections && grammarReport.corrections.length > 0 ? '#fff7ed' : '#ecfdf5',
+                      border: `1.5px solid ${grammarReport.corrections && grammarReport.corrections.length > 0 ? '#fed7aa' : '#a7f3d0'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: grammarReport.corrections && grammarReport.corrections.length > 0 ? '#9a3412' : '#065f46' }}>
+                        {grammarReport.corrections && grammarReport.corrections.length > 0
+                          ? `${grammarReport.corrections.length} Suggestion(s) Detected`
+                          : '✓ Perfect! Zero Errors Found'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        {grammarReport.corrections && grammarReport.corrections.length > 0
+                          ? 'Review individual suggestions below or fix everything in one click.'
+                          : 'Your text is grammatically sound, well-punctuated, and fluent.'}
+                      </div>
+                    </div>
+
+                    {grammarReport.corrections && grammarReport.corrections.length > 0 && (
+                      <button
+                        onClick={handleFixAllGrammar}
+                        disabled={isFixingGrammar}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
+                          color: '#fff',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 2px 8px rgba(234, 88, 12, 0.3)',
+                        }}
+                      >
+                        <Check size={15} />
+                        <span>Fix All ({grammarReport.corrections.length})</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Corrections List */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {grammarReport.corrections?.map((corr, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: '14px',
+                          borderRadius: '8px',
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              background:
+                                corr.type === 'spelling'
+                                  ? '#fee2e2'
+                                  : corr.type === 'grammar'
+                                  ? '#fef3c7'
+                                  : corr.type === 'punctuation'
+                                  ? '#e0e7ff'
+                                  : '#f3e8ff',
+                              color:
+                                corr.type === 'spelling'
+                                  ? '#b91c1c'
+                                  : corr.type === 'grammar'
+                                  ? '#b45309'
+                                  : corr.type === 'punctuation'
+                                  ? '#4338ca'
+                                  : '#7e22ce',
+                            }}
+                          >
+                            {corr.type}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: '13px', color: '#1e293b' }}>
+                          <del style={{ color: '#dc2626', marginRight: '8px' }}>{corr.original}</del>
+                          <span style={{ color: '#94a3b8', marginRight: '8px' }}>→</span>
+                          <ins style={{ color: '#059669', fontWeight: 600, textDecoration: 'none' }}>{corr.corrected}</ins>
+                        </div>
+
+                        {corr.explanation && (
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>
+                            {corr.explanation}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
         )}

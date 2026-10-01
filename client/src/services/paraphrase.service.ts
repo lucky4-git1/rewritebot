@@ -96,6 +96,44 @@ class ParaphraseService {
       reader.releaseLock();
     }
   }
+
+  /**
+   * Get 3 diverse alternative rephrasings for a single sentence
+   */
+  async getSentenceAlternatives(
+    sentence: string,
+    options: {
+      providerId: string;
+      modelId: string;
+      language?: string;
+      frozenTerms?: string[];
+    }
+  ): Promise<string[]> {
+    const modes: Array<'fluency' | 'creative' | 'formal'> = ['fluency', 'creative', 'formal'];
+    const results = await Promise.all(
+      modes.map(async (m) => {
+        try {
+          const res = await this.paraphrase({
+            text: sentence,
+            mode: m,
+            language: options.language || 'auto',
+            synonymLevel: 3,
+            frozenTerms: options.frozenTerms || [],
+            providerId: options.providerId,
+            modelId: options.modelId,
+            plagiarismGuard: true,
+          });
+          return res.text.trim();
+        } catch (e) {
+          return '';
+        }
+      })
+    );
+
+    // Filter out empties and duplicates
+    const unique = Array.from(new Set(results.filter((s) => s && s !== sentence)));
+    return unique.length > 0 ? unique : [sentence];
+  }
 }
 
 export const paraphraseService = new ParaphraseService();
