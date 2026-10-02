@@ -5,7 +5,7 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced clause rearrangement and syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, and refresh vocabulary without retaining the source sentence's exact template. Allow slight natural expansion (strictly up to +15% longer, never exceeding +15%) where beneficial for clause restructuring, nuance, and smooth syntactic flow, but do not add unnecessary padding or bloated paragraphs.`,
+  standard: `Rewrite the following text with balanced clause rearrangement and syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, and refresh vocabulary without retaining the source sentence's exact template. Maintain a proportional length strictly within 10% of the input text (never exceed +10% longer) while ensuring clause restructuring and smooth syntactic flow, without adding unnecessary padding or bloated paragraphs.`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text. Focus on:
 - Reorganizing clause order and sentence structure for natural human cadence
@@ -14,12 +14,12 @@ const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
 - Eliminating awkward phrasing, word repetition, and monotonous rhythm
 Preserve all factual information, names, numbers, and technical terms.`,
 
-  humanize: `Rewrite the following text with deep sentence-level variety to sound naturally authored and defeat AI detectors. Use:
-- Dramatic sentence length variation (mix punchy 5-word statements with compound thoughts)
-- Inverted conversational clause structures and natural human cadence
+  humanize: `Rewrite the following text with deep sentence-level variety to sound naturally authored and defeat AI detectors. Focus on:
+- Subtle sentence length variation and natural clause rhythm
+- Inverted conversational clause structures and authentic human cadence
 - Asymmetric discourse connectors and organic flow
 - Never preserve the robotic word-for-word sentence structure of the source
-Keep all facts, names, numbers, and technical terms intact.`,
+CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact. Maintain strictly proportional length (word count strictly within ±10% of the original text). Do NOT expand, explain, elaborate, or add conversational padding, filler stories, or introductory fluff.`,
 
   formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, and polished formal transitions while preserving all original facts.`,
 
@@ -82,13 +82,13 @@ export class PromptEngine {
     parts.push('5. 100% Fact & Semantic Preservation: Keep all numbers, proper nouns, facts, and underlying intent completely accurate.');
     parts.push('');
 
-    // Length calibration constraints
+    // Length constraints for Standard, Fluency, Simple, and Humanize modes
     if (request.mode === 'standard') {
       parts.push('LENGTH CALIBRATION RULE:');
-      parts.push('- Maintain a natural, comfortable length: allow slight natural expansion (strictly up to +15% longer maximum; do NOT exceed +15% as 20% is too long) where beneficial for clause restructuring, nuance, and smooth syntactic flow.');
+      parts.push('- Maintain a natural, proportional length: keep the word count strictly within 10% of the input text (strictly do NOT exceed +10% longer).');
       parts.push('- Do NOT over-expand into multiple paragraphs or add unnecessary padding.');
       parts.push('');
-    } else if (request.mode === 'fluency' || request.mode === 'simple') {
+    } else if (request.mode === 'fluency' || request.mode === 'simple' || request.mode === 'humanize') {
       parts.push('STRICT LENGTH PRESERVATION RULE (CRITICAL FOR THIS MODE):');
       parts.push('- The rewritten output MUST closely match the input length (word count strictly within ±10% of the input text).');
       parts.push('- Do NOT add unsolicited explanations, conversational filler, background context, or descriptive padding.');
@@ -224,6 +224,7 @@ ${text}
     return `${instruction}
 
 Use natural sentence variation, appropriate transitions, and clear expression. Do not intentionally introduce errors.
+CRITICAL: Keep output length strictly proportional to the input text (word count strictly within ±10%). Do NOT add background explanations, introductory remarks, or conversational filler. Return ONLY the rewritten text.
 
 Language: ${this.getLanguageName(language)}
 

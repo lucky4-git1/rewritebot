@@ -1033,8 +1033,8 @@ export function Home() {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                background: '#e0e7ff',
-                color: '#4338ca',
+                background: isDark ? 'var(--rb-primary-light)' : '#fbebf0',
+                color: isDark ? '#f48fb1' : '#670626',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1335,16 +1335,16 @@ export function Home() {
               gap: '5px',
               padding: '6px 12px',
               borderRadius: '20px',
-              border: isDark ? '1px solid rgba(124, 58, 237, 0.35)' : '1px solid #e0e7ff',
-              background: isDark ? 'rgba(124, 58, 237, 0.16)' : '#f5f3ff',
-              color: isDark ? '#c4b5fd' : '#6d28d9',
+              border: isDark ? '1px solid var(--rb-primary-border)' : '1px solid #f3cbd7',
+              background: isDark ? 'var(--rb-primary-light)' : '#fbebf0',
+              color: isDark ? '#f48fb1' : '#670626',
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
               whiteSpace: 'nowrap',
             }}
           >
-            <Columns size={13} color={isDark ? '#c4b5fd' : '#7c3aed'} />
+            <Columns size={13} color={isDark ? '#f48fb1' : '#670626'} />
             <span>Compare Modes</span>
           </button>
         </div>
@@ -1481,9 +1481,9 @@ export function Home() {
               gap: '6px',
               padding: '4px 10px',
               borderRadius: '6px',
-              border: plagiarismGuard ? (isDark ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid #c7d2fe') : '1px solid var(--rb-border)',
-              background: plagiarismGuard ? (isDark ? 'rgba(99, 102, 241, 0.2)' : '#eef2ff') : 'var(--rb-surface)',
-              color: plagiarismGuard ? (isDark ? '#c7d2fe' : '#4338ca') : 'var(--rb-text)',
+              border: plagiarismGuard ? (isDark ? '1px solid rgba(186, 215, 151, 0.4)' : '1px solid #cbe6ac') : '1px solid var(--rb-border)',
+              background: plagiarismGuard ? (isDark ? 'rgba(186, 215, 151, 0.18)' : '#f2f8eb') : 'var(--rb-surface)',
+              color: plagiarismGuard ? (isDark ? '#cbe6ac' : '#2d5a1e') : 'var(--rb-text)',
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
@@ -1491,7 +1491,7 @@ export function Home() {
             }}
             title="When active, forces deep restructuring to ensure 100% unique, plagiarism-free output"
           >
-            <ShieldCheck size={14} color={plagiarismGuard ? (isDark ? '#c7d2fe' : '#4f46e5') : 'var(--rb-text-muted)'} />
+            <ShieldCheck size={14} color={plagiarismGuard ? (isDark ? '#cbe6ac' : '#3b6f28') : 'var(--rb-text-muted)'} />
             <span>Guard: {plagiarismGuard ? 'ON' : 'OFF'}</span>
           </button>
         </div>
@@ -1952,11 +1952,11 @@ export function Home() {
                     <button
                       onClick={() => setShowPlagiarism(true)}
                       style={{
-                        border: isDark ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid var(--rb-border)',
+                        border: isDark ? '1px solid rgba(186, 215, 151, 0.35)' : '1px solid var(--rb-border)',
                         fontSize: '11.5px',
                         fontWeight: 600,
-                        color: isDark ? '#c7d2fe' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#3730a3' : '#991b1b'),
-                        background: isDark ? 'rgba(99, 102, 241, 0.14)' : 'var(--rb-surface-cream)',
+                        color: isDark ? '#cbe6ac' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#2d5a1e' : '#991b1b'),
+                        background: isDark ? 'rgba(186, 215, 151, 0.14)' : 'var(--rb-surface-cream)',
                         padding: '3px 7px',
                         borderRadius: '6px',
                         cursor: 'pointer',
@@ -1969,7 +1969,7 @@ export function Home() {
                       }}
                       title={`Human Content Score: ${plagiarismReport.humanScore ?? 95}% (Click to view details)`}
                     >
-                      <BrainCircuit size={13} color={isDark ? '#a5b4fc' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#4f46e5' : '#dc2626')} />
+                      <BrainCircuit size={13} color={isDark ? '#cbe6ac' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#3b6f28' : '#dc2626')} />
                       <span>{plagiarismReport.humanScore ?? 95}%</span>
                     </button>
                   </div>
@@ -2025,17 +2025,17 @@ export function Home() {
             <div
               style={{
                 padding: '8px 20px',
-                background: '#f5f3ff',
-                borderBottom: '1px solid #c7d2fe',
+                background: isDark ? 'rgba(186, 215, 151, 0.14)' : '#f2f8eb',
+                borderBottom: isDark ? '1px solid rgba(186, 215, 151, 0.3)' : '1px solid #d4e8be',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
                 fontSize: '13px',
                 fontWeight: 600,
-                color: '#4338ca',
+                color: isDark ? '#cbe6ac' : '#2d5a1e',
               }}
             >
-              <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: '#6d28d9', borderTopColor: 'transparent' }} />
+              <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: isDark ? '#cbe6ac' : '#3b6f28', borderTopColor: 'transparent' }} />
               {isScanningPlagiarism
                 ? '🛡️ Guard: Scanning for plagiarism…'
                 : '🛡️ Guard: Auto-fixing flagged sentences…'}
@@ -2611,9 +2611,9 @@ export function Home() {
                   height: '36px',
                   padding: '0 10px',
                   borderRadius: '6px',
-                  border: isDark ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid #c7d2fe',
-                  background: isDark ? 'rgba(99, 102, 241, 0.15)' : '#eef2ff',
-                  color: isDark ? '#c7d2fe' : '#4338ca',
+                  border: isDark ? '1px solid rgba(186, 215, 151, 0.4)' : '1px solid #cbe6ac',
+                  background: isDark ? 'rgba(186, 215, 151, 0.15)' : '#f2f8eb',
+                  color: isDark ? '#cbe6ac' : '#2d5a1e',
                   fontSize: '13px',
                   fontWeight: 600,
                   cursor: outputText || inputText.trim() ? 'pointer' : 'not-allowed',
@@ -2624,7 +2624,7 @@ export function Home() {
                   flexShrink: 0,
                 }}
               >
-                <ShieldCheck size={15} color={isDark ? '#a5b4fc' : '#4f46e5'} />
+                <ShieldCheck size={15} color={isDark ? '#cbe6ac' : '#3b6f28'} />
                 <span className="hide-on-mobile">Plagiarism</span>
               </button>
 
@@ -2886,15 +2886,15 @@ export function Home() {
             <div
               style={{
                 padding: '16px 20px',
-                borderBottom: '1px solid #e2e8f0',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                background: '#faf5ff',
+                background: isDark ? 'var(--rb-surface-cream)' : '#f2f8eb',
+                borderBottom: isDark ? '1px solid var(--rb-border)' : '1px solid #d4e8be',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px', color: '#581c87' }}>
-                <ShieldCheck size={20} color="#7c3aed" /> Originality & Plagiarism Report
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px', color: isDark ? '#cbe6ac' : '#2d5a1e' }}>
+                <ShieldCheck size={20} color={isDark ? '#cbe6ac' : '#3b6f28'} /> Originality & Plagiarism Report
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
@@ -2906,9 +2906,9 @@ export function Home() {
                     gap: '4px',
                     padding: '4px 10px',
                     borderRadius: '6px',
-                    border: '1px solid #c7d2fe',
-                    background: '#eef2ff',
-                    color: '#4338ca',
+                    border: isDark ? '1px solid rgba(186, 215, 151, 0.4)' : '1px solid #cbe6ac',
+                    background: isDark ? 'rgba(186, 215, 151, 0.15)' : '#ffffff',
+                    color: isDark ? '#cbe6ac' : '#2d5a1e',
                     fontSize: '12px',
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -2927,9 +2927,9 @@ export function Home() {
                     gap: '4px',
                     padding: '4px 10px',
                     borderRadius: '6px',
-                    border: '1px solid #ddd6fe',
-                    background: '#fff',
-                    color: '#6d28d9',
+                    border: isDark ? '1px solid var(--rb-border)' : '1px solid #cbe6ac',
+                    background: isDark ? 'var(--rb-surface)' : '#fff',
+                    color: isDark ? '#cbe6ac' : '#2d5a1e',
                     fontSize: '12px',
                     fontWeight: 500,
                     cursor: isScanningPlagiarism ? 'not-allowed' : 'pointer',
@@ -2953,7 +2953,7 @@ export function Home() {
                 <div style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                   <div
                     className="spinner"
-                    style={{ width: '40px', height: '40px', borderWidth: '3px', borderColor: '#7c3aed', borderTopColor: 'transparent' }}
+                    style={{ width: '40px', height: '40px', borderWidth: '3px', borderColor: isDark ? '#cbe6ac' : '#3b6f28', borderTopColor: 'transparent' }}
                   />
                   <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>
                     Scanning text for plagiarism...
@@ -3044,12 +3044,12 @@ export function Home() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                          border: '3px solid #6366f1',
+                          border: '3px solid #BAD797',
                           flexShrink: 0,
                         }}
                         title="AI detector bypass score (100% = natural human cadence)"
                       >
-                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#4338ca', lineHeight: 1 }}>
+                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#2d5a1e', lineHeight: 1 }}>
                           {plagiarismReport.humanScore ?? 95}%
                         </div>
                         <div style={{ fontSize: '9px', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
@@ -3106,7 +3106,7 @@ export function Home() {
                             padding: '6px 12px',
                             borderRadius: '6px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)',
+                            background: 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
                             color: '#fff',
                             fontSize: '11px',
                             fontWeight: 700,
@@ -3114,6 +3114,7 @@ export function Home() {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '4px',
+                            boxShadow: '0 2px 6px rgba(103, 6, 38, 0.25)',
                           }}
                         >
                           <Wand2 size={12} />
@@ -3166,8 +3167,8 @@ export function Home() {
                       style={{
                         padding: '14px 16px',
                         borderRadius: '10px',
-                        background: '#f5f3ff',
-                        border: '1.5px solid #c7d2fe',
+                        background: isDark ? 'rgba(186, 215, 151, 0.1)' : '#f2f8eb',
+                        border: isDark ? '1.5px solid rgba(186, 215, 151, 0.3)' : '1.5px solid #d4e8be',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -3176,12 +3177,12 @@ export function Home() {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Sparkles size={18} color="#7c3aed" />
+                        <Sparkles size={18} color={isDark ? '#cbe6ac' : '#3b6f28'} />
                         <div>
-                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#4338ca' }}>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#cbe6ac' : '#2d5a1e' }}>
                             Auto-Fix Entire Document
                           </div>
-                          <div style={{ fontSize: '12px', color: '#6366f1' }}>
+                          <div style={{ fontSize: '12px', color: isDark ? '#a5c77e' : '#4a7c2f' }}>
                             Rewrites all {plagiarismReport.matches.filter((m) => m.type !== 'clean').length} flagged sentences in-place with zero plagiarism.
                           </div>
                         </div>
@@ -3194,7 +3195,7 @@ export function Home() {
                           padding: '8px 16px',
                           borderRadius: '8px',
                           border: 'none',
-                          background: isAutoFixingAll ? '#cbd5e1' : 'linear-gradient(135deg, #7c3aed 0%, #4338ca 100%)',
+                          background: isAutoFixingAll ? '#cbd5e1' : 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
                           color: '#fff',
                           fontSize: '13px',
                           fontWeight: 700,
@@ -3202,7 +3203,7 @@ export function Home() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px',
-                          boxShadow: '0 2px 8px rgba(124, 58, 237, 0.3)',
+                          boxShadow: '0 2px 8px rgba(103, 6, 38, 0.25)',
                         }}
                       >
                         {isAutoFixingAll ? (
@@ -3378,7 +3379,7 @@ export function Home() {
                           background:
                             rewritingSentenceIndex === selectedMatchIndex
                               ? '#cbd5e1'
-                              : 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                              : 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
                           color: '#ffffff',
                           fontSize: '12px',
                           fontWeight: 600,
@@ -3387,7 +3388,7 @@ export function Home() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '6px',
-                          boxShadow: '0 2px 6px rgba(124, 58, 237, 0.25)',
+                          boxShadow: '0 2px 6px rgba(103, 6, 38, 0.25)',
                         }}
                       >
                         {rewritingSentenceIndex === selectedMatchIndex ? (
@@ -3695,7 +3696,7 @@ export function Home() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Columns size={20} color="#7c3aed" />
+                  <Columns size={20} color={isDark ? 'var(--rb-primary)' : '#670626'} />
                   <div>
                     <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--rb-text)' }}>
                       Compare Modes Side-by-Side
@@ -3735,9 +3736,9 @@ export function Home() {
                       key={m.value}
                       onClick={() => toggleCompareMode(m.value)}
                       style={{
-                        border: isSelected ? '1.5px solid #7c3aed' : '1px solid var(--rb-border)',
-                        background: isSelected ? (isDark ? 'rgba(124, 58, 237, 0.25)' : '#ede9fe') : 'var(--rb-surface)',
-                        color: isSelected ? (isDark ? '#c4b5fd' : '#6d28d9') : 'var(--rb-text)',
+                        border: isSelected ? (isDark ? '1.5px solid var(--rb-primary)' : '1.5px solid #670626') : '1px solid var(--rb-border)',
+                        background: isSelected ? (isDark ? 'var(--rb-primary-light)' : '#fbebf0') : 'var(--rb-surface)',
+                        color: isSelected ? (isDark ? '#f48fb1' : '#670626') : 'var(--rb-text)',
                         padding: '4px 10px',
                         borderRadius: '16px',
                         fontSize: '12px',
@@ -3762,7 +3763,7 @@ export function Home() {
                     padding: '6px 14px',
                     borderRadius: '8px',
                     border: 'none',
-                    background: '#7c3aed',
+                    background: 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
                     color: '#ffffff',
                     fontSize: '12px',
                     fontWeight: 600,
@@ -3770,7 +3771,7 @@ export function Home() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    boxShadow: '0 2px 6px rgba(124, 58, 237, 0.25)',
+                    boxShadow: '0 2px 6px rgba(103, 6, 38, 0.25)',
                   }}
                 >
                   <RotateCw size={13} className={isComparing ? 'spinner' : ''} />
@@ -3782,7 +3783,7 @@ export function Home() {
               <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
                 {isComparing ? (
                   <div style={{ textAlign: 'center', padding: '80px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                    <div className="spinner" style={{ width: '44px', height: '44px', borderWidth: '3px', borderColor: '#7c3aed', borderTopColor: 'transparent' }} />
+                    <div className="spinner" style={{ width: '44px', height: '44px', borderWidth: '3px', borderColor: isDark ? 'var(--rb-primary)' : '#670626', borderTopColor: 'transparent' }} />
                     <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--rb-text)' }}>
                       Generating {selectedCompareModes.length} modes in parallel...
                     </div>

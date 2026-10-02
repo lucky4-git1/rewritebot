@@ -214,10 +214,8 @@ export class AIOrchestrator {
     providerId: string;
     modelId: string;
   }): Promise<AIResponse> {
-    const prompt = this.promptEngine.buildHumanizePrompt(params.text, params.mode, params.language);
-
     const request: AIRequest = {
-      text: prompt,
+      text: params.text,
       mode: 'humanize',
       language: params.language,
       synonymLevel: 2,
