@@ -1813,7 +1813,7 @@ export function Home() {
               gap: '8px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <div className="output-header-tabs" style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
               <button
                 className="show-on-mobile hide-on-desktop"
                 onClick={() => setMobileTab('input')}
@@ -1892,7 +1892,7 @@ export function Home() {
             </div>
 
             {outputText && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+              <div className="output-header-badges" style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
                 <span
                   style={{
                     fontSize: '11.5px',
