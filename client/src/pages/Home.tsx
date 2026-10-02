@@ -269,7 +269,13 @@ export function Home() {
           setShowPlagiarism(true);
         } catch (scanErr: any) {
           console.error('Guard auto-scan failed:', scanErr);
-          showToast('Guard scan failed – you can run plagiarism check manually.', 'error');
+          const isRateLimit = scanErr?.message?.includes('429') || scanErr?.statusCode === 429;
+          showToast(
+            isRateLimit
+              ? 'Guard scan paused (API rate limit). Click Plagiarism to run check.'
+              : 'Guard scan paused. Click the Plagiarism button to check manually.',
+            'info'
+          );
         } finally {
           setIsAutoScanRunning(false);
           setIsScanningPlagiarism(false);
@@ -772,28 +778,32 @@ export function Home() {
     let currentDoc = useEditorStore.getState().outputText || inputText;
     const updatedMatches = [...report.matches];
 
-    // Execute all flagged sentence rewrites concurrently in parallel
-    const rewriteResults = await Promise.all(
-      flaggedItems.map(async ({ match, idx }) => {
-        try {
-          const res = await paraphraseService.paraphrase({
-            text: match.sentence,
-            mode: 'fluency',
-            language,
-            synonymLevel: 3,
-            frozenTerms: [],
-            providerId: provider.id,
-            modelId: provider.modelId,
-            plagiarismGuard: true,
-          });
-          const newSentence = res.text.trim();
-          return { original: match.sentence, newSentence, idx, success: !!newSentence };
-        } catch (e) {
-          console.error('Failed to rewrite individual sentence in parallel batch:', e);
-          return { original: match.sentence, newSentence: match.sentence, idx, success: false };
-        }
-      })
-    );
+    // Process flagged sentence rewrites sequentially with small interval to prevent provider 429 rate limit errors
+    const rewriteResults: { original: string; newSentence: string; idx: number; success: boolean }[] = [];
+    for (const { match, idx } of flaggedItems) {
+      try {
+        const res = await paraphraseService.paraphrase({
+          text: match.sentence,
+          mode: 'fluency',
+          language,
+          synonymLevel: 3,
+          frozenTerms: [],
+          providerId: provider.id,
+          modelId: provider.modelId,
+          plagiarismGuard: false,
+        });
+        const newSentence = res.text.trim();
+        rewriteResults.push({ original: match.sentence, newSentence, idx, success: !!newSentence });
+      } catch (e) {
+        console.error('Failed to rewrite individual sentence in batch:', e);
+        rewriteResults.push({ original: match.sentence, newSentence: match.sentence, idx, success: false });
+      }
+
+      // Brief 150ms pause between requests to respect API rate limits on free providers (Groq/Ollama)
+      if (flaggedItems.length > 1) {
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    }
 
     // Apply all rewritten sentences into document and update matches
     for (const item of rewriteResults) {

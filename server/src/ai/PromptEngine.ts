@@ -5,7 +5,7 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced clause rearrangement and syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, and refresh vocabulary without retaining the source sentence's exact template.`,
+  standard: `Rewrite the following text with balanced clause rearrangement and syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, and refresh vocabulary without retaining the source sentence's exact template. CRITICAL: Maintain approximately the same word count as the original text (do NOT expand, elaborate, or pad with explanatory filler).`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text. Focus on:
 - Reorganizing clause order and sentence structure for natural human cadence
@@ -81,6 +81,15 @@ export class PromptEngine {
     parts.push('4. Varied Openings: Never start consecutive sentences with the same word or syntactic structure.');
     parts.push('5. 100% Fact & Semantic Preservation: Keep all numbers, proper nouns, facts, and underlying intent completely accurate.');
     parts.push('');
+
+    // Length preservation constraints for Standard, Fluency, and Simple modes
+    if (request.mode === 'standard' || request.mode === 'fluency' || request.mode === 'simple') {
+      parts.push('STRICT LENGTH PRESERVATION RULE (CRITICAL FOR THIS MODE):');
+      parts.push('- The rewritten output MUST closely match the input length (word count strictly within ±10% of the input text).');
+      parts.push('- Do NOT add unsolicited explanations, conversational filler, background context, or descriptive padding.');
+      parts.push('- Do NOT treat this mode like an Expand mode. Keep the prose tight, proportional, and directly focused on the source ideas.');
+      parts.push('');
+    }
 
     // Synonym level instructions
     if (request.synonymLevel > 1) {
