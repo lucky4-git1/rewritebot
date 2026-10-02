@@ -405,6 +405,32 @@ select option {
   input, textarea, select {
     font-size: 16px !important;
   }
+
+  /* Output Pane Mobile Toolbar & Footer */
+  .output-header-responsive {
+    padding: 8px 12px !important;
+    gap: 6px !important;
+  }
+
+  .output-footer-responsive {
+    padding: 0 10px !important;
+    gap: 6px !important;
+  }
+
+  .output-footer-responsive button {
+    padding: 0 8px !important;
+  }
+
+  .output-legend-responsive {
+    padding: 6px 12px !important;
+    gap: 8px 12px !important;
+    font-size: 10.5px !important;
+  }
+
+  .workspace-pane-right {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
 }
 
 @media (min-width: 768px) {

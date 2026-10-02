@@ -745,11 +745,11 @@ export function Landing() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
             }}
           >
             {/* Left Column: Original Input */}
-            <div style={{ padding: '28px', borderRight: '1px solid var(--rb-border)' }}>
+            <div style={{ padding: 'clamp(16px, 3vw, 28px)', borderRight: '1px solid var(--rb-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--rb-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Original Draft
@@ -1094,24 +1094,26 @@ export function Landing() {
             borderRadius: '16px',
             border: '1px solid var(--rb-border)',
             boxShadow: 'var(--rb-shadow-md)',
-            overflow: 'hidden',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1.3fr 1.5fr',
-              padding: '18px 24px',
-              background: 'var(--rb-surface-cream)',
-              borderBottom: '2px solid var(--rb-border)',
-              fontWeight: 700,
-              fontSize: '14px',
-            }}
-          >
-            <span>Capability & Freedom</span>
-            <span style={{ color: 'var(--rb-text-muted)' }}>🦆 QuillBot Premium</span>
-            <span style={{ color: 'var(--rb-primary)' }}>⚡ RewriteBot Flagship</span>
-          </div>
+          <div style={{ minWidth: '640px' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1.3fr 1.5fr',
+                padding: '18px 24px',
+                background: 'var(--rb-surface-cream)',
+                borderBottom: '2px solid var(--rb-border)',
+                fontWeight: 700,
+                fontSize: '14px',
+              }}
+            >
+              <span>Capability & Freedom</span>
+              <span style={{ color: 'var(--rb-text-muted)' }}>🦆 QuillBot Premium</span>
+              <span style={{ color: 'var(--rb-primary)' }}>⚡ RewriteBot Flagship</span>
+            </div>
 
           {[
             {
@@ -1251,7 +1253,8 @@ export function Landing() {
             </button>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
       {/* ====================================================================
           5. BENTO GRID OF FLAGSHIP CAPABILITIES

@@ -1793,15 +1793,17 @@ export function Home() {
         >
           {/* Output Header Toolbar */}
           <div
+            className="output-header-responsive"
             style={{
               padding: '12px 20px',
               borderBottom: '1px solid var(--rb-border)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              gap: '8px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
               <button
                 className="show-on-mobile hide-on-desktop"
                 onClick={() => setMobileTab('input')}
@@ -1809,7 +1811,7 @@ export function Home() {
                   display: 'none',
                   alignItems: 'center',
                   gap: '4px',
-                  padding: '5px 10px',
+                  padding: '5px 8px',
                   borderRadius: '6px',
                   border: '1px solid var(--rb-border)',
                   background: 'var(--rb-surface-cream)',
@@ -1817,22 +1819,23 @@ export function Home() {
                   fontSize: '12px',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  flexShrink: 0,
                 }}
               >
                 <ArrowLeft size={13} /> Edit
               </button>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--rb-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--rb-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>
                 Paraphrase
               </span>
               {outputText && (
-                <div style={{ display: 'flex', background: 'var(--rb-surface-cream)', borderRadius: '6px', padding: '2px', border: '1px solid var(--rb-border)' }}>
+                <div style={{ display: 'flex', background: 'var(--rb-surface-cream)', borderRadius: '6px', padding: '2px', border: '1px solid var(--rb-border)', flexShrink: 0 }}>
                   <button
                     onClick={() => setActiveTab('diff')}
                     style={{
                       border: 'none',
-                      padding: '4px 10px',
+                      padding: '4px 8px',
                       borderRadius: '4px',
-                      fontSize: '12px',
+                      fontSize: '11.5px',
                       fontWeight: activeTab === 'diff' ? 600 : 500,
                       background: activeTab === 'diff' ? 'var(--rb-surface)' : 'transparent',
                       color: activeTab === 'diff' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
@@ -1846,9 +1849,9 @@ export function Home() {
                     onClick={() => setActiveTab('sentences')}
                     style={{
                       border: 'none',
-                      padding: '4px 10px',
+                      padding: '4px 8px',
                       borderRadius: '4px',
-                      fontSize: '12px',
+                      fontSize: '11.5px',
                       fontWeight: activeTab === 'sentences' ? 600 : 500,
                       background: activeTab === 'sentences' ? 'var(--rb-surface)' : 'transparent',
                       color: activeTab === 'sentences' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
@@ -1862,9 +1865,9 @@ export function Home() {
                     onClick={() => setActiveTab('plain')}
                     style={{
                       border: 'none',
-                      padding: '4px 10px',
+                      padding: '4px 8px',
                       borderRadius: '4px',
-                      fontSize: '12px',
+                      fontSize: '11.5px',
                       fontWeight: activeTab === 'plain' ? 600 : 500,
                       background: activeTab === 'plain' ? 'var(--rb-surface)' : 'transparent',
                       color: activeTab === 'plain' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
@@ -1879,14 +1882,14 @@ export function Home() {
             </div>
 
             {outputText && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
                 <span
                   style={{
-                    fontSize: '12px',
+                    fontSize: '11.5px',
                     fontWeight: 600,
                     color: isDark ? '#cbe6ac' : '#2d5a1e',
                     background: isDark ? 'rgba(186, 215, 151, 0.14)' : 'var(--rb-surface-cream)',
-                    padding: '3px 8px',
+                    padding: '3px 7px',
                     borderRadius: '6px',
                     border: `1px solid ${isDark ? 'rgba(186, 215, 151, 0.35)' : 'var(--rb-border)'}`,
                     display: 'inline-flex',
@@ -1911,16 +1914,16 @@ export function Home() {
                 </span>
 
                 {plagiarismReport && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <button
                       onClick={() => setShowPlagiarism(true)}
                       style={{
                         border: isDark ? '1px solid rgba(34, 197, 94, 0.35)' : '1px solid var(--rb-border)',
-                        fontSize: '12px',
+                        fontSize: '11.5px',
                         fontWeight: 600,
                         color: isDark ? '#86efac' : (plagiarismReport.originalityScore >= 85 ? '#065f46' : '#92400e'),
                         background: isDark ? 'rgba(34, 197, 94, 0.14)' : 'var(--rb-surface-cream)',
-                        padding: '3px 8px',
+                        padding: '3px 7px',
                         borderRadius: '6px',
                         cursor: 'pointer',
                         display: 'inline-flex',
@@ -1940,11 +1943,11 @@ export function Home() {
                       onClick={() => setShowPlagiarism(true)}
                       style={{
                         border: isDark ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid var(--rb-border)',
-                        fontSize: '12px',
+                        fontSize: '11.5px',
                         fontWeight: 600,
                         color: isDark ? '#c7d2fe' : ((plagiarismReport.humanScore ?? 95) >= 80 ? '#3730a3' : '#991b1b'),
                         background: isDark ? 'rgba(99, 102, 241, 0.14)' : 'var(--rb-surface-cream)',
-                        padding: '3px 8px',
+                        padding: '3px 7px',
                         borderRadius: '6px',
                         cursor: 'pointer',
                         display: 'inline-flex',
@@ -1963,7 +1966,7 @@ export function Home() {
                 )}
 
                 {latency && (
-                  <span style={{ fontSize: '11px', color: 'var(--rb-text-muted)' }}>
+                  <span className="hide-on-mobile" style={{ fontSize: '11px', color: 'var(--rb-text-muted)', flexShrink: 0 }}>
                     {latency}ms
                   </span>
                 )}
@@ -1974,13 +1977,14 @@ export function Home() {
           {/* 🎨 QuillBot-Style 3-Color Legend Bar */}
           {outputText && activeTab === 'diff' && (
             <div
+              className="output-legend-responsive"
               style={{
                 padding: '6px 20px',
                 background: 'var(--rb-surface-cream)',
                 borderBottom: '1px solid var(--rb-border)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '16px',
+                gap: '12px',
                 fontSize: '11px',
                 color: 'var(--rb-text-secondary)',
                 fontWeight: 500,
@@ -2535,6 +2539,7 @@ export function Home() {
 
           {/* Output Footer Toolbar */}
           <div
+            className="output-footer-responsive"
             style={{
               height: '60px',
               minHeight: '60px',
@@ -2548,27 +2553,28 @@ export function Home() {
               background: 'var(--rb-surface-cream)',
             }}
           >
-            <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <span>
+            <div style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', display: 'flex', gap: '8px', alignItems: 'center', minWidth: 0 }}>
+              <span style={{ flexShrink: 0 }}>
                 <strong style={{ color: 'var(--rb-text)' }}>{outputWordCount}</strong> words
               </span>
               {currentProvider && currentModel && (
-                <>
+                <span className="hide-on-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                   <span>•</span>
                   <span style={{ fontSize: '12px', color: 'var(--rb-text-muted)' }}>
                     {currentProvider} ({currentModel})
                   </span>
-                </>
+                </span>
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
               <button
                 onClick={() => outputText && handleCopy(outputText)}
                 disabled={!outputText}
+                title={copied ? 'Copied to clipboard!' : 'Copy output text'}
                 style={{
                   height: '36px',
-                  padding: '0 14px',
+                  padding: '0 12px',
                   borderRadius: '6px',
                   border: '1px solid var(--rb-border)',
                   background: copied ? (isDark ? 'rgba(34, 197, 94, 0.2)' : '#ecfdf5') : 'var(--rb-surface)',
@@ -2580,10 +2586,11 @@ export function Home() {
                   alignItems: 'center',
                   gap: '6px',
                   transition: 'all 0.2s',
+                  flexShrink: 0,
                 }}
               >
                 {copied ? <Check size={15} /> : <Copy size={15} />}
-                <span>{copied ? 'Copied!' : 'Copy'}</span>
+                <span className="hide-on-mobile">{copied ? 'Copied!' : 'Copy'}</span>
               </button>
 
               <button
@@ -2592,7 +2599,7 @@ export function Home() {
                 title="Scan text for plagiarism and originality"
                 style={{
                   height: '36px',
-                  padding: '0 12px',
+                  padding: '0 10px',
                   borderRadius: '6px',
                   border: isDark ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid #c7d2fe',
                   background: isDark ? 'rgba(99, 102, 241, 0.15)' : '#eef2ff',
@@ -2604,10 +2611,11 @@ export function Home() {
                   alignItems: 'center',
                   gap: '6px',
                   transition: 'all 0.15s ease',
+                  flexShrink: 0,
                 }}
               >
                 <ShieldCheck size={15} color={isDark ? '#a5b4fc' : '#4f46e5'} />
-                <span>Plagiarism</span>
+                <span className="hide-on-mobile">Plagiarism</span>
               </button>
 
               <button
@@ -2625,6 +2633,7 @@ export function Home() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
                 <RotateCw size={15} />
@@ -2635,9 +2644,10 @@ export function Home() {
                 <button
                   onClick={() => setExportOpen(!exportOpen)}
                   disabled={!outputText}
+                  title="Export document (PDF, DOCX, TXT, MD)"
                   style={{
                     height: '36px',
-                    padding: '0 12px',
+                    padding: '0 10px',
                     borderRadius: '6px',
                     border: '1px solid var(--rb-border)',
                     background: 'var(--rb-surface)',
@@ -2648,9 +2658,12 @@ export function Home() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
+                    flexShrink: 0,
                   }}
                 >
-                  <Download size={15} /> Export <ChevronDown size={14} />
+                  <Download size={15} />
+                  <span className="hide-on-mobile">Export</span>
+                  <ChevronDown size={14} />
                 </button>
 
                 {exportOpen && (
