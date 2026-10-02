@@ -14,6 +14,12 @@ const THEME_STORAGE_KEY = 'rewritebot-theme';
 function getInitialTheme(): ThemeMode {
   if (typeof window === 'undefined') return 'light';
   
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramTheme = urlParams.get('theme');
+  if (paramTheme === 'light' || paramTheme === 'dark') {
+    return paramTheme;
+  }
+
   const saved = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
   if (saved === 'light' || saved === 'dark') {
     return saved;
