@@ -336,14 +336,15 @@ export function Home() {
     const cleanWord = rawWord.toLowerCase().replace(/^[^\w]+|[^\w]+$/g, '');
     if (!cleanWord || cleanWord.length < 2) return;
 
-    if (outputContainerRef.current) {
-      const containerRect = outputContainerRef.current.getBoundingClientRect();
-      const targetRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-      const top = targetRect.bottom - containerRect.top + 6;
-      const idealLeft = targetRect.left - containerRect.left + (targetRect.width / 2) - 110;
-      const left = Math.max(10, Math.min(idealLeft, containerRect.width - 250));
-      setThesaurusPos({ top, left });
+    const targetRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const popupWidth = 260;
+    const popupHeight = 220;
+    let left = Math.max(12, Math.min(targetRect.left + (targetRect.width / 2) - 110, window.innerWidth - popupWidth - 12));
+    let top = targetRect.bottom + 6;
+    if (top + popupHeight > window.innerHeight - 12) {
+      top = Math.max(12, targetRect.top - popupHeight - 6);
     }
+    setThesaurusPos({ top, left });
 
     setSelectedTokenIndex(index);
     setSelectedWord(rawWord);
@@ -409,24 +410,25 @@ export function Home() {
   };
 
   // 📝 Sentence Alternative Selector (< 1 of 3 >)
-  const handleSentenceClick = async (sentence: string, event: React.MouseEvent) => {
-    event.stopPropagation();
+  const handleSentenceClick = async (sentence: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+    }
     const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
     if (!provider) {
       showToast('Please configure a provider first', 'error');
       return;
     }
 
-    if (outputContainerRef.current) {
-      const containerRect = outputContainerRef.current.getBoundingClientRect();
+    if (event && !sentenceWidgetPos) {
       const targetRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-      let top = targetRect.bottom - containerRect.top + 8;
-      // If widget would extend past container bottom and there's room above, position above
-      if (top > containerRect.height - 180 && targetRect.top - containerRect.top > 160) {
-        top = targetRect.top - containerRect.top - 150;
+      const popupWidth = 380;
+      const popupHeight = 240;
+      let left = Math.max(16, Math.min(targetRect.left, window.innerWidth - popupWidth - 16));
+      let top = targetRect.bottom + 8;
+      if (top + popupHeight > window.innerHeight - 16) {
+        top = Math.max(16, targetRect.top - popupHeight - 8);
       }
-      const idealLeft = targetRect.left - containerRect.left;
-      const left = Math.max(10, Math.min(idealLeft, containerRect.width - 380));
       setSentenceWidgetPos({ top, left });
     }
 
@@ -458,6 +460,7 @@ export function Home() {
       showToast('Replaced sentence with alternative!', 'success');
     }
     setSelectedSentence(null);
+    setSentenceWidgetPos(null);
   };
 
   // 📑 Compare Modes Multi-Pane
@@ -2084,11 +2087,11 @@ export function Home() {
                       alignItems: 'center',
                       gap: '8px',
                       padding: '8px 12px',
-                      background: isDark ? 'rgba(59, 130, 246, 0.14)' : '#f0f9ff',
-                      border: isDark ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid #bae6fd',
+                      background: isDark ? 'rgba(186, 215, 151, 0.12)' : 'var(--rb-accent-light)',
+                      border: isDark ? '1px solid rgba(186, 215, 151, 0.3)' : '1px solid var(--rb-accent)',
                       borderRadius: '8px',
                       fontSize: '12px',
-                      color: isDark ? '#93c5fd' : '#0369a1',
+                      color: isDark ? 'var(--rb-accent-hover)' : 'var(--rb-accent-dark)',
                       fontWeight: 500,
                     }}
                   >
@@ -2120,10 +2123,10 @@ export function Home() {
                             padding: '4px 8px',
                             marginRight: '6px',
                             borderRadius: '6px',
-                            background: isSelected ? (isDark ? 'rgba(186, 215, 151, 0.2)' : '#dbeafe') : defaultBg,
-                            border: isSelected ? (isDark ? '2px solid var(--rb-accent)' : '2px solid #2563eb') : `1.5px solid ${defaultBorder}`,
-                            boxShadow: isSelected ? (isDark ? '0 4px 12px rgba(186,215,151,0.25)' : '0 4px 12px rgba(37,99,235,0.22)') : '0 1px 2px rgba(0,0,0,0.04)',
-                            color: isSelected ? (isDark ? 'var(--rb-accent-hover)' : '#1e3a8a') : 'var(--rb-text)',
+                            background: isSelected ? (isDark ? 'rgba(186, 215, 151, 0.2)' : 'var(--rb-primary-light)') : defaultBg,
+                            border: isSelected ? (isDark ? '2px solid var(--rb-accent)' : '2px solid var(--rb-primary)') : `1.5px solid ${defaultBorder}`,
+                            boxShadow: isSelected ? (isDark ? '0 4px 12px rgba(186,215,151,0.25)' : '0 4px 12px rgba(103,6,38,0.18)') : '0 1px 2px rgba(0,0,0,0.04)',
+                            color: isSelected ? (isDark ? 'var(--rb-accent-hover)' : 'var(--rb-primary)') : 'var(--rb-text)',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
                             boxDecorationBreak: 'clone',
@@ -2131,9 +2134,9 @@ export function Home() {
                           }}
                           onMouseEnter={(e) => {
                             if (!isSelected) {
-                              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.1)' : '#e0f2fe';
-                              e.currentTarget.style.borderColor = isDark ? 'var(--rb-accent)' : '#38bdf8';
-                              e.currentTarget.style.boxShadow = isDark ? '0 2px 8px rgba(186,215,151,0.2)' : '0 2px 8px rgba(56,189,248,0.2)';
+                              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'var(--rb-accent-light)';
+                              e.currentTarget.style.borderColor = isDark ? 'var(--rb-accent)' : 'var(--rb-accent)';
+                              e.currentTarget.style.boxShadow = isDark ? '0 2px 8px rgba(186,215,151,0.2)' : '0 2px 8px rgba(186,215,151,0.3)';
                             }
                           }}
                           onMouseLeave={(e) => {
@@ -2153,7 +2156,7 @@ export function Home() {
                               width: '18px',
                               height: '18px',
                               borderRadius: '50%',
-                              background: isSelected ? (isDark ? 'var(--rb-accent)' : '#2563eb') : (isDark ? 'var(--rb-border)' : '#64748b'),
+                              background: isSelected ? (isDark ? 'var(--rb-accent)' : 'var(--rb-primary)') : (isDark ? 'var(--rb-border)' : '#64748b'),
                               color: isSelected && isDark ? '#171314' : '#ffffff',
                               fontSize: '10px',
                               fontWeight: 700,
@@ -2280,270 +2283,279 @@ export function Home() {
           {/* Interactive Thesaurus Popover */}
           {selectedTokenIndex !== null && thesaurusPos && (
             <div
-              style={{
-                position: 'absolute',
-                top: `${thesaurusPos.top}px`,
-                left: `${thesaurusPos.left}px`,
-                zIndex: 200,
-                background: 'var(--rb-surface)',
-                border: '1.5px solid var(--rb-border)',
-                borderRadius: '8px',
-                boxShadow: isDark ? '0 12px 28px -5px rgba(0,0,0,0.6)' : '0 12px 28px -5px rgba(0,0,0,0.2)',
-                padding: '8px 10px',
-                minWidth: '200px',
-                maxWidth: '260px',
+              className="thesaurus-widget-backdrop"
+              onClick={() => {
+                setSelectedTokenIndex(null);
+                setThesaurusPos(null);
               }}
             >
               <div
+                className="thesaurus-widget-card"
+                onClick={(e) => e.stopPropagation()}
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '2px 4px 6px',
-                  borderBottom: '1px solid var(--rb-border)',
+                  top: `${thesaurusPos.top}px`,
+                  left: `${thesaurusPos.left}px`,
                 }}
               >
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    color: 'var(--rb-text-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  Synonyms: <strong style={{ color: 'var(--rb-text)' }}>{selectedWord}</strong>
-                </span>
-                <button
-                  onClick={() => {
-                    setSelectedTokenIndex(null);
-                    setThesaurusPos(null);
-                  }}
-                  style={{
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--rb-text-muted)',
-                    fontSize: '14px',
-                    padding: '0 2px',
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-
-              {isLoadingWordSynonyms && wordSynonyms.length === 0 ? (
+                <div className="modal-drag-handle" />
                 <div
                   style={{
-                    padding: '14px 8px',
-                    textAlign: 'center',
-                    fontSize: '12px',
-                    color: 'var(--rb-text-secondary)',
                     display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
+                    padding: '2px 4px 6px',
+                    borderBottom: '1px solid var(--rb-border)',
                   }}
                 >
                   <span
-                    className="spinner"
                     style={{
-                      width: '14px',
-                      height: '14px',
-                      borderWidth: '2px',
-                      borderColor: '#d97706',
-                      borderTopColor: 'transparent',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      color: 'var(--rb-text-muted)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
                     }}
-                  />
-                  <span>Finding synonyms…</span>
+                  >
+                    Synonyms: <strong style={{ color: 'var(--rb-text)' }}>{selectedWord}</strong>
+                  </span>
+                  <button
+                    onClick={() => {
+                      setSelectedTokenIndex(null);
+                      setThesaurusPos(null);
+                    }}
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--rb-text-muted)',
+                      fontSize: '14px',
+                      padding: '0 2px',
+                    }}
+                  >
+                    ✕
+                  </button>
                 </div>
-              ) : wordSynonyms.length > 0 ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px',
-                    marginTop: '6px',
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                  }}
-                >
-                  {wordSynonyms.map((syn, sIdx) => (
-                    <button
-                      key={sIdx}
-                      onClick={() => replaceWord(syn, selectedTokenIndex)}
+
+                {isLoadingWordSynonyms && wordSynonyms.length === 0 ? (
+                  <div
+                    style={{
+                      padding: '14px 8px',
+                      textAlign: 'center',
+                      fontSize: '12px',
+                      color: 'var(--rb-text-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span
+                      className="spinner"
                       style={{
-                        textAlign: 'left',
-                        padding: '6px 8px',
-                        borderRadius: '4px',
-                        border: 'none',
-                        background: 'transparent',
-                        color: 'var(--rb-text)',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        transition: 'background 0.12s ease',
+                        width: '14px',
+                        height: '14px',
+                        borderWidth: '2px',
+                        borderColor: isDark ? 'var(--rb-accent)' : 'var(--rb-accent-dark)',
+                        borderTopColor: 'transparent',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = isDark ? 'var(--rb-surface-cream)' : '#fef3c7')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      <span>{syn}</span>
-                      <span style={{ fontSize: '10px', color: isDark ? 'var(--rb-accent)' : '#d97706', fontWeight: 600 }}>Swap</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ padding: '12px 8px', fontSize: '12px', color: 'var(--rb-text-muted)', textAlign: 'center' }}>
-                  No alternative synonyms found
-                </div>
-              )}
+                    />
+                    <span>Finding synonyms…</span>
+                  </div>
+                ) : wordSynonyms.length > 0 ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px',
+                      marginTop: '6px',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    {wordSynonyms.map((syn, sIdx) => (
+                      <button
+                        key={sIdx}
+                        onClick={() => replaceWord(syn, selectedTokenIndex)}
+                        style={{
+                          textAlign: 'left',
+                          padding: '6px 8px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          background: 'transparent',
+                          color: 'var(--rb-text)',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          transition: 'background 0.12s ease',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = isDark ? 'var(--rb-surface-cream)' : '#fef3c7')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <span>{syn}</span>
+                        <span style={{ fontSize: '10px', color: isDark ? 'var(--rb-accent)' : '#d97706', fontWeight: 600 }}>Swap</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: '12px 8px', fontSize: '12px', color: 'var(--rb-text-muted)', textAlign: 'center' }}>
+                    No alternative synonyms found
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {/* 📝 Floating Sentence Alternative Selector Widget (< 1 of 3 >) */}
           {selectedSentence && sentenceWidgetPos && (
             <div
-              style={{
-                position: 'absolute',
-                top: `${sentenceWidgetPos.top}px`,
-                left: `${sentenceWidgetPos.left}px`,
-                zIndex: 120,
-                background: 'var(--rb-surface)',
-                border: isDark ? '1.5px solid var(--rb-border)' : '1.5px solid #93c5fd',
-                borderRadius: '10px',
-                boxShadow: isDark ? '0 12px 30px -5px rgba(0, 0, 0, 0.6)' : '0 12px 30px -5px rgba(37, 99, 235, 0.2)',
-                padding: '12px 14px',
-                width: '360px',
-                maxWidth: '92vw',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
+              className="sentence-widget-backdrop"
+              onClick={() => {
+                setSelectedSentence(null);
+                setSentenceWidgetPos(null);
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--rb-border)', paddingBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? 'var(--rb-accent)' : '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Wand2 size={13} /> Sentence Alternatives
-                </span>
-                <button
-                  onClick={() => setSelectedSentence(null)}
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '14px', padding: '2px' }}
-                >
-                  ✕
-                </button>
-              </div>
-
-              {isLoadingAlternatives ? (
-                <div style={{ textAlign: 'center', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--rb-text-secondary)', fontSize: '13px' }}>
-                  <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: isDark ? 'var(--rb-accent)' : '#2563eb', borderTopColor: 'transparent' }} />
-                  <span>Generating 3 alternatives…</span>
+              <div
+                className="sentence-widget-card"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  top: `${sentenceWidgetPos.top}px`,
+                  left: `${sentenceWidgetPos.left}px`,
+                }}
+              >
+                <div className="modal-drag-handle" />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--rb-border)', paddingBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? 'var(--rb-accent)' : '#2d5a1e', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Wand2 size={13} /> Sentence Alternatives
+                  </span>
+                  <button
+                    onClick={() => {
+                      setSelectedSentence(null);
+                      setSentenceWidgetPos(null);
+                    }}
+                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '14px', padding: '2px' }}
+                  >
+                    ✕
+                  </button>
                 </div>
-              ) : sentenceAlternatives.length > 0 ? (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--rb-text-secondary)', fontWeight: 600 }}>
-                      Option {currentAltIndex + 1} of {sentenceAlternatives.length}
-                    </span>
-                    <div style={{ display: 'flex', gap: '4px' }}>
+
+                {isLoadingAlternatives ? (
+                  <div style={{ textAlign: 'center', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--rb-text-secondary)', fontSize: '13px' }}>
+                    <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', borderColor: isDark ? 'var(--rb-accent)' : '#2d5a1e', borderTopColor: 'transparent' }} />
+                    <span>Generating 3 alternatives…</span>
+                  </div>
+                ) : sentenceAlternatives.length > 0 ? (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--rb-text-secondary)', fontWeight: 600 }}>
+                        Option {currentAltIndex + 1} of {sentenceAlternatives.length}
+                      </span>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={() => setCurrentAltIndex((prev) => (prev > 0 ? prev - 1 : sentenceAlternatives.length - 1))}
+                          style={{
+                            border: '1px solid var(--rb-border)',
+                            background: 'var(--rb-surface-cream)',
+                            color: 'var(--rb-text)',
+                            borderRadius: '4px',
+                            padding: '3px 7px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.15s ease',
+                          }}
+                          title="Previous alternative"
+                          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-muted)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
+                        >
+                          <ChevronLeft size={14} color="var(--rb-text)" />
+                        </button>
+                        <button
+                          onClick={() => setCurrentAltIndex((prev) => (prev < sentenceAlternatives.length - 1 ? prev + 1 : 0))}
+                          style={{
+                            border: '1px solid var(--rb-border)',
+                            background: 'var(--rb-surface-cream)',
+                            color: 'var(--rb-text)',
+                            borderRadius: '4px',
+                            padding: '3px 7px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.15s ease',
+                          }}
+                          title="Next alternative"
+                          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-muted)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
+                        >
+                          <ChevronRight size={14} color="var(--rb-text)" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--rb-text)', background: 'var(--rb-surface-cream)', padding: '10px', borderRadius: '6px', border: '1px solid var(--rb-border)' }}>
+                      "{sentenceAlternatives[currentAltIndex]}"
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px' }}>
                       <button
-                        onClick={() => setCurrentAltIndex((prev) => (prev > 0 ? prev - 1 : sentenceAlternatives.length - 1))}
+                        onClick={() => handleApplySentenceAlternative(sentenceAlternatives[currentAltIndex])}
                         style={{
-                          border: '1px solid var(--rb-border)',
-                          background: 'var(--rb-surface-cream)',
-                          color: 'var(--rb-text)',
-                          borderRadius: '4px',
-                          padding: '3px 7px',
+                          flex: 1,
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: isDark
+                            ? 'linear-gradient(135deg, #BAD797 0%, #a5c77e 100%)'
+                            : 'linear-gradient(135deg, #2d5a1e 0%, #3d7528 100%)',
+                          color: isDark ? '#171314' : '#ffffff',
+                          fontSize: '12px',
+                          fontWeight: 600,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
+                          gap: '6px',
+                          boxShadow: 'var(--rb-shadow-sm)',
                           transition: 'all 0.15s ease',
                         }}
-                        title="Previous alternative"
-                        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-muted)')}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
+                        onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.08)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.filter = 'none')}
                       >
-                        <ChevronLeft size={14} color="var(--rb-text)" />
+                        <Check size={14} /> Replace
                       </button>
                       <button
-                        onClick={() => setCurrentAltIndex((prev) => (prev < sentenceAlternatives.length - 1 ? prev + 1 : 0))}
+                        onClick={(e) => handleSentenceClick(selectedSentence, e)}
+                        title="Regenerate more variations"
                         style={{
+                          padding: '8px 10px',
+                          borderRadius: '6px',
                           border: '1px solid var(--rb-border)',
                           background: 'var(--rb-surface-cream)',
                           color: 'var(--rb-text)',
-                          borderRadius: '4px',
-                          padding: '3px 7px',
+                          fontSize: '12px',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
+                          gap: '4px',
                           transition: 'all 0.15s ease',
                         }}
-                        title="Next alternative"
                         onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-muted)')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
                       >
-                        <ChevronRight size={14} color="var(--rb-text)" />
+                        <RotateCw size={13} />
                       </button>
                     </div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: '12px', color: 'var(--rb-text-muted)', textAlign: 'center', padding: '10px' }}>
+                    No alternative variations found.
                   </div>
-
-                  <div style={{ fontSize: '13px', lineHeight: '1.5', color: 'var(--rb-text)', background: 'var(--rb-surface-cream)', padding: '10px', borderRadius: '6px', border: '1px solid var(--rb-border)' }}>
-                    "{sentenceAlternatives[currentAltIndex]}"
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button
-                      onClick={() => handleApplySentenceAlternative(sentenceAlternatives[currentAltIndex])}
-                      style={{
-                        flex: 1,
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        background: 'linear-gradient(135deg, var(--rb-primary) 0%, var(--rb-primary-hover) 100%)',
-                        color: '#ffffff',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        boxShadow: 'var(--rb-shadow-sm)',
-                      }}
-                    >
-                      <Check size={14} /> Replace
-                    </button>
-                    <button
-                      onClick={(e) => handleSentenceClick(selectedSentence, e)}
-                      title="Regenerate more variations"
-                      style={{
-                        padding: '8px 10px',
-                        borderRadius: '6px',
-                        border: '1px solid var(--rb-border)',
-                        background: 'var(--rb-surface-cream)',
-                        color: 'var(--rb-text)',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--rb-surface-muted)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
-                    >
-                      <RotateCw size={13} />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div style={{ fontSize: '12px', color: 'var(--rb-text-muted)', textAlign: 'center', padding: '10px' }}>
-                  No alternative variations found.
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 

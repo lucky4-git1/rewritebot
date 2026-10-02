@@ -624,3 +624,117 @@ html {
 .landing-glow-pulse {
   animation: pulseGlow 3s ease-in-out infinite;
 }
+
+/* Responsive Floating Widget Overlays (Sentence Mode & Thesaurus) */
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sentence-widget-backdrop,
+.thesaurus-widget-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.sentence-widget-card {
+  position: fixed;
+  z-index: 1001;
+  width: 380px;
+  max-width: calc(100vw - 24px);
+  background: var(--rb-surface);
+  border: 1.5px solid var(--rb-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.28);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.thesaurus-widget-card {
+  position: fixed;
+  z-index: 1001;
+  width: 260px;
+  max-width: calc(100vw - 24px);
+  background: var(--rb-surface);
+  border: 1.5px solid var(--rb-border);
+  border-radius: 10px;
+  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.25);
+  padding: 10px 12px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@media (max-width: 767.98px) {
+  .sentence-widget-backdrop,
+  .thesaurus-widget-backdrop {
+    background: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(3px) !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    padding: 12px !important;
+    animation: fadeIn 0.15s ease-out !important;
+  }
+
+  .sentence-widget-card {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    border-radius: 16px !important;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3) !important;
+    animation: slideUpSheet 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding: 16px !important;
+    gap: 12px !important;
+    margin: 0 auto !important;
+  }
+
+  .thesaurus-widget-card {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+    border-radius: 14px !important;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25) !important;
+    animation: slideUpSheet 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding: 14px !important;
+    margin: 0 auto !important;
+  }
+}
+
+.modal-drag-handle {
+  display: none;
+  width: 36px;
+  height: 4px;
+  background: var(--rb-border);
+  border-radius: 2px;
+  margin: 0 auto 6px auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767.98px) {
+  .modal-drag-handle {
+    display: block !important;
+  }
+}
