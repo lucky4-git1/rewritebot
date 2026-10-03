@@ -98,8 +98,8 @@ export class MultiSourceSearchEngine {
       const items = res.data?.query?.search;
       if (!Array.isArray(items)) return [];
 
-      return items.map((item: any) => {
-        // Strip HTML tags from Wikipedia snippet
+      const results: PlagiarismSource[] = [];
+      for (const item of items) {
         const cleanSnippet = (item.snippet || '')
           .replace(/<[^>]*>/g, '')
           .replace(/&quot;/g, '"')
@@ -107,16 +107,18 @@ export class MultiSourceSearchEngine {
           .slice(0, 120);
 
         const similarity = this.calculateOverlapSimilarity(query, cleanSnippet || item.title);
-
-        return {
-          title: `${item.title} — Wikipedia`,
-          url: `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/\s+/g, '_'))}`,
-          domain: 'en.wikipedia.org',
-          snippet: cleanSnippet || item.title,
-          similarity: Math.max(45, Math.min(95, similarity)),
-          matchCount: 1,
-        };
-      });
+        if (similarity >= 35) {
+          results.push({
+            title: `${item.title} — Wikipedia`,
+            url: `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/\s+/g, '_'))}`,
+            domain: 'en.wikipedia.org',
+            snippet: cleanSnippet || item.title,
+            similarity,
+            matchCount: 1,
+          });
+        }
+      }
+      return results;
     } catch (err) {
       return [];
     }
@@ -137,35 +139,37 @@ export class MultiSourceSearchEngine {
       const items = res.data?.message?.items;
       if (!Array.isArray(items)) return [];
 
-      return items
-        .filter((item: any) => item.title && item.title.length > 0)
-        .map((item: any) => {
-          const rawTitle = Array.isArray(item.title) ? item.title[0] : item.title;
-          const container = Array.isArray(item['container-title']) ? item['container-title'][0] : '';
-          const publisher = item.publisher || 'Academic Publisher';
-          const doiUrl = item.URL || (item.DOI ? `https://doi.org/${item.DOI}` : 'https://crossref.org');
-          
-          let domain = 'crossref.org';
-          try {
-            if (doiUrl.startsWith('http')) {
-              domain = new URL(doiUrl).hostname.replace(/^www\./, '');
-            }
-          } catch {
-            domain = 'crossref.org';
+      const results: PlagiarismSource[] = [];
+      for (const item of items) {
+        if (!item.title || item.title.length === 0) continue;
+        const rawTitle = Array.isArray(item.title) ? item.title[0] : item.title;
+        const container = Array.isArray(item['container-title']) ? item['container-title'][0] : '';
+        const publisher = item.publisher || 'Academic Publisher';
+        const doiUrl = item.URL || (item.DOI ? `https://doi.org/${item.DOI}` : 'https://crossref.org');
+        
+        let domain = 'crossref.org';
+        try {
+          if (doiUrl.startsWith('http')) {
+            domain = new URL(doiUrl).hostname.replace(/^www\./, '');
           }
+        } catch {
+          domain = 'crossref.org';
+        }
 
-          const displayTitle = container ? `${rawTitle} (${container})` : `${rawTitle} — ${publisher}`;
-          const similarity = this.calculateOverlapSimilarity(query, rawTitle);
-
-          return {
+        const displayTitle = container ? `${rawTitle} (${container})` : `${rawTitle} — ${publisher}`;
+        const similarity = this.calculateOverlapSimilarity(query, rawTitle);
+        if (similarity >= 35) {
+          results.push({
             title: displayTitle.slice(0, 100),
             url: doiUrl,
             domain,
             snippet: `${rawTitle.slice(0, 90)}...`,
-            similarity: Math.max(40, Math.min(92, similarity)),
+            similarity,
             matchCount: 1,
-          };
-        });
+          });
+        }
+      }
+      return results;
     } catch (err) {
       return [];
     }
@@ -186,32 +190,34 @@ export class MultiSourceSearchEngine {
       const items = res.data?.results;
       if (!Array.isArray(items)) return [];
 
-      return items
-        .filter((item: any) => item.display_name)
-        .map((item: any) => {
-          const landingUrl = item.doi || item.primary_location?.landing_page_url || `https://openalex.org/${item.id}`;
-          let domain = 'openalex.org';
-          try {
-            if (landingUrl.startsWith('http')) {
-              domain = new URL(landingUrl).hostname.replace(/^www\./, '');
-            }
-          } catch {
-            domain = 'openalex.org';
+      const results: PlagiarismSource[] = [];
+      for (const item of items) {
+        if (!item.display_name) continue;
+        const landingUrl = item.doi || item.primary_location?.landing_page_url || `https://openalex.org/${item.id}`;
+        let domain = 'openalex.org';
+        try {
+          if (landingUrl.startsWith('http')) {
+            domain = new URL(landingUrl).hostname.replace(/^www\./, '');
           }
+        } catch {
+          domain = 'openalex.org';
+        }
 
-          const sourceVenue = item.primary_location?.source?.display_name || 'Scholarly Index';
-          const title = `${item.display_name} [${sourceVenue}]`;
-          const similarity = this.calculateOverlapSimilarity(query, item.display_name);
-
-          return {
+        const sourceVenue = item.primary_location?.source?.display_name || 'Scholarly Index';
+        const title = `${item.display_name} [${sourceVenue}]`;
+        const similarity = this.calculateOverlapSimilarity(query, item.display_name);
+        if (similarity >= 35) {
+          results.push({
             title: title.slice(0, 100),
             url: landingUrl,
             domain,
             snippet: item.display_name.slice(0, 90),
-            similarity: Math.max(42, Math.min(90, similarity)),
+            similarity,
             matchCount: 1,
-          };
-        });
+          });
+        }
+      }
+      return results;
     } catch (err) {
       return [];
     }
@@ -252,24 +258,59 @@ export class MultiSourceSearchEngine {
   }
 
   /**
-   * Calculate word token overlap similarity (0-100)
+   * Calculate consecutive word sequence matching and substantial token overlap (Turnitin standard)
    */
   private static calculateOverlapSimilarity(phraseA: string, textB: string): number {
-    const tokensA = new Set(
-      phraseA.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter((w) => w.length > 3)
-    );
-    const tokensB = new Set(
-      textB.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter((w) => w.length > 3)
-    );
+    const cleanWordsA = phraseA.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
+    const cleanWordsB = textB.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
 
-    if (tokensA.size === 0 || tokensB.size === 0) return 40;
+    if (cleanWordsA.length < 4 || cleanWordsB.length < 4) return 0;
 
-    let matchCount = 0;
-    for (const t of tokensA) {
-      if (tokensB.has(t)) matchCount++;
+    // 1. Longest Common Consecutive Substring (5+ consecutive words required for verbatim plagiarism)
+    let maxConsecutive = 0;
+    for (let i = 0; i < cleanWordsA.length; i++) {
+      for (let j = 0; j < cleanWordsB.length; j++) {
+        let k = 0;
+        while (
+          i + k < cleanWordsA.length &&
+          j + k < cleanWordsB.length &&
+          cleanWordsA[i + k] === cleanWordsB[j + k]
+        ) {
+          k++;
+        }
+        if (k > maxConsecutive) maxConsecutive = k;
+      }
     }
 
-    const jaccard = matchCount / Math.max(tokensA.size, tokensB.size);
-    return Math.round(40 + jaccard * 55);
+    // If 5+ words match consecutively, it is a genuine verbatim match!
+    if (maxConsecutive >= 5) {
+      const verbatimRatio = maxConsecutive / cleanWordsA.length;
+      return Math.round(Math.min(95, Math.max(50, verbatimRatio * 100)));
+    }
+
+    // 2. High content overlap (excluding generic stopwords and single-word coincidences)
+    const stopwords = new Set([
+      'the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but', 'in', 'with', 'to', 'for', 'of',
+      'that', 'this', 'it', 'by', 'from', 'as', 'are', 'was', 'were', 'be', 'been', 'being', 'have',
+      'has', 'had', 'do', 'does', 'did', 'can', 'could', 'should', 'would', 'may', 'might', 'must',
+      'today', 'world', 'modern', 'role', 'crucial', 'pivotal'
+    ]);
+
+    const contentWordsA = cleanWordsA.filter((w) => !stopwords.has(w) && w.length > 3);
+    const contentWordsB = new Set(cleanWordsB.filter((w) => !stopwords.has(w) && w.length > 3));
+
+    if (contentWordsA.length < 4) return 0;
+
+    let matchedCount = 0;
+    for (const w of contentWordsA) {
+      if (contentWordsB.has(w)) matchedCount++;
+    }
+
+    // At least 4 distinct non-stopword content words must match simultaneously
+    if (matchedCount >= 4 && matchedCount / contentWordsA.length >= 0.6) {
+      return Math.round(Math.min(85, (matchedCount / contentWordsA.length) * 100));
+    }
+
+    return 0;
   }
 }

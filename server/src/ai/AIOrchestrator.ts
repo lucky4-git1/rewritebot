@@ -486,24 +486,6 @@ export class AIOrchestrator {
 
     let flaggedMatches = matches.filter((m: any) => m.type !== 'clean');
 
-    // Case 1: If model labeled all matches as clean, verify text as 100% original
-    if (flaggedMatches.length === 0) {
-      rawOriginality = Math.max(95, rawOriginality || 99);
-    } else {
-      // Calculate realistic score matching flagged ratio
-      const cleanRatio = (matches.length - flaggedMatches.length) / (matches.length || 1);
-      const derivedScore = Math.round(cleanRatio * 100);
-      rawOriginality = Math.min(rawOriginality, derivedScore);
-      if (rawOriginality >= 85) {
-        rawOriginality = Math.min(84, Math.max(45, derivedScore));
-      }
-    }
-
-    const originalityScore = Math.max(0, Math.min(100, rawOriginality));
-    const plagiarismScore = Math.max(0, Math.min(100, 100 - originalityScore));
-    const riskLevel: 'safe' | 'moderate' | 'high' =
-      originalityScore >= 85 ? 'safe' : originalityScore >= 60 ? 'moderate' : 'high';
-
     // Live Multi-Source Search Integration
     let sources: any[] = [];
     if (flaggedMatches.length > 0) {
@@ -515,44 +497,62 @@ export class AIOrchestrator {
 
         if (liveSources.length > 0) {
           sources = liveSources;
-          // Assign genuine live sources to flagged matches that lack specific sources
           flaggedMatches.forEach((match: any, idx: number) => {
             const assignedSource = liveSources[idx % liveSources.length];
-            if (!match.sourceTitle || match.sourceTitle.includes('Academic & Web')) {
-              match.sourceTitle = assignedSource.title;
-              match.sourceUrl = assignedSource.url;
-            }
+            match.sourceTitle = assignedSource.title;
+            match.sourceUrl = assignedSource.url;
+            match.similarity = assignedSource.similarity;
           });
+        } else {
+          // If no multi-source database found a match, check if model provided a realistic source URL
+          const modelProvidedSources = Array.isArray(parsed.sources) ? parsed.sources.filter((s: any) => s.url && s.title) : [];
+          if (modelProvidedSources.length > 0) {
+            sources = modelProvidedSources.map((s: any) => ({
+              title: s.title,
+              url: s.url,
+              domain: s.domain || 'web-source.org',
+              snippet: s.snippet || '',
+              similarity: s.similarity || 45,
+              matchCount: 1,
+            }));
+          } else {
+            // No external database matches and no model sources: text is verified original human writing
+            flaggedMatches.forEach((match: any) => {
+              match.type = 'clean';
+              match.similarity = 0;
+              match.explanation = '';
+              match.sourceTitle = '';
+              match.sourceUrl = '';
+            });
+            flaggedMatches = [];
+          }
         }
       } catch (searchErr) {
         logger.warn('[checkPlagiarism] Live multi-source query encountered error:', searchErr);
       }
+    }
 
-      // If live search returned empty, fall back to model-provided sources or realistic domains
-      if (sources.length === 0 && Array.isArray(parsed.sources) && parsed.sources.length > 0) {
-        sources = parsed.sources.map((src: any) => ({
-          title: src.title || 'Referenced Web Document',
-          url: src.url || 'https://en.wikipedia.org',
-          domain: src.domain || 'wikipedia.org',
-          snippet: src.snippet || flaggedMatches[0]?.sentence?.slice(0, 50) || '',
-          similarity: src.similarity || flaggedMatches[0]?.similarity || 60,
-          matchCount: src.matchCount || flaggedMatches.length,
-        }));
-      } else if (sources.length === 0) {
-        sources = [
-          {
-            title: `${flaggedMatches[0].sourceTitle || 'Public Academic & Web Repository'}`,
-            url: flaggedMatches[0].sourceUrl || 'https://en.wikipedia.org',
-            domain: 'en.wikipedia.org',
-            snippet: flaggedMatches[0].sentence.slice(0, 60),
-            similarity: flaggedMatches[0].similarity,
-            matchCount: flaggedMatches.length,
-          },
-        ];
-      }
-    } else {
+    // Word-weighted document originality calculation (Turnitin standard)
+    let totalWords = 0;
+    let weightedSimilaritySum = 0;
+    for (const m of matches) {
+      const wordsInSentence = m.sentence.trim().split(/\s+/).filter(Boolean).length || 1;
+      totalWords += wordsInSentence;
+      const sim = m.type === 'clean' ? 0 : (m.similarity || (m.type === 'exact' ? 75 : 35));
+      weightedSimilaritySum += wordsInSentence * sim;
+    }
+
+    const calculatedPlagScore = totalWords > 0 ? Math.round(weightedSimilaritySum / totalWords) : 0;
+    let originalityScore = Math.max(0, Math.min(100, 100 - calculatedPlagScore));
+
+    if (flaggedMatches.length === 0) {
+      originalityScore = Math.max(96, Math.min(100, Math.max(rawOriginality, 98)));
       sources = [];
     }
+
+    const plagiarismScore = Math.max(0, Math.min(100, 100 - originalityScore));
+    const riskLevel: 'safe' | 'moderate' | 'high' =
+      originalityScore >= 85 ? 'safe' : originalityScore >= 60 ? 'moderate' : 'high';
 
     // Dynamic calibrated humanScore: weighted combination of model evaluation + statistical linguistic metrics
     let humanScore: number;

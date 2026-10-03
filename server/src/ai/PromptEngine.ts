@@ -409,15 +409,16 @@ CRITICAL: Return ONLY a valid, compact JSON object matching this schema without 
 
 SPEED & ACCURACY INSTRUCTIONS:
 - Break text into its sentences. Keep matches compact.
-- Label original phrasing, humanized flow, or standard speech as "clean" (similarity 0-10%). For "clean", explanation, sourceTitle, and sourceUrl MUST be empty strings "".
-- Label close verbatim copying as "exact" (similarity 80-100%).
-- Label heavy patchwriting / close paraphrasing as "paraphrased" (similarity 30-79%).
+- TOPICAL & COMMON KNOWLEDGE RULE: Do NOT flag general discussion of common topics (e.g. artificial intelligence, technology, healthcare, education) as plagiarism unless there is an actual verbatim 8+ word sequence copied from a specific published paper or website.
+- Label original phrasing, humanized flow, or standard speech as "clean" (similarity 0-5%). For "clean", explanation, sourceTitle, and sourceUrl MUST be empty strings "".
+- Label close verbatim copying (8+ word identical sequence) as "exact" (similarity 75-100%).
+- Label heavy patchwriting / close syntactic mimicry as "paraphrased" (similarity 30-65%).
 - "sources" array: If all sentences are "clean", return []. If non-clean matches exist, provide up to 2-3 realistic matched source domains (e.g. "en.wikipedia.org", "crossref.org", "openalex.org", "arxiv.org", "sciencedirect.com", "britannica.com").
 - "riskLevel": "safe" if originalityScore >= 85, "moderate" if >= 60, else "high".
 
 CRITICAL CONSISTENCY MANDATE:
 - "originalityScore" and "matches" MUST be 100% mathematically consistent:
-  * If ALL sentences in "matches" are "clean", originalityScore MUST be 95-100, plagiarismScore <= 5, riskLevel "safe", and sources [].
+  * If ALL sentences in "matches" are "clean", originalityScore MUST be 96-100, plagiarismScore <= 4, riskLevel "safe", and sources [].
   * If originalityScore < 85, you MUST flag at least one or more sentences as "paraphrased" or "exact". NEVER return a low score with 0 flagged sentences.
 - "humanScore":
   * 85-99: Naturally written, varied sentence lengths, authentic human cadence, no repetitive AI transition words.
