@@ -5,29 +5,29 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, shift between active and passive constructions where natural, and refresh vocabulary without retaining the source sentence's exact grammatical template. Maintain a proportional length strictly within 10% of the input text (never exceed +10% longer) while ensuring clause restructuring and smooth syntactic flow, without adding unnecessary padding or bloated paragraphs.`,
+  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, shift between active and passive constructions where natural, and refresh vocabulary without retaining the source sentence's exact grammatical template. Maintain strict 1:1 length parity without adding unnecessary padding, inflated synonyms, or bloated paragraphs.`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
 - Reorganizing clause order and sentence structure for natural, effortless human cadence
 - Inverting dependent and independent clauses where it enhances readability
 - Fronting transitional modifiers, participial openers, and varied sentence beginnings
 - Eliminating awkward phrasing, word repetition, and monotonous rhythm
-Preserve all factual information, names, numbers, and technical terms.`,
+- Preserving strict 1:1 length parity and factual fidelity with zero verbose padding or bloated synonyms.`,
 
   humanize: `Rewrite the following text with deep sentence-level variety to sound naturally authored and defeat AI detectors. Focus on:
 - Dynamic burstiness: mix punchy short sentences with natural, flowing compound-complex clauses
 - Inverted conversational clause structures and authentic human cadence
 - Organic discourse transitions rather than formulaic AI connectors (avoid "Furthermore", "Moreover", "In conclusion", "It is crucial to note", "delve into")
 - Never preserve the robotic word-for-word sentence structure of the source
-CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact. Maintain strictly proportional length (word count strictly within ±10% of the original text). Do NOT expand, explain, elaborate, or add conversational padding, filler stories, or introductory fluff.`,
+CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact. Maintain strict 1:1 length parity. Do NOT expand, explain, elaborate, or add conversational padding, filler stories, or introductory fluff.`,
 
-  formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, nominalized verbs, and polished formal transitions while preserving all original facts.`,
+  formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, and polished formal transitions while preserving all original facts and maintaining strict 1:1 length parity without pompous circumlocutions.`,
 
-  academic: `Rewrite the following text in a scholarly peer-reviewed academic style. Reframe sentences by fronting evidence, methodology, or conditional clauses, utilizing syntactic nominalization, alternating passive/active constructions for objective detachment, and synthesizing conceptual relationships with varied sentence architecture.`,
+  academic: `Rewrite the following text in a scholarly peer-reviewed academic style. Reframe sentences by fronting evidence, methodology, or conditional clauses, alternating passive/active constructions for objective detachment, and synthesizing conceptual relationships with varied sentence architecture while maintaining strict 1:1 length parity.`,
 
-  simple: `Simplify the following text to make it effortless to understand. Break convoluted, nested clauses into clean, direct sentences with clear subject-verb-object order, and reorder ideas chronologically or logically while keeping meaning 100% accurate.`,
+  simple: `Simplify the following text to make it effortless to understand. Break convoluted, nested clauses into clean, direct sentences with clear subject-verb-object order, and reorder ideas chronologically or logically while keeping meaning 100% accurate and maintaining direct, concise phrasing.`,
 
-  creative: `Rewrite the following text with expressive, imaginative phrasing and dynamic sentence pacing. Radically vary sentence rhythms, restructure narrative clause order, employ evocative syntactic flow, and alternate between punchy short clauses and rich compound structures while preserving core meaning.`,
+  creative: `Rewrite the following text with expressive, imaginative phrasing and dynamic sentence pacing. Radically vary sentence rhythms, restructure narrative clause order, employ evocative syntactic flow, and alternate between punchy short clauses and rich compound structures while preserving core meaning and avoiding artificial padding.`,
 
   expand: `Expand the following text with contextual nuance, explanatory depth, and elaborated sentence structures without inventing unsupported claims. Combine ideas into sophisticated compound-complex sentences with rich subordinate clauses and nuanced descriptors.`,
 
@@ -73,49 +73,69 @@ export class PromptEngine {
     parts.push('- Never reuse the identical main predicate or grammatical template across consecutive sentences.');
     parts.push('');
 
-    // Rule 3: Mode-specific instructions and calibrated length limits
+    // Rule 3: Zero Unnecessary Synonyms & Anti-Bloat Directive
+    parts.push('ZERO UNNECESSARY SYNONYMS & ANTI-BLOAT DIRECTIVE:');
+    parts.push('1. EQUAL-WEIGHT SYNONYM REPLACEMENTS: When replacing words, use precise, concise equivalents of identical or nearly identical semantic length (e.g. replace "delay" with "postpone", NOT with "make a strategic decision to push back").');
+    parts.push('2. ZERO CIRCUMLOCUTIONS: Never expand a single word into a wordy multi-word phrase (e.g. never change "because" to "due to the incontrovertible fact that", or "helps" to "plays an instrumental role in facilitating").');
+    parts.push('3. ZERO ADJECTIVE/ADVERB PADDING: Do not insert decorative, pretentious adverbs or intensifiers ("substantially", "critically", "dramatically", "crucially", "remarkably") unless they exist in the input.');
+    parts.push('4. RESTRUCTURE VIA SYNTAX, NOT INFLATION: Transform sentence architecture through clause inversion (subordinate <-> main), grammatical voice alternation, and varied sentence openings—NOT by inflating vocabulary or padding with thesaurus synonyms.');
+    parts.push('');
+
+    // Calculate dynamic word count metrics
+    const rawWords = request.text.trim().split(/\s+/).filter(Boolean);
+    const inputWordCount = rawWords.length;
+
+    // Rule 4: Mode-specific instructions and calibrated length limits
     const mode = request.mode;
     if (mode === 'shorten') {
+      const minWords = Math.max(3, Math.round(inputWordCount * 0.40));
+      const maxWords = Math.max(minWords, Math.round(inputWordCount * 0.65));
       parts.push('MODE: SHORTEN (HIGH COMPRESSION MANDATE):');
-      parts.push('- The rewritten output MUST be significantly shorter than the input text.');
-      parts.push('- Target length: 40% to 65% of the input word count.');
+      parts.push(`- Input length: ${inputWordCount} words.`);
+      parts.push(`- TARGET COMPRESSION LENGTH: ${minWords} to ${maxWords} words (40% to 65% of input).`);
       parts.push('- Strip non-essential modifiers, eliminate wordy transitions, and synthesize the core assertion into a single, punchy, high-impact sentence or tight paragraph.');
       parts.push('- Under NO circumstances should you expand or output multiple alternative versions.');
       parts.push('');
     } else if (mode === 'expand') {
+      const minWords = Math.round(inputWordCount * 1.20);
+      const maxWords = Math.round(inputWordCount * 1.45);
       parts.push('MODE: EXPAND (NUANCED ELABORATION MANDATE):');
+      parts.push(`- Input length: ${inputWordCount} words.`);
+      parts.push(`- TARGET EXPANDED LENGTH: ${minWords} to ${maxWords} words (+20% to +45% longer).`);
       parts.push('- Elaborate ideas with analytical depth, rich subordinate clauses, and contextual precision without inventing ungrounded facts.');
-      parts.push('- Target length: +20% to +45% longer than input text.');
       parts.push('');
     } else {
       // Standard, Fluency, Humanize, Formal, Academic, Simple, Creative, Custom
+      const minWords = Math.max(1, Math.round(inputWordCount * 0.95));
+      const maxWords = Math.max(inputWordCount, Math.round(inputWordCount * 1.08));
       const modePrompt = this.getModePrompt(mode, request.customInstruction);
       parts.push(`MODE: ${mode.toUpperCase()}`);
       parts.push(modePrompt);
       parts.push('');
-      parts.push('LENGTH PROPORTIONALITY:');
-      parts.push('- Keep the total word count natural and proportional (within ±15% to ±20% of the input text).');
-      parts.push('- Do NOT bloat into extra paragraphs, add padding, or invent external context.');
+      parts.push('QUILLBOT 1:1 WORD-COUNT PARITY & LENGTH CONSERVATION:');
+      parts.push(`- Input length: Exactly ${inputWordCount} words.`);
+      parts.push(`- STRICT TARGET LENGTH: ${minWords} to ${maxWords} words (strict 1:1 length parity).`);
+      parts.push(`- STRICT MAXIMUM: Never exceed ${maxWords} words. Do NOT bloat into extra sentences, add padding, or introduce conversational filler.`);
       parts.push('');
     }
 
-    // Rule 4: Synonym & Structural Intensity Slider (Levels 1 to 4)
+    // Rule 5: Synonym & Structural Intensity Slider (Levels 1 to 4)
     parts.push(this.getSynonymLevelInstruction(request.synonymLevel || 2));
     parts.push('');
 
-    // Rule 5: Frozen terms
+    // Rule 6: Frozen terms
     if (request.frozenTerms && request.frozenTerms.length > 0) {
       parts.push(this.getFrozenTermsInstruction(request.frozenTerms));
       parts.push('');
     }
 
-    // Rule 6: Language
+    // Rule 7: Language
     if (request.language && request.language !== 'auto') {
       parts.push(`LANGUAGE: Keep the output in ${this.getLanguageName(request.language)}.`);
       parts.push('');
     }
 
-    // Rule 7: Plagiarism Guard
+    // Rule 8: Plagiarism Guard
     if (request.plagiarismGuard !== false) {
       parts.push('ANTI-PLAGIARISM DIRECTIVE: Ensure the output exhibits zero verbatim copying or patchwriting by completely recasting sentence trees while keeping meaning intact.');
       parts.push('');
@@ -128,8 +148,23 @@ export class PromptEngine {
    * Build the clean user prompt containing only the text to rewrite
    */
   buildUserPrompt(request: AIRequest): string {
-    const action = request.mode === 'shorten' ? 'Shorten and structurally rewrite' : 'Rewrite and structurally restructure';
-    return `${action} the following text:\n\n${request.text}`;
+    const rawWords = request.text.trim().split(/\s+/).filter(Boolean);
+    const inputWordCount = rawWords.length;
+    const mode = request.mode;
+
+    if (mode === 'shorten') {
+      const minWords = Math.max(3, Math.round(inputWordCount * 0.40));
+      const maxWords = Math.max(minWords, Math.round(inputWordCount * 0.65));
+      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Do not bloat or output multiple versions:\n\n${request.text}`;
+    }
+
+    if (mode === 'expand') {
+      return `Expand the following text (${inputWordCount} words) with nuanced depth:\n\n${request.text}`;
+    }
+
+    const minWords = Math.max(1, Math.round(inputWordCount * 0.95));
+    const maxWords = Math.max(inputWordCount, Math.round(inputWordCount * 1.08));
+    return `Rewrite and structurally restructure the following text (${inputWordCount} words) maintaining strict 1:1 word count parity (${minWords}-${maxWords} words) with zero fluff or bloated synonyms:\n\n${request.text}`;
   }
 
   /**
@@ -159,10 +194,10 @@ export class PromptEngine {
    */
   private getSynonymLevelInstruction(level: number): string {
     const instructions = {
-      1: 'STRUCTURAL & LEXICAL INTENSITY: Level 1 (Mild). Use subtle phrasing shifts and light clause adjustments while preserving familiar cadence and tone.',
-      2: 'STRUCTURAL & LEXICAL INTENSITY: Level 2 (Balanced). Actively invert cause-and-effect clauses, alternate sentence openings, and substitute fresh vocabulary.',
-      3: 'STRUCTURAL & LEXICAL INTENSITY: Level 3 (High — QuillBot Standard). Aggressively transform sentence architecture: invert clause hierarchies, change sentence subjects, front participial/prepositional modifiers, and combine or divide clauses for dynamic cadence.',
-      4: 'STRUCTURAL & LEXICAL INTENSITY: Level 4 (Max — Radical Syntactic Transformation). Rebuild sentence syntax from the ground up: completely re-sequence ideas, invert main and subordinate clauses, transform parts of speech, and maximize structural variety while preserving 100% of underlying facts.',
+      1: 'SYNONYM & STRUCTURAL INTENSITY: Level 1 (Mild). Substitute ~20% of words with concise equivalents and make light clause adjustments while preserving familiar cadence and strict word count parity.',
+      2: 'SYNONYM & STRUCTURAL INTENSITY: Level 2 (Balanced). Substitute ~35% of words with concise equivalents, actively invert cause-and-effect clauses, and alternate sentence openings while maintaining strict word count parity.',
+      3: 'SYNONYM & STRUCTURAL INTENSITY: Level 3 (High — QuillBot Standard). Transform ~55% of phrasing: aggressively invert clause hierarchies, change sentence subjects, front participial/prepositional modifiers, and maintain strict 1:1 word count parity with zero fluff.',
+      4: 'SYNONYM & STRUCTURAL INTENSITY: Level 4 (Max — Radical Syntactic Transformation). Completely reconstruct sentence syntax and transform ~75% of phrasing from the ground up: re-sequence ideas, invert main/subordinate clauses, and maximize structural variety while preserving exact facts and strict word count parity.',
     };
 
     return instructions[level as 1 | 2 | 3 | 4] || instructions[2];
