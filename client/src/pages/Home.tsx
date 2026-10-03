@@ -31,7 +31,6 @@ import {
   ShieldCheck,
   ExternalLink,
   Snowflake,
-  Upload,
   Columns,
   BrainCircuit,
   CheckCheck,
@@ -108,9 +107,6 @@ export function Home() {
   const [selectedCompareModes, setSelectedCompareModes] = useState<string[]>(['standard', 'fluency', 'academic']);
   const [isComparing, setIsComparing] = useState(false);
 
-  // 📂 File Upload & Drag/Drop
-  const [isDraggingFile, setIsDraggingFile] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 🔍 Live Grammar Proofreader
   const [isCheckingGrammar, setIsCheckingGrammar] = useState(false);
@@ -643,42 +639,6 @@ export function Home() {
     }
   };
 
-  // 📂 File Upload (Drag & Drop + file picker)
-  const processUploadedFile = (file: File) => {
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    const reader = new FileReader();
-
-    if (ext === 'txt' || ext === 'md' || ext === 'text') {
-      reader.onload = (e) => {
-        const content = (e.target?.result as string) || '';
-        setInputText(content);
-        showToast(`Imported ${file.name} (${content.split(/\s+/).filter(Boolean).length} words)`, 'success');
-      };
-      reader.readAsText(file);
-    } else {
-      reader.onload = (e) => {
-        const buffer = e.target?.result as ArrayBuffer;
-        const decoder = new TextDecoder('utf-8', { fatal: false });
-        const raw = decoder.decode(buffer);
-        const clean = raw.replace(/[^\x20-\x7E\t\n\r]/g, ' ').replace(/\s{3,}/g, '\n\n').trim();
-        if (clean.length > 30) {
-          setInputText(clean);
-          showToast(`Extracted readable text from ${file.name}`, 'success');
-        } else {
-          showToast(`Could not extract clean text from ${file.name}. Try saving as .txt`, 'error');
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-  };
-
-  const handleFileDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingFile(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processUploadedFile(e.dataTransfer.files[0]);
-    }
-  };
 
   // 🔍 Live Grammar Proofreader
   const handleCheckGrammar = async () => {
@@ -1677,50 +1637,7 @@ export function Home() {
             borderRight: '1px solid var(--rb-border)',
             position: 'relative',
           }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDraggingFile(true);
-          }}
-          onDragLeave={() => setIsDraggingFile(false)}
-          onDrop={handleFileDrop}
         >
-          {/* Drag Overlay */}
-          {isDraggingFile && (
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'rgba(236, 253, 245, 0.95)',
-                border: '2px dashed #10b981',
-                zIndex: 50,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                color: '#059669',
-                pointerEvents: 'none',
-              }}
-            >
-              <Upload size={36} />
-              <div style={{ fontSize: '16px', fontWeight: 700 }}>Drop your document file here</div>
-              <div style={{ fontSize: '13px', color: '#047857' }}>Supports .txt, .md, .docx, .pdf</div>
-            </div>
-          )}
-
-          {/* Hidden File Input */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept=".txt,.md,.text,.docx,.pdf"
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                processUploadedFile(e.target.files[0]);
-              }
-            }}
-          />
-
           {/* Input Header Toolbar */}
           <div
             style={{
@@ -1735,25 +1652,6 @@ export function Home() {
               Input Text
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid var(--rb-border)',
-                  background: 'var(--rb-surface)',
-                  color: 'var(--rb-text)',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-                title="Upload .txt, .docx, or .pdf"
-              >
-                <Upload size={14} /> Upload
-              </button>
               <button
                 onClick={handlePaste}
                 style={{
