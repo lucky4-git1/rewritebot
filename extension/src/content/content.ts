@@ -553,6 +553,11 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
     }
 
     try {
+      if (!chrome.runtime?.id) {
+        if (outputEl) outputEl.innerHTML = '<span class="rb-error">🔄 Extension updated. Please refresh this page (F5).</span>';
+        return;
+      }
+
       chrome.runtime.sendMessage(
         {
           type: 'EXECUTE_PARAPHRASE',
@@ -562,6 +567,14 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
           },
         },
         (response: any) => {
+          if (chrome.runtime?.lastError) {
+            const lastErrMsg = chrome.runtime.lastError.message || '';
+            if (lastErrMsg.includes('invalidated') || lastErrMsg.includes('context')) {
+              if (outputEl) outputEl.innerHTML = '<span class="rb-error">🔄 Extension updated. Please refresh this page (F5).</span>';
+              return;
+            }
+          }
+
           if (response?.success && response.data?.text) {
             rewrittenResultText = response.data.text;
             if (outputEl) outputEl.textContent = rewrittenResultText;
@@ -574,7 +587,13 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
         }
       );
     } catch (err: any) {
-      if (outputEl) outputEl.innerHTML = `<span class="rb-error">${err.message || 'Extension error'}</span>`;
+      if (outputEl) {
+        if (err.message?.includes('invalidated') || !chrome.runtime?.id) {
+          outputEl.innerHTML = '<span class="rb-error">🔄 Extension updated. Please refresh this page (F5).</span>';
+        } else {
+          outputEl.innerHTML = `<span class="rb-error">${err.message || 'Extension error'}</span>`;
+        }
+      }
     }
   }
 
