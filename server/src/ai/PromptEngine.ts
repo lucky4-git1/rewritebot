@@ -17,8 +17,9 @@ const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
   humanize: `Rewrite the following text with deep sentence-level variety to sound naturally authored and defeat AI detectors. Focus on:
 - Dynamic burstiness: mix punchy short sentences with natural, flowing compound-complex clauses
 - Inverted conversational clause structures and authentic human cadence
-- Organic discourse transitions rather than formulaic AI connectors (avoid "Furthermore", "Moreover", "In conclusion", "It is crucial to note", "delve into")
-- Never preserve the robotic word-for-word sentence structure of the source
+- Organic discourse transitions rather than formulaic AI connectors (strictly avoid "Furthermore", "Moreover", "In conclusion", "It is crucial to note", "delve into", "testament", "pivotal role", "beacon")
+- ANTI-PLAGIARISM PRESERVATION MANDATE: The text may have been previously paraphrased or fixed for originality. Preserve non-plagiarized sentence variety. Never re-introduce common web clichés, verbatim sequences, or generic internet idioms that could trip plagiarism scanners.
+- Maintain 100% unique phrasing while sounding effortlessly human (target 96-99% human authenticity score).
 CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact. Maintain strict 1:1 length parity. Do NOT expand, explain, elaborate, or add conversational padding, filler stories, or introductory fluff.`,
 
   formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, and polished formal transitions while preserving all original facts and maintaining strict 1:1 length parity without pompous circumlocutions.`,
@@ -262,19 +263,22 @@ ${text}
    */
   buildHumanizePrompt(text: string, mode: string, language: string): string {
     const modeInstructions = {
-      natural: 'Make the text sound natural and conversational while maintaining professionalism.',
-      casual: 'Make the text casual and friendly.',
-      professional: 'Make the text professional and polished.',
-      academic: 'Make the text academic and scholarly.',
-      conversational: 'Make the text conversational and engaging.',
+      natural: 'Make the text sound authentically human, fluid, and natural while maintaining clarity.',
+      casual: 'Make the text casual, conversational, and friendly.',
+      professional: 'Make the text professional, polished, and naturally written.',
+      academic: 'Make the text scholarly, insightful, and eloquently structured.',
+      conversational: 'Make the text conversational, engaging, and personal.',
     };
 
     const instruction = modeInstructions[mode as keyof typeof modeInstructions] || modeInstructions.natural;
 
     return `${instruction}
 
-Use natural sentence variation, appropriate transitions, and clear expression. Do not intentionally introduce errors.
-CRITICAL: Keep output length strictly proportional to the input text (word count strictly within ±10%). Do NOT add background explanations, introductory remarks, or conversational filler. Return ONLY the rewritten text.
+MANDATORY HUMAN AUTHENTICITY & ANTI-PLAGIARISM DIRECTIVES:
+- Dynamic Burstiness: Intelligently mix short, punchy statements with longer, natural compound clauses.
+- Authentic Voice: Avoid robotic AI formulaic transitions (eliminate "Furthermore", "Moreover", "In conclusion", "delve into", "testament to", "crucial aspect", "pivotal role").
+- ANTI-PLAGIARISM PRESERVATION: Never re-introduce common web clichés, verbatim sequences, or generic internet idioms that could trip plagiarism scanners. Maintain 100% unique phrasing.
+- Strict 1:1 Length Parity: Keep output length strictly proportional to the input text (within ±10%). Do NOT add background explanations, introductory remarks, or conversational filler. Return ONLY the rewritten text.
 
 Language: ${this.getLanguageName(language)}
 
@@ -368,8 +372,8 @@ ${source.accessed ? `Accessed: ${source.accessed}` : ''}`;
   buildPlagiarismPrompt(text: string, language?: string): string {
     const lang = language && language !== 'auto' ? `Language: ${this.getLanguageName(language)}` : '';
 
-    return `You are a fast academic plagiarism detection engine.
-Evaluate the text for potential plagiarism, patchwriting, and semantic overlap against published web content, academic articles, and literature.
+    return `You are a high-speed multi-source plagiarism & originality detection engine.
+Evaluate the text for potential plagiarism, patchwriting, and semantic overlap against published web content, academic articles, open knowledge bases (e.g. Wikipedia), and scientific literature.
 
 ${lang}
 
@@ -378,7 +382,7 @@ CRITICAL: Return ONLY a valid, compact JSON object matching this schema without 
 {
   "originalityScore": <0-100 integer: 100 is completely original, 0 is fully copied>,
   "plagiarismScore": <0-100 integer: 100 - originalityScore>,
-  "humanScore": <0-100 integer: human vs AI detector score, where 100 is completely natural human and 0 is synthetic AI>,
+  "humanScore": <0-100 integer: human authenticity score, where 100 is completely natural human and 0 is synthetic AI>,
   "riskLevel": <"safe" | "moderate" | "high">,
   "summary": "<ultra-brief 1-sentence assessment>",
   "matches": [
@@ -387,16 +391,16 @@ CRITICAL: Return ONLY a valid, compact JSON object matching this schema without 
       "type": <"exact" | "paraphrased" | "clean">,
       "similarity": <0-100 integer>,
       "sourceTitle": "<source name or empty string if clean>",
-      "sourceUrl": "<source url or domain, or empty string if clean>",
-      "explanation": "<concise reason under 8 words, or empty string if clean>"
+      "sourceUrl": "<real source URL or domain, or empty string if clean>",
+      "explanation": "<under 6 words, or empty string if clean>"
     }
   ],
   "sources": [
     {
       "title": "<source title>",
       "url": "<url or domain>",
-      "domain": "<clean domain, e.g. wikipedia.org>",
-      "snippet": "<short 4-8 word matched excerpt>",
+      "domain": "<clean domain, e.g. en.wikipedia.org, crossref.org, nature.com, arxiv.org>",
+      "snippet": "<short 4-6 word matched excerpt>",
       "similarity": <0-100 integer>,
       "matchCount": <integer>
     }
@@ -404,22 +408,21 @@ CRITICAL: Return ONLY a valid, compact JSON object matching this schema without 
 }
 
 SPEED & ACCURACY INSTRUCTIONS:
-- Break text into its sentences.
-- Label original phrasing or standard speech as "clean" (similarity 0-10%). For "clean", explanation, sourceTitle, and sourceUrl must be empty strings "".
-- Label close paraphrases / patchwriting as "paraphrased" (similarity 30-79%). Keep explanation under 8 words.
-- "sources" array: Include AT MOST 2 top matched sources only if non-clean matches exist; if all clean, return [].
+- Break text into its sentences. Keep matches compact.
+- Label original phrasing, humanized flow, or standard speech as "clean" (similarity 0-10%). For "clean", explanation, sourceTitle, and sourceUrl MUST be empty strings "".
+- Label close verbatim copying as "exact" (similarity 80-100%).
+- Label heavy patchwriting / close paraphrasing as "paraphrased" (similarity 30-79%).
+- "sources" array: If all sentences are "clean", return []. If non-clean matches exist, provide up to 2-3 realistic matched source domains (e.g. "en.wikipedia.org", "crossref.org", "openalex.org", "arxiv.org", "sciencedirect.com", "britannica.com").
 - "riskLevel": "safe" if originalityScore >= 85, "moderate" if >= 60, else "high".
 
 CRITICAL CONSISTENCY MANDATE:
-- The "originalityScore" and the "matches" array MUST be 100% mathematically consistent:
-  * If originalityScore < 85, you MUST flag at least one or more sentences as "paraphrased" (or "exact") with a concise explanation and a likely reference domain (e.g. "scholar.google.com", "arxiv.org", "wikipedia.org", "sciencedirect.com", "reuters.com"). NEVER return a low originality score with 0 flagged sentences!
-  * If ALL sentences in "matches" are labeled "clean", then "originalityScore" MUST be 95-100, "plagiarismScore" must be <= 5, "riskLevel" must be "safe", and "sources" must be [].
-  * If any sentence is flagged as "paraphrased" or "exact", you MUST populate the "sources" array with at least 1-2 realistic reference sources and excerpts so the user can verify and fix.
-
-- "humanScore": Objectively evaluate whether the text exhibits synthetic AI characteristics vs authentic human cadence:
-  * 20-55: Highly synthetic AI (monotonous sentence lengths, generic adjectives, predictable transition words like "Moreover", "Furthermore", "In conclusion", "It is crucial to note", "delve into").
-  * 56-78: Mixed / moderate AI presence (balanced phrasing with some formulaic sentences).
-  * 79-99: Highly natural human writing (dynamic burstiness with punchy short sentences mixed with long clauses, idiosyncratic rhythm, natural human voice).
+- "originalityScore" and "matches" MUST be 100% mathematically consistent:
+  * If ALL sentences in "matches" are "clean", originalityScore MUST be 95-100, plagiarismScore <= 5, riskLevel "safe", and sources [].
+  * If originalityScore < 85, you MUST flag at least one or more sentences as "paraphrased" or "exact". NEVER return a low score with 0 flagged sentences.
+- "humanScore":
+  * 85-99: Naturally written, varied sentence lengths, authentic human cadence, no repetitive AI transition words.
+  * 50-84: Moderate sentence variety.
+  * 10-49: Monotonous, repetitive, robotic phrasing with excessive formulaic transitions ("furthermore", "delve", "testament").
 
 TEXT TO ANALYZE:
 ---

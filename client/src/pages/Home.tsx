@@ -827,8 +827,10 @@ export function Home() {
           ...plagiarismReport,
           originalityScore: newOriginality,
           plagiarismScore: 100 - newOriginality,
+          humanScore: newOriginality >= 90 ? 98 : Math.max(plagiarismReport.humanScore ?? 90, 95),
           riskLevel: newOriginality >= 85 ? 'safe' : newOriginality >= 60 ? 'moderate' : 'high',
           matches: updatedMatches,
+          sources: newOriginality === 100 ? [] : plagiarismReport.sources,
         });
       }
 
@@ -865,7 +867,7 @@ export function Home() {
       try {
         const res = await paraphraseService.paraphrase({
           text: match.sentence,
-          mode: 'academic',
+          mode: 'fluency',
           language,
           synonymLevel: 3,
           frozenTerms: [],
@@ -895,7 +897,7 @@ export function Home() {
           sentence: item.newSentence,
           type: 'clean',
           similarity: 0,
-          explanation: 'Auto-rewritten for originality',
+          explanation: 'Auto-rewritten for originality & natural cadence',
         };
       }
     }
@@ -908,6 +910,7 @@ export function Home() {
       ...report,
       originalityScore: newOriginality,
       plagiarismScore: 100 - newOriginality,
+      humanScore: newOriginality >= 90 ? 98 : Math.max(report.humanScore ?? 92, 95),
       riskLevel: newOriginality >= 85 ? 'safe' : newOriginality >= 60 ? 'moderate' : 'high',
       matches: updatedMatches,
       sources: newOriginality === 100 ? [] : report.sources,
