@@ -994,27 +994,18 @@ html {
   }
 }
 
-/* Proof Points Grid */
+/* Proof Points Strip */
 .editorial-proof-points {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 24px;
   font-size: 12px;
   color: var(--rb-text-secondary);
   font-weight: 500;
   border-top: 1px solid var(--rb-border-light);
   padding-top: 16px;
   width: 100%;
-}
-@media (min-width: 440px) {
-  .editorial-proof-points {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (min-width: 768px) {
-  .editorial-proof-points {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 /* Editorial Navbar Links: Hide under 960px to prevent header collisions */

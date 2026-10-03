@@ -170,21 +170,21 @@ export function Landing() {
               </a>
             </div>
 
-            {/* Proof Points Strip in clean responsive grid */}
+            {/* Proof Points Strip in clean responsive flex wrap */}
             <div className="editorial-proof-points">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                 <CheckCircle2 size={14} color="#059669" style={{ flexShrink: 0 }} />
                 <span style={{ whiteSpace: 'nowrap' }}>Zero Subscription Fees</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                 <Cpu size={14} color="#BAD797" style={{ flexShrink: 0 }} />
                 <span style={{ whiteSpace: 'nowrap' }}>BYOK or Local Ollama</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                 <Lock size={14} color="#059669" style={{ flexShrink: 0 }} />
                 <span style={{ whiteSpace: 'nowrap' }}>100% Private & Air-Gapped</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                 <Layers size={14} color={isDark ? '#e27293' : '#670626'} style={{ flexShrink: 0 }} />
                 <span style={{ whiteSpace: 'nowrap' }}>3-Color Clause Diffs</span>
               </div>
