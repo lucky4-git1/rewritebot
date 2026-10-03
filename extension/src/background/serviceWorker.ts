@@ -1,9 +1,9 @@
 /**
  * RewriteBot Background Service Worker (Manifest V3)
- * Manages right-click context menu, shortcut commands, user auth, and API routing.
+ * Manages right-click context menu, shortcut commands, user auth, provider setup, and API routing.
  */
 
-const DEFAULT_SERVER_URL = 'http://localhost:3000/api/v1';
+const DEFAULT_SERVER_URL = 'https://p01--rewrite--25nzx6wzv2gh.code.run/api/v1';
 
 // Initialize context menu on install
 chrome.runtime.onInstalled.addListener(() => {
@@ -12,7 +12,7 @@ chrome.runtime.onInstalled.addListener(() => {
     title: 'Rewrite with RewriteBot (Alt+R)',
     contexts: ['selection'],
   });
-  console.log('[RewriteBot] Extension initialized & context menu registered');
+  console.log('[RewriteBot] Extension initialized with Northflank production server');
 });
 
 // Helper to safely send message to a tab, injecting content script if not already present
@@ -84,6 +84,18 @@ chrome.runtime.onMessage.addListener(
           .catch((error) => sendResponse({ success: false, error: error.message }));
         return true;
 
+      case 'AUTH_REGISTER':
+        handleRegister(request.payload)
+          .then((data) => sendResponse({ success: true, data }))
+          .catch((error) => sendResponse({ success: false, error: error.message }));
+        return true;
+
+      case 'ADD_PROVIDER':
+        handleAddProvider(request.payload)
+          .then((data) => sendResponse({ success: true, data }))
+          .catch((error) => sendResponse({ success: false, error: error.message }));
+        return true;
+
       case 'AUTH_LOGOUT':
         handleLogout()
           .then(() => sendResponse({ success: true }))
@@ -131,7 +143,7 @@ async function handleLogin(payload: { email: string; password: string }) {
       }),
     });
   } catch (err: any) {
-    throw new Error(`Cannot reach RewriteBot server at ${serverUrl}. Make sure the server is running.`);
+    throw new Error(`Cannot reach RewriteBot server at ${serverUrl}`);
   }
 
   const resData = await response.json().catch(() => ({}));
@@ -158,6 +170,128 @@ async function handleLogin(payload: { email: string; password: string }) {
   }
 
   return { user, providers, accessToken };
+}
+
+/**
+ * Handles new user registration directly inside the extension
+ */
+async function handleRegister(payload: { name: string; email: string; password: string }) {
+  const serverUrl = await getServerUrl();
+
+  let response: Response;
+  try {
+    response = await fetch(`${serverUrl}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: payload.name.trim(),
+        email: payload.email.trim(),
+        password: payload.password,
+      }),
+    });
+  } catch (err: any) {
+    throw new Error(`Cannot reach RewriteBot server at ${serverUrl}`);
+  }
+
+  const resData = await response.json().catch(() => ({}));
+  if (!response.ok || !resData.success) {
+    throw new Error(resData.error?.message || resData.message || 'Registration failed.');
+  }
+
+  const { user, accessToken, refreshToken } = resData.data;
+
+  await chrome.storage.local.set({
+    authToken: accessToken,
+    refreshToken: refreshToken || '',
+    currentUser: user,
+    isLoggedIn: true,
+  });
+
+  return { user, accessToken, providers: [] };
+}
+
+/**
+ * Adds an AI provider and API key for the authenticated user
+ */
+async function handleAddProvider(payload: {
+  name?: string;
+  type: string;
+  apiKey: string;
+  modelId?: string;
+  baseUrl?: string;
+}) {
+  const syncStorage = await chrome.storage.local.get(['authToken']);
+  if (!syncStorage.authToken) {
+    throw new Error('Please log in to configure an AI provider.');
+  }
+
+  const serverUrl = await getServerUrl();
+
+  const protocolMap: Record<string, string> = {
+    groq: 'openai',
+    openai: 'openai',
+    anthropic: 'anthropic',
+    gemini: 'gemini',
+    nvidia: 'openai',
+    together: 'openai',
+    deepseek: 'openai',
+  };
+
+  const defaultModels: Record<string, string> = {
+    groq: 'llama-3.3-70b-versatile',
+    openai: 'gpt-4o-mini',
+    gemini: 'gemini-1.5-flash',
+    anthropic: 'claude-3-5-sonnet-20241022',
+    nvidia: 'meta/llama-3.2-11b-vision-instruct',
+  };
+
+  const defaultBaseUrls: Record<string, string> = {
+    groq: 'https://api.groq.com/openai/v1',
+    nvidia: 'https://integrate.api.nvidia.com/v1',
+  };
+
+  const providerType = payload.type || 'groq';
+  const modelId = payload.modelId || defaultModels[providerType] || 'llama-3.3-70b-versatile';
+  const baseUrl = payload.baseUrl || defaultBaseUrls[providerType] || undefined;
+  const authType = ['anthropic', 'gemini'].includes(providerType) ? 'api-key' : 'bearer';
+
+  const bodyData: any = {
+    name: payload.name || `${providerType.toUpperCase()} Key`,
+    type: providerType,
+    protocol: protocolMap[providerType] || 'openai',
+    authenticationType: authType,
+    apiKey: payload.apiKey.trim(),
+    modelId,
+    baseUrl,
+    options: { streamingEnabled: true },
+  };
+
+  const response = await fetch(`${serverUrl}/providers`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${syncStorage.authToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bodyData),
+  });
+
+  const resData = await response.json().catch(() => ({}));
+  if (!response.ok || !resData.success) {
+    throw new Error(resData.error?.message || resData.message || 'Failed to add provider');
+  }
+
+  const newProvider = resData.data;
+
+  // Refresh providers list
+  const providers = await fetchProviders(syncStorage.authToken);
+
+  // Set as active selected provider
+  await chrome.storage.local.set({
+    selectedProviderId: newProvider.id,
+    selectedModelId: newProvider.modelId || modelId,
+  });
+
+  return { provider: newProvider, providers };
 }
 
 /**
@@ -237,7 +371,7 @@ async function syncActiveTabAuth() {
   const allTabs = await chrome.tabs.query({});
   // Prioritize open RewriteBot web app tab, then active tab
   let targetTab = allTabs.find(
-    (t) => t.id && t.url && (t.url.includes('localhost:5173') || t.url.includes('localhost:3000') || t.url.includes('rewritebot'))
+    (t) => t.id && t.url && (t.url.includes('localhost:5173') || t.url.includes('code.run') || t.url.includes('rewritebot'))
   );
 
   if (!targetTab) {
@@ -267,7 +401,7 @@ async function syncActiveTabAuth() {
   }
 
   if (!extractedToken) {
-    throw new Error('No logged-in session found in your open RewriteBot tab. Please log in with email and password below.');
+    throw new Error('No logged-in session found in your open RewriteBot tab. Please log in or sign up below.');
   }
 
   const serverUrl = await getServerUrl();
@@ -313,16 +447,20 @@ async function handleParaphraseRequest(payload: {
     'authToken',
     'selectedProviderId',
     'selectedModelId',
+    'providers',
   ]);
   const serverUrl = await getServerUrl();
   const token = syncStorage.authToken || '';
 
+  // Enforce authentication to protect developer credits
+  if (!token) {
+    throw new Error('Please open RewriteBot in your toolbar to Log In or Sign Up first.');
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
   };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
 
   const reqBody: Record<string, any> = {
     text: payload.text,
@@ -347,7 +485,7 @@ async function handleParaphraseRequest(payload: {
       body: JSON.stringify(reqBody),
     });
   } catch (netErr: any) {
-    throw new Error(`Cannot connect to RewriteBot backend at ${serverUrl}. Please ensure server is running.`);
+    throw new Error(`Cannot connect to RewriteBot cloud backend at ${serverUrl}.`);
   }
 
   if (!response.ok) {
