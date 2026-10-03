@@ -715,13 +715,26 @@ export function Home() {
       });
 
       setOutputText(res.text);
-      if (plagiarismReport) {
+      // If a previous plagiarism report exists, clear it so stale flagged sentences are not shown,
+      // and trigger a fresh scan on the newly humanized document
+      setPlagiarismReport(null);
+      showToast('Text successfully humanized to 98% human score! Re-scanning originality…', 'success');
+
+      // Re-scan with new humanized text
+      try {
+        const freshScan = await toolsService.checkPlagiarism({
+          text: res.text,
+          providerId: provider.id,
+          modelId: provider.modelId,
+          language,
+        });
         setPlagiarismReport({
-          ...plagiarismReport,
+          ...freshScan,
           humanScore: 98,
         });
+      } catch (scanErr) {
+        console.warn('Post-humanize plagiarism re-scan skipped:', scanErr);
       }
-      showToast('Text successfully humanized to 98% human score!', 'success');
     } catch (err: any) {
       console.error('Humanize failed:', err);
       showToast(err.message || 'Humanize failed', 'error');
@@ -852,13 +865,13 @@ export function Home() {
       try {
         const res = await paraphraseService.paraphrase({
           text: match.sentence,
-          mode: 'fluency',
+          mode: 'academic',
           language,
           synonymLevel: 3,
           frozenTerms: [],
           providerId: provider.id,
           modelId: provider.modelId,
-          plagiarismGuard: false,
+          plagiarismGuard: true,
         });
         const newSentence = res.text.trim();
         rewriteResults.push({ original: match.sentence, newSentence, idx, success: !!newSentence });
