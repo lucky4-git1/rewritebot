@@ -145,7 +145,8 @@ export class PromptEngine {
       parts.push('3. DECOUPLE FIXED TECHNICAL & FACTUAL ANCHORS: When names, numbers, dates, locations, or clinical terms (e.g. disease names, acronyms) must be preserved:');
       parts.push('   - Do NOT line them up in the original sequence.');
       parts.push('   - Separate them across new clauses and distinct grammatical roles so Turnitin cannot match multi-word chains.');
-      parts.push('4. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
+      parts.push('4. INVERT COMPOUND PHRASES & LISTS: Never copy multi-word lists verbatim (e.g. invert "dysmenorrhea, and other menstrual abnormalities" into "other menstrual irregularities, including dysmenorrhea"; invert "pain management techniques employed by girls" into "analgesic relief measures reported by participants").');
+      parts.push('5. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
       parts.push('');
     }
 

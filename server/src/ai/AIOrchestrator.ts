@@ -15,6 +15,7 @@ import { prisma } from '../database/prisma';
 import { decrypt } from '../security/crypto';
 import { IAIProvider } from './types';
 import { DiagnosticLogger } from '../utils/diagnostics';
+import { sanitizeNGrams } from './NGramSanitizer';
 
 /**
  * Main orchestrator for AI operations
@@ -106,14 +107,25 @@ export class AIOrchestrator {
         throw new ValidationError('Provider returned empty response');
       }
 
+      // Tier 2: Deterministic N-Gram Sanitizer & Patchwriting Decoupler
+      let sanitizedText = response.text;
+      if (request.plagiarismGuard !== false && request.text) {
+        const sanitization = sanitizeNGrams(request.text, response.text);
+        if (sanitization.modified) {
+          logger.info(`[NGramSanitizer] Decoupled ${sanitization.sanitizedCount} matching phrase sequence(s) to guarantee 0% patchwriting`);
+          sanitizedText = sanitization.text;
+        }
+      }
+
       diag?.log('RESPONSE_VALIDATED', {
-        outputLength: response.text.length,
+        outputLength: sanitizedText.length,
       });
 
-      logger.info(`Generation completed in ${latency}ms, output length: ${response.text.length}`);
+      logger.info(`Generation completed in ${latency}ms, output length: ${sanitizedText.length}`);
 
       return {
         ...response,
+        text: sanitizedText,
         latency,
       };
     } catch (error) {
