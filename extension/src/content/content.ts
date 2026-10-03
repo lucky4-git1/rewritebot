@@ -7,9 +7,13 @@ let activeShadowHost: HTMLElement | null = null;
 let activeShadowRoot: ShadowRoot | null = null;
 let currentSelectedText: string = '';
 let currentTargetElement: HTMLElement | null = null;
+let isCardOpen = false;
+let selectionDebounceTimer: any = null;
 
 // Clean up existing floating widget
 function removeActiveWidget() {
+  isCardOpen = false;
+  clearTimeout(selectionDebounceTimer);
   if (activeShadowHost) {
     activeShadowHost.remove();
     activeShadowHost = null;
@@ -95,18 +99,21 @@ function getSelectionInfo(mouseEvent?: MouseEvent): SelectionInfo | null {
 }
 
 // Listen to selection changes across the webpage
-let selectionDebounceTimer: any = null;
 ['mouseup', 'pointerup', 'keyup'].forEach((evt) => {
   window.addEventListener(evt, (e: any) => {
-    // If interaction occurs inside our widget, don't dismiss or reposition
+    // If the card is already open, do not disturb it!
+    if (isCardOpen) {
+      return;
+    }
+
+    // If interaction occurs inside our shadow host, ignore
     if (activeShadowHost && e.composedPath && e.composedPath().includes(activeShadowHost)) {
       return;
     }
 
     clearTimeout(selectionDebounceTimer);
     selectionDebounceTimer = setTimeout(() => {
-      // Don't disturb if full rewrite card is already open
-      if (activeShadowRoot?.querySelector('.rb-card-open')) {
+      if (isCardOpen) {
         return;
       }
 
@@ -118,9 +125,23 @@ let selectionDebounceTimer: any = null;
       } else {
         removeActiveWidget();
       }
-    }, 60);
+    }, 50);
   });
 });
+
+// Dismiss card when user clicks outside
+window.addEventListener(
+  'pointerdown',
+  (e: any) => {
+    if (isCardOpen && activeShadowHost) {
+      const path = e.composedPath ? e.composedPath() : [];
+      if (!path.includes(activeShadowHost)) {
+        removeActiveWidget();
+      }
+    }
+  },
+  true
+);
 
 // Direct in-page keyboard shortcut listener for Alt+R (or Option+R on Mac)
 window.addEventListener(
@@ -230,8 +251,20 @@ function showFloatingTriggerBadge(x: number, y: number) {
   const pill = document.createElement('div');
   pill.className = 'rb-pill';
   pill.innerHTML = `<span class="rb-icon">✍️</span> <span>Rewrite</span>`;
-  pill.addEventListener('click', (e) => {
+
+  // Crucial: prevent mousedown and pointerdown from deselecting text on the page!
+  const stopEvent = (e: Event) => {
+    e.preventDefault();
     e.stopPropagation();
+  };
+  pill.addEventListener('mousedown', stopEvent);
+  pill.addEventListener('pointerdown', stopEvent);
+  pill.addEventListener('mouseup', stopEvent);
+
+  pill.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearTimeout(selectionDebounceTimer);
     showFloatingRewriteCard({ x, y });
   });
 
@@ -240,6 +273,9 @@ function showFloatingTriggerBadge(x: number, y: number) {
 }
 
 function showFloatingRewriteCard(coords: { x: number; y: number }) {
+  isCardOpen = true;
+  clearTimeout(selectionDebounceTimer);
+
   if (!activeShadowRoot || !activeShadowHost) {
     activeShadowHost = document.createElement('div');
     activeShadowHost.id = 'rewritebot-extension-root';
@@ -269,7 +305,7 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       color: #171314;
       border-radius: 12px;
       border: 1px solid #e5e7eb;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.08);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
       display: flex;
@@ -452,7 +488,10 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   activeShadowRoot.appendChild(card);
 
   // Close handler
-  card.querySelector('#rb-btn-close')?.addEventListener('click', removeActiveWidget);
+  card.querySelector('#rb-btn-close')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    removeActiveWidget();
+  });
 
   // Manual input handler if displayed
   const manualInput = card.querySelector<HTMLTextAreaElement>('#rb-manual-input');
@@ -463,7 +502,8 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   // Mode switcher handler
   const modeButtons = card.querySelectorAll<HTMLButtonElement>('.rb-mode-btn');
   modeButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       modeButtons.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       selectedMode = btn.dataset.mode || 'standard';
@@ -472,12 +512,14 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   });
 
   // Re-run handler
-  card.querySelector('#rb-btn-rerun')?.addEventListener('click', () => {
+  card.querySelector('#rb-btn-rerun')?.addEventListener('click', (e) => {
+    e.stopPropagation();
     executeParaphrase();
   });
 
   // Copy handler
-  card.querySelector('#rb-btn-copy')?.addEventListener('click', () => {
+  card.querySelector('#rb-btn-copy')?.addEventListener('click', (e) => {
+    e.stopPropagation();
     if (rewrittenResultText) {
       navigator.clipboard.writeText(rewrittenResultText);
       const copyBtn = card.querySelector<HTMLButtonElement>('#rb-btn-copy');
@@ -489,7 +531,8 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   });
 
   // Replace in page handler
-  card.querySelector('#rb-btn-replace')?.addEventListener('click', () => {
+  card.querySelector('#rb-btn-replace')?.addEventListener('click', (e) => {
+    e.stopPropagation();
     if (rewrittenResultText) {
       replaceTextInPage(currentSelectedText, rewrittenResultText);
       removeActiveWidget();
