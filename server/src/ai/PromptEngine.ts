@@ -5,31 +5,31 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced clause rearrangement and syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, and refresh vocabulary without retaining the source sentence's exact template. Maintain a proportional length strictly within 10% of the input text (never exceed +10% longer) while ensuring clause restructuring and smooth syntactic flow, without adding unnecessary padding or bloated paragraphs.`,
+  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, shift between active and passive constructions where natural, and refresh vocabulary without retaining the source sentence's exact grammatical template. Maintain a proportional length strictly within 10% of the input text (never exceed +10% longer) while ensuring clause restructuring and smooth syntactic flow, without adding unnecessary padding or bloated paragraphs.`,
 
-  fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text. Focus on:
-- Reorganizing clause order and sentence structure for natural human cadence
+  fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
+- Reorganizing clause order and sentence structure for natural, effortless human cadence
 - Inverting dependent and independent clauses where it enhances readability
-- Fronting transitional modifiers and varied sentence openings
+- Fronting transitional modifiers, participial openers, and varied sentence beginnings
 - Eliminating awkward phrasing, word repetition, and monotonous rhythm
 Preserve all factual information, names, numbers, and technical terms.`,
 
   humanize: `Rewrite the following text with deep sentence-level variety to sound naturally authored and defeat AI detectors. Focus on:
-- Subtle sentence length variation and natural clause rhythm
+- Dynamic burstiness: mix punchy short sentences with natural, flowing compound-complex clauses
 - Inverted conversational clause structures and authentic human cadence
-- Asymmetric discourse connectors and organic flow
+- Organic discourse transitions rather than formulaic AI connectors (avoid "Furthermore", "Moreover", "In conclusion", "It is crucial to note", "delve into")
 - Never preserve the robotic word-for-word sentence structure of the source
 CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact. Maintain strictly proportional length (word count strictly within ±10% of the original text). Do NOT expand, explain, elaborate, or add conversational padding, filler stories, or introductory fluff.`,
 
-  formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, and polished formal transitions while preserving all original facts.`,
+  formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, nominalized verbs, and polished formal transitions while preserving all original facts.`,
 
-  academic: `Rewrite the following text in a scholarly peer-reviewed academic style. Reframe sentences by fronting evidence, condition, or methodology clauses, utilizing syntactic nominalization, and synthesizing conceptual relationships with varied sentence architecture.`,
+  academic: `Rewrite the following text in a scholarly peer-reviewed academic style. Reframe sentences by fronting evidence, methodology, or conditional clauses, utilizing syntactic nominalization, alternating passive/active constructions for objective detachment, and synthesizing conceptual relationships with varied sentence architecture.`,
 
-  simple: `Simplify the following text to make it effortless to understand. Break convoluted, nested clauses into clean, direct sentences with clear subject-verb order, and reorder ideas chronologically or logically while keeping meaning accurate.`,
+  simple: `Simplify the following text to make it effortless to understand. Break convoluted, nested clauses into clean, direct sentences with clear subject-verb-object order, and reorder ideas chronologically or logically while keeping meaning 100% accurate.`,
 
-  creative: `Rewrite the following text with expressive, imaginative phrasing and dynamic sentence pacing. Radically vary sentence rhythms, restructure narrative clause order, and employ evocative syntactic flow while preserving core meaning.`,
+  creative: `Rewrite the following text with expressive, imaginative phrasing and dynamic sentence pacing. Radically vary sentence rhythms, restructure narrative clause order, employ evocative syntactic flow, and alternate between punchy short clauses and rich compound structures while preserving core meaning.`,
 
-  expand: `Expand the following text with contextual nuance, explanatory depth, and elaborated sentence structures without inventing unsupported claims. Combine ideas into sophisticated compound-complex sentences.`,
+  expand: `Expand the following text with contextual nuance, explanatory depth, and elaborated sentence structures without inventing unsupported claims. Combine ideas into sophisticated compound-complex sentences with rich subordinate clauses and nuanced descriptors.`,
 
   shorten: `Condense the following text into high-impact, concise sentences. Merge redundant clauses, eliminate filler, and invert syntax for maximal economy of language while keeping every essential fact.`,
 
@@ -153,10 +153,10 @@ export class PromptEngine {
    */
   private getSynonymLevelInstruction(level: number): string {
     const instructions = {
-      1: 'Use minimal lexical changes. Replace words only when necessary for clarity.',
-      2: 'Use moderate synonym replacement to vary the expression.',
-      3: 'Use high synonym replacement to significantly vary the wording.',
-      4: 'Use aggressive synonym replacement to maximize lexical variation.',
+      1: 'SYNTACTIC & LEXICAL INTENSITY: Level 1 (Mild). Use minimal lexical changes and light clause adjustments. Preserve core phrasing, modifying words only when necessary for natural flow.',
+      2: 'SYNTACTIC & LEXICAL INTENSITY: Level 2 (Balanced). Use moderate synonym substitution and active clause inversion. Flip cause-and-effect clauses and vary sentence openings while preserving original tone.',
+      3: 'SYNTACTIC & LEXICAL INTENSITY: Level 3 (QuillBot Standard — High Structural Restructuring). Aggressively transform sentence architecture: flip dependent and independent clauses, alternate between active and passive constructions, front prepositional/adverbial modifiers, split or merge clauses for dynamic cadence, and substitute fresh, elevated vocabulary across all sentences.',
+      4: 'SYNTACTIC & LEXICAL INTENSITY: Level 4 (Maximum Structural Transformation). Radically reconstruct sentence syntax and grammatical layout: completely re-sequence ideas within each sentence, employ advanced clause subordination, transform parts of speech (e.g. nominalize actions into concepts), and maximize lexical variation while preserving 100% of underlying facts.',
     };
 
     return instructions[level as 1 | 2 | 3 | 4] || instructions[2];
@@ -359,6 +359,13 @@ SPEED & ACCURACY INSTRUCTIONS:
 - Label close paraphrases / patchwriting as "paraphrased" (similarity 30-79%). Keep explanation under 8 words.
 - "sources" array: Include AT MOST 2 top matched sources only if non-clean matches exist; if all clean, return [].
 - "riskLevel": "safe" if originalityScore >= 85, "moderate" if >= 60, else "high".
+
+CRITICAL CONSISTENCY MANDATE:
+- The "originalityScore" and the "matches" array MUST be 100% mathematically consistent:
+  * If originalityScore < 85, you MUST flag at least one or more sentences as "paraphrased" (or "exact") with a concise explanation and a likely reference domain (e.g. "scholar.google.com", "arxiv.org", "wikipedia.org", "sciencedirect.com", "reuters.com"). NEVER return a low originality score with 0 flagged sentences!
+  * If ALL sentences in "matches" are labeled "clean", then "originalityScore" MUST be 95-100, "plagiarismScore" must be <= 5, "riskLevel" must be "safe", and "sources" must be [].
+  * If any sentence is flagged as "paraphrased" or "exact", you MUST populate the "sources" array with at least 1-2 realistic reference sources and excerpts so the user can verify and fix.
+
 - "humanScore": Objectively evaluate whether the text exhibits synthetic AI characteristics vs authentic human cadence:
   * 20-55: Highly synthetic AI (monotonous sentence lengths, generic adjectives, predictable transition words like "Moreover", "Furthermore", "In conclusion", "It is crucial to note", "delve into").
   * 56-78: Mixed / moderate AI presence (balanced phrasing with some formulaic sentences).

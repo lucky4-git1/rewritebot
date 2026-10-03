@@ -121,6 +121,16 @@ export function Home() {
   // 🧠 Humanizer Action
   const [isHumanizing, setIsHumanizing] = useState(false);
 
+  // ⚡ Typewriter Effect & Instant Fallback
+  const [enableTypewriter, setEnableTypewriter] = useState<boolean>(() => {
+    return localStorage.getItem('rb_typewriter_effect') !== 'false';
+  });
+  const [isTypingOutput, setIsTypingOutput] = useState<boolean>(false);
+  const [typedOutputLength, setTypedOutputLength] = useState<number>(0);
+  const typingIntervalRef = useRef<any>(null);
+  const lastTypedTextRef = useRef<string>('');
+  const wasStreamedRef = useRef<boolean>(false);
+
   const {
     inputText,
     outputText,
@@ -196,6 +206,98 @@ export function Home() {
     setShowHistory(!showHistory);
   };
 
+  // ⚡ Skip typewriter animation and show full output instantly
+  const skipTyping = () => {
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    setIsTypingOutput(false);
+    setTypedOutputLength(outputText.length);
+  };
+
+  // ⚡ Toggle typewriter animation preference
+  const toggleTypewriterMode = () => {
+    const nextVal = !enableTypewriter;
+    setEnableTypewriter(nextVal);
+    localStorage.setItem('rb_typewriter_effect', String(nextVal));
+    if (!nextVal) {
+      skipTyping();
+    }
+    showToast(nextVal ? 'Typewriter animation enabled' : 'Instant output rendering enabled', 'info');
+  };
+
+  // ⚡ Typewriter Engine: Triggers smoothly when new output arrives
+  useEffect(() => {
+    if (!outputText) {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+        typingIntervalRef.current = null;
+      }
+      setIsTypingOutput(false);
+      setTypedOutputLength(0);
+      lastTypedTextRef.current = '';
+      return;
+    }
+
+    // While generation / streaming is active, live chunks stream directly
+    if (isGenerating) {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+        typingIntervalRef.current = null;
+      }
+      setIsTypingOutput(false);
+      setTypedOutputLength(outputText.length);
+      return;
+    }
+
+    // If the text was already streamed live chunk-by-chunk, or text has not changed,
+    // or typewriter is disabled, or text is long (> 2000 chars), display immediately (fallback)
+    if (wasStreamedRef.current || !enableTypewriter || outputText === lastTypedTextRef.current || outputText.length > 2000) {
+      wasStreamedRef.current = false;
+      lastTypedTextRef.current = outputText;
+      setIsTypingOutput(false);
+      setTypedOutputLength(outputText.length);
+      return;
+    }
+
+    // Start fluid typing animation
+    lastTypedTextRef.current = outputText;
+    setIsTypingOutput(true);
+    setTypedOutputLength(0);
+
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+    }
+
+    const totalLen = outputText.length;
+    // Step size scaled dynamically: short text is crisp, long text completes in <1.1s
+    const step = totalLen < 120 ? 1 : totalLen < 400 ? 2 : Math.max(3, Math.ceil(totalLen / 55));
+    const intervalMs = totalLen < 120 ? 20 : 16;
+    let currentPos = 0;
+
+    typingIntervalRef.current = setInterval(() => {
+      currentPos += step;
+      if (currentPos >= totalLen) {
+        setTypedOutputLength(totalLen);
+        setIsTypingOutput(false);
+        if (typingIntervalRef.current) {
+          clearInterval(typingIntervalRef.current);
+          typingIntervalRef.current = null;
+        }
+      } else {
+        setTypedOutputLength(currentPos);
+      }
+    }, intervalMs);
+
+    return () => {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+        typingIntervalRef.current = null;
+      }
+    };
+  }, [outputText, isGenerating, enableTypewriter]);
+
   const handleParaphrase = async () => {
     if (!selectedProviderId) {
       showToast('Please select or configure an AI provider first!', 'error');
@@ -225,16 +327,19 @@ export function Home() {
       setSelectedTokenIndex(null);
       if (provider.options?.streamingEnabled !== false) {
         try {
+          wasStreamedRef.current = true;
           await paraphraseStream(provider.id, provider.modelId);
           showToast('Paraphrase completed successfully!', 'success');
         } catch (streamErr) {
           console.warn('Streaming encountered issue, falling back to standard paraphrase:', streamErr);
+          wasStreamedRef.current = false;
           const result = await paraphrase(provider.id, provider.modelId);
           if (result && result.text && result.text.trim().length > 0) {
             showToast('Paraphrase completed successfully!', 'success');
           }
         }
       } else {
+        wasStreamedRef.current = false;
         const result = await paraphrase(provider.id, provider.modelId);
         if (result && result.text && result.text.trim().length > 0) {
           showToast('Paraphrase completed successfully!', 'success');
@@ -1841,56 +1946,80 @@ export function Home() {
                 Paraphrase
               </span>
               {outputText && (
-                <div style={{ display: 'flex', background: 'var(--rb-surface-cream)', borderRadius: '6px', padding: '2px', border: '1px solid var(--rb-border)', flexShrink: 0 }}>
+                <>
+                  <div style={{ display: 'flex', background: 'var(--rb-surface-cream)', borderRadius: '6px', padding: '2px', border: '1px solid var(--rb-border)', flexShrink: 0 }}>
+                    <button
+                      onClick={() => setActiveTab('diff')}
+                      style={{
+                        border: 'none',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11.5px',
+                        fontWeight: activeTab === 'diff' ? 600 : 500,
+                        background: activeTab === 'diff' ? 'var(--rb-surface)' : 'transparent',
+                        color: activeTab === 'diff' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
+                        cursor: 'pointer',
+                        boxShadow: activeTab === 'diff' ? 'var(--rb-shadow-sm)' : 'none',
+                      }}
+                    >
+                      Synonyms
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('sentences')}
+                      style={{
+                        border: 'none',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11.5px',
+                        fontWeight: activeTab === 'sentences' ? 600 : 500,
+                        background: activeTab === 'sentences' ? 'var(--rb-surface)' : 'transparent',
+                        color: activeTab === 'sentences' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
+                        cursor: 'pointer',
+                        boxShadow: activeTab === 'sentences' ? 'var(--rb-shadow-sm)' : 'none',
+                      }}
+                    >
+                      Sentences
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('plain')}
+                      style={{
+                        border: 'none',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11.5px',
+                        fontWeight: activeTab === 'plain' ? 600 : 500,
+                        background: activeTab === 'plain' ? 'var(--rb-surface)' : 'transparent',
+                        color: activeTab === 'plain' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
+                        cursor: 'pointer',
+                        boxShadow: activeTab === 'plain' ? 'var(--rb-shadow-sm)' : 'none',
+                      }}
+                    >
+                      Plain
+                    </button>
+                  </div>
                   <button
-                    onClick={() => setActiveTab('diff')}
+                    onClick={toggleTypewriterMode}
+                    title={enableTypewriter ? 'Typewriter animation active (Click for Instant rendering)' : 'Instant rendering active (Click for Typewriter animation)'}
                     style={{
-                      border: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
                       padding: '4px 8px',
-                      borderRadius: '4px',
+                      borderRadius: '6px',
+                      border: `1px solid ${enableTypewriter ? (isDark ? 'rgba(186, 215, 151, 0.4)' : '#cbe6ac') : 'var(--rb-border)'}`,
+                      background: enableTypewriter ? (isDark ? 'rgba(186, 215, 151, 0.14)' : '#f2f8eb') : 'var(--rb-surface-cream)',
+                      color: enableTypewriter ? (isDark ? '#cbe6ac' : '#2d5a1e') : 'var(--rb-text-muted)',
                       fontSize: '11.5px',
-                      fontWeight: activeTab === 'diff' ? 600 : 500,
-                      background: activeTab === 'diff' ? 'var(--rb-surface)' : 'transparent',
-                      color: activeTab === 'diff' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
+                      fontWeight: 600,
                       cursor: 'pointer',
-                      boxShadow: activeTab === 'diff' ? 'var(--rb-shadow-sm)' : 'none',
+                      transition: 'all 0.15s ease',
+                      flexShrink: 0,
                     }}
                   >
-                    Synonyms
+                    <Sparkles size={12} color={enableTypewriter ? (isDark ? '#cbe6ac' : '#2d5a1e') : 'var(--rb-text-muted)'} />
+                    <span className="hide-on-mobile">{enableTypewriter ? 'Typewriter' : 'Instant'}</span>
                   </button>
-                  <button
-                    onClick={() => setActiveTab('sentences')}
-                    style={{
-                      border: 'none',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '11.5px',
-                      fontWeight: activeTab === 'sentences' ? 600 : 500,
-                      background: activeTab === 'sentences' ? 'var(--rb-surface)' : 'transparent',
-                      color: activeTab === 'sentences' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
-                      cursor: 'pointer',
-                      boxShadow: activeTab === 'sentences' ? 'var(--rb-shadow-sm)' : 'none',
-                    }}
-                  >
-                    Sentences
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('plain')}
-                    style={{
-                      border: 'none',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '11.5px',
-                      fontWeight: activeTab === 'plain' ? 600 : 500,
-                      background: activeTab === 'plain' ? 'var(--rb-surface)' : 'transparent',
-                      color: activeTab === 'plain' ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
-                      cursor: 'pointer',
-                      boxShadow: activeTab === 'plain' ? 'var(--rb-shadow-sm)' : 'none',
-                    }}
-                  >
-                    Plain
-                  </button>
-                </div>
+                </>
               )}
             </div>
 
@@ -2047,19 +2176,59 @@ export function Home() {
 
           {/* Output Content Area */}
           <div
+            ref={outputContainerRef}
+            onClick={() => {
+              if (isTypingOutput) skipTyping();
+            }}
             style={{
               flex: 1,
               padding: '20px',
               overflowY: 'auto',
               fontSize: '16px',
               lineHeight: '1.7',
+              cursor: isTypingOutput ? 'pointer' : 'default',
             }}
           >
             {isGenerating && !outputText ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '20px' }}>
-                <div style={{ height: '20px', background: '#f1f5f9', borderRadius: '4px', width: '85%', animation: 'pulse 1.5s infinite' }} />
-                <div style={{ height: '20px', background: '#f1f5f9', borderRadius: '4px', width: '95%', animation: 'pulse 1.5s infinite' }} />
-                <div style={{ height: '20px', background: '#f1f5f9', borderRadius: '4px', width: '70%', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ height: '20px', background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9', borderRadius: '4px', width: '85%', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ height: '20px', background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9', borderRadius: '4px', width: '95%', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ height: '20px', background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9', borderRadius: '4px', width: '70%', animation: 'pulse 1.5s infinite' }} />
+              </div>
+            ) : isTypingOutput ? (
+              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: 'var(--rb-text)' }}>
+                <span>{outputText.slice(0, typedOutputLength)}</span>
+                <span className="typing-caret" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    skipTyping();
+                  }}
+                  title="Click to skip typing animation"
+                  style={{
+                    marginLeft: '12px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    background: 'var(--rb-surface-cream)',
+                    border: '1px solid var(--rb-border)',
+                    color: 'var(--rb-text-muted)',
+                    cursor: 'pointer',
+                    verticalAlign: 'middle',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--rb-text)';
+                    e.currentTarget.style.borderColor = 'var(--rb-text-secondary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--rb-text-muted)';
+                    e.currentTarget.style.borderColor = 'var(--rb-border)';
+                  }}
+                >
+                  Skip ⏭
+                </button>
               </div>
             ) : outputText ? (
               isGenerating || activeTab === 'plain' ? (
@@ -2886,12 +3055,13 @@ export function Home() {
               top: 0,
               right: 0,
               bottom: 0,
-              background: '#ffffff',
-              borderLeft: '1px solid #e2e8f0',
-              boxShadow: '-4px 0 25px rgba(0,0,0,0.12)',
+              background: isDark ? 'var(--rb-surface)' : '#ffffff',
+              borderLeft: isDark ? '1px solid var(--rb-border)' : '1px solid #e2e8f0',
+              boxShadow: '-4px 0 25px rgba(0,0,0,0.25)',
               zIndex: 310,
               display: 'flex',
               flexDirection: 'column',
+              color: isDark ? 'var(--rb-text)' : '#1e293b',
             }}
           >
             {/* Drawer Header */}
@@ -3008,7 +3178,7 @@ export function Home() {
                           width: '68px',
                           height: '68px',
                           borderRadius: '50%',
-                          background: '#ffffff',
+                          background: isDark ? 'var(--rb-surface-cream)' : '#ffffff',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
@@ -3039,7 +3209,7 @@ export function Home() {
                         >
                           {plagiarismReport.originalityScore}%
                         </div>
-                        <div style={{ fontSize: '9px', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                        <div style={{ fontSize: '9px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
                           ORIGINAL
                         </div>
                       </div>
@@ -3050,7 +3220,7 @@ export function Home() {
                           width: '68px',
                           height: '68px',
                           borderRadius: '50%',
-                          background: '#ffffff',
+                          background: isDark ? 'var(--rb-surface-cream)' : '#ffffff',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
@@ -3061,10 +3231,10 @@ export function Home() {
                         }}
                         title="AI detector bypass score (100% = natural human cadence)"
                       >
-                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#2d5a1e', lineHeight: 1 }}>
+                        <div style={{ fontSize: '18px', fontWeight: 800, color: isDark ? '#BAD797' : '#2d5a1e', lineHeight: 1 }}>
                           {plagiarismReport.humanScore ?? 95}%
                         </div>
-                        <div style={{ fontSize: '9px', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                        <div style={{ fontSize: '9px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
                           HUMAN
                         </div>
                       </div>
@@ -3082,16 +3252,16 @@ export function Home() {
                             letterSpacing: '0.5px',
                             background:
                               plagiarismReport.riskLevel === 'safe'
-                                ? '#d1fae5'
+                                ? (isDark ? 'rgba(16, 185, 129, 0.2)' : '#d1fae5')
                                 : plagiarismReport.riskLevel === 'moderate'
-                                ? '#fef3c7'
-                                : '#fee2e2',
+                                ? (isDark ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7')
+                                : (isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2'),
                             color:
                               plagiarismReport.riskLevel === 'safe'
-                                ? '#065f46'
+                                ? (isDark ? '#6ee7b7' : '#065f46')
                                 : plagiarismReport.riskLevel === 'moderate'
-                                ? '#92400e'
-                                : '#991b1b',
+                                ? (isDark ? '#fde047' : '#92400e')
+                                : (isDark ? '#fca5a5' : '#991b1b'),
                           }}
                         >
                           {plagiarismReport.riskLevel === 'safe'
@@ -3101,7 +3271,7 @@ export function Home() {
                             : '✕ High Plagiarism Risk'}
                         </span>
                       </div>
-                      <div style={{ fontSize: '13px', color: '#334155', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: '13px', color: isDark ? 'var(--rb-text)' : '#334155', lineHeight: 1.4 }}>
                         {plagiarismReport.riskLevel === 'safe'
                           ? 'Great job! Your text shows very high originality and natural human cadence.'
                           : plagiarismReport.riskLevel === 'moderate'
@@ -3144,20 +3314,20 @@ export function Home() {
                       gap: '10px',
                     }}
                   >
-                    <div style={{ padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Words Checked</div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
+                    <div style={{ padding: '10px', background: isDark ? 'var(--rb-surface-cream)' : '#f8fafc', borderRadius: '8px', border: isDark ? '1px solid var(--rb-border)' : '1px solid #e2e8f0', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', fontWeight: 500 }}>Words Checked</div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: isDark ? 'var(--rb-text)' : '#0f172a', marginTop: '2px' }}>
                         {plagiarismReport.wordCount}
                       </div>
                     </div>
 
-                    <div style={{ padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Flagged Parts</div>
+                    <div style={{ padding: '10px', background: isDark ? 'var(--rb-surface-cream)' : '#f8fafc', borderRadius: '8px', border: isDark ? '1px solid var(--rb-border)' : '1px solid #e2e8f0', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', fontWeight: 500 }}>Flagged Parts</div>
                       <div
                         style={{
                           fontSize: '16px',
                           fontWeight: 700,
-                          color: plagiarismReport.matches.filter((m) => m.type !== 'clean').length > 0 ? '#d97706' : '#059669',
+                          color: plagiarismReport.matches.filter((m) => m.type !== 'clean').length > 0 ? (isDark ? '#fbbf24' : '#d97706') : (isDark ? '#4ade80' : '#059669'),
                           marginTop: '2px',
                         }}
                       >
@@ -3165,9 +3335,9 @@ export function Home() {
                       </div>
                     </div>
 
-                    <div style={{ padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Sources Matched</div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
+                    <div style={{ padding: '10px', background: isDark ? 'var(--rb-surface-cream)' : '#f8fafc', borderRadius: '8px', border: isDark ? '1px solid var(--rb-border)' : '1px solid #e2e8f0', textAlign: 'center' }}>
+                      <div style={{ fontSize: '11px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', fontWeight: 500 }}>Sources Matched</div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: isDark ? 'var(--rb-text)' : '#0f172a', marginTop: '2px' }}>
                         {plagiarismReport.sources.length}
                       </div>
                     </div>
@@ -3233,14 +3403,54 @@ export function Home() {
                     </div>
                   )}
 
+                  {/* Verified Clean Card (when 0 flagged parts) */}
+                  {plagiarismReport.matches.every((m) => m.type === 'clean') && (
+                    <div
+                      style={{
+                        padding: '14px 16px',
+                        borderRadius: '10px',
+                        background: isDark ? 'rgba(186, 215, 151, 0.12)' : '#f2f8eb',
+                        border: isDark ? '1.5px solid rgba(186, 215, 151, 0.3)' : '1.5px solid #d4e8be',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          background: isDark ? 'rgba(186, 215, 151, 0.2)' : '#e2f2d5',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <CheckCheck size={20} color={isDark ? '#BAD797' : '#2d5a1e'} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#cbe6ac' : '#2d5a1e' }}>
+                          Verified 100% Original Content
+                        </div>
+                        <div style={{ fontSize: '12px', color: isDark ? '#a5c77e' : '#4a7c2f', marginTop: '2px' }}>
+                          All {plagiarismReport.matches.length} sentences passed originality check with zero matching external sources.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Highlighted Sentence Inspector */}
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: isDark ? 'var(--rb-text)' : '#1e293b' }}>
                         Sentence-by-Sentence Breakdown
                       </span>
-                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                        Click flagged sentences to view details & fix
+                      <span style={{ fontSize: '11px', color: isDark ? 'var(--rb-text-muted)' : '#94a3b8' }}>
+                        {plagiarismReport.matches.some((m) => m.type !== 'clean')
+                          ? 'Click flagged sentences to view details & fix'
+                          : 'All sentences verified 100% original'}
                       </span>
                     </div>
 
@@ -3248,11 +3458,11 @@ export function Home() {
                       style={{
                         padding: '14px',
                         borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
-                        background: '#ffffff',
+                        border: isDark ? '1px solid var(--rb-border)' : '1px solid #e2e8f0',
+                        background: isDark ? 'var(--rb-surface-cream)' : '#ffffff',
                         fontSize: '14px',
                         lineHeight: '1.8',
-                        color: '#1e293b',
+                        color: isDark ? 'var(--rb-text)' : '#1e293b',
                         maxHeight: '260px',
                         overflowY: 'auto',
                       }}
@@ -3311,8 +3521,8 @@ export function Home() {
                       style={{
                         padding: '14px',
                         borderRadius: '8px',
-                        border: '1.5px solid #c7d2fe',
-                        background: '#f5f3ff',
+                        border: isDark ? '1.5px solid rgba(186, 215, 151, 0.4)' : '1.5px solid #c7d2fe',
+                        background: isDark ? 'var(--rb-surface-cream)' : '#f5f3ff',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '10px',
@@ -3328,16 +3538,16 @@ export function Home() {
                             borderRadius: '4px',
                             background:
                               plagiarismReport.matches[selectedMatchIndex].type === 'exact'
-                                ? '#fee2e2'
+                                ? (isDark ? 'rgba(239, 68, 68, 0.25)' : '#fee2e2')
                                 : plagiarismReport.matches[selectedMatchIndex].type === 'paraphrased'
-                                ? '#fef3c7'
-                                : '#d1fae5',
+                                ? (isDark ? 'rgba(245, 158, 11, 0.25)' : '#fef3c7')
+                                : (isDark ? 'rgba(16, 185, 129, 0.25)' : '#d1fae5'),
                             color:
                               plagiarismReport.matches[selectedMatchIndex].type === 'exact'
-                                ? '#991b1b'
+                                ? (isDark ? '#fca5a5' : '#991b1b')
                                 : plagiarismReport.matches[selectedMatchIndex].type === 'paraphrased'
-                                ? '#92400e'
-                                : '#065f46',
+                                ? (isDark ? '#fde047' : '#92400e')
+                                : (isDark ? '#6ee7b7' : '#065f46'),
                           }}
                         >
                           {plagiarismReport.matches[selectedMatchIndex].type === 'exact'
@@ -3351,24 +3561,24 @@ export function Home() {
 
                         <button
                           onClick={() => setSelectedMatchIndex(null)}
-                          style={{ border: 'none', background: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px' }}
+                          style={{ border: 'none', background: 'none', color: isDark ? 'var(--rb-text-muted)' : '#94a3b8', cursor: 'pointer', fontSize: '14px' }}
                         >
                           ✕
                         </button>
                       </div>
 
-                      <div style={{ fontSize: '13px', fontStyle: 'italic', color: '#334155' }}>
+                      <div style={{ fontSize: '13px', fontStyle: 'italic', color: isDark ? 'var(--rb-text)' : '#334155' }}>
                         "{plagiarismReport.matches[selectedMatchIndex].sentence}"
                       </div>
 
                       {plagiarismReport.matches[selectedMatchIndex].explanation && (
-                        <div style={{ fontSize: '12px', color: '#475569' }}>
+                        <div style={{ fontSize: '12px', color: isDark ? 'var(--rb-text-secondary)' : '#475569' }}>
                           <strong>Analysis:</strong> {plagiarismReport.matches[selectedMatchIndex].explanation}
                         </div>
                       )}
 
                       {plagiarismReport.matches[selectedMatchIndex].sourceTitle && (
-                        <div style={{ fontSize: '12px', color: '#6d28d9', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ fontSize: '12px', color: isDark ? '#c7d2fe' : '#6d28d9', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <ExternalLink size={12} />
                           <span>Likely Source: {plagiarismReport.matches[selectedMatchIndex].sourceTitle}</span>
                         </div>
@@ -3420,7 +3630,7 @@ export function Home() {
 
                   {/* Sources List */}
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: isDark ? 'var(--rb-text)' : '#1e293b', marginBottom: '8px' }}>
                       Identified Sources ({plagiarismReport.sources.length})
                     </div>
 
@@ -3432,8 +3642,8 @@ export function Home() {
                             style={{
                               padding: '12px',
                               borderRadius: '8px',
-                              border: '1px solid #e2e8f0',
-                              background: '#f8fafc',
+                              border: isDark ? '1px solid var(--rb-border)' : '1px solid #e2e8f0',
+                              background: isDark ? 'var(--rb-surface-cream)' : '#f8fafc',
                               display: 'flex',
                               flexDirection: 'column',
                               gap: '4px',
@@ -3444,25 +3654,25 @@ export function Home() {
                                 style={{
                                   fontSize: '11px',
                                   fontWeight: 600,
-                                  color: '#059669',
-                                  background: '#ecfdf5',
+                                  color: isDark ? '#a7f3d0' : '#059669',
+                                  background: isDark ? 'rgba(16, 185, 129, 0.2)' : '#ecfdf5',
                                   padding: '2px 6px',
                                   borderRadius: '4px',
                                 }}
                               >
                                 {src.domain || 'web source'}
                               </span>
-                              <span style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? '#f87171' : '#dc2626' }}>
                                 {src.similarity}% match
                               </span>
                             </div>
 
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: isDark ? 'var(--rb-text)' : '#0f172a' }}>
                               {src.title}
                             </div>
 
                             {src.snippet && (
-                              <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>
+                              <div style={{ fontSize: '12px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', fontStyle: 'italic' }}>
                                 "{src.snippet}"
                               </div>
                             )}
@@ -3474,7 +3684,7 @@ export function Home() {
                                 rel="noreferrer"
                                 style={{
                                   fontSize: '11px',
-                                  color: '#6366f1',
+                                  color: isDark ? '#a5b4fc' : '#6366f1',
                                   textDecoration: 'none',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -3493,9 +3703,9 @@ export function Home() {
                         style={{
                           padding: '16px',
                           borderRadius: '8px',
-                          background: '#ecfdf5',
-                          border: '1px solid #a7f3d0',
-                          color: '#065f46',
+                          background: isDark ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5',
+                          border: isDark ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid #a7f3d0',
+                          color: isDark ? '#6ee7b7' : '#065f46',
                           fontSize: '13px',
                           textAlign: 'center',
                         }}
