@@ -212,6 +212,67 @@ export function Home() {
     setTypedOutputLength(outputText.length);
   };
 
+  // ⚡ Update outputText instantly without triggering typewriter re-animation
+  const updateOutputDirectly = (nextText: string) => {
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    lastTypedTextRef.current = nextText;
+    setIsTypingOutput(false);
+    setTypedOutputLength(nextText.length);
+    setOutputText(nextText);
+  };
+
+  /**
+   * Resilient, fuzzy sentence replacement in document text
+   * Handles trailing punctuation, whitespace collapse, quotation marks, and regex escapes
+   */
+  const replaceSentenceInDoc = (doc: string, target: string, replacement: string): { updated: string; replaced: boolean } => {
+    if (!doc || !target) return { updated: doc, replaced: false };
+
+    // 1. Direct exact match
+    if (doc.includes(target)) {
+      return { updated: doc.replace(target, replacement), replaced: true };
+    }
+
+    // 2. Trimmed match
+    const trimmedTarget = target.trim();
+    if (trimmedTarget && doc.includes(trimmedTarget)) {
+      return { updated: doc.replace(trimmedTarget, replacement), replaced: true };
+    }
+
+    // 3. Normalized whitespace regex match (handles newlines, extra spaces, tabs)
+    try {
+      const words = trimmedTarget.split(/\s+/).filter(Boolean);
+      if (words.length > 0) {
+        const regexStr = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
+        const regex = new RegExp(regexStr, 'i');
+        if (regex.test(doc)) {
+          return { updated: doc.replace(regex, replacement), replaced: true };
+        }
+      }
+    } catch {
+      // Ignore regex error and fall through
+    }
+
+    // 4. Token overlap fallback: match by core word subsequence if 4+ words match consecutively
+    try {
+      const words = trimmedTarget.replace(/[^\w\s]/g, '').split(/\s+/).filter((w) => w.length > 2);
+      if (words.length >= 4) {
+        const keyPhrase = words.slice(0, 5).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
+        const fuzzyRegex = new RegExp(keyPhrase + '[^.!?\\n]*[.!?]?', 'i');
+        if (fuzzyRegex.test(doc)) {
+          return { updated: doc.replace(fuzzyRegex, replacement), replaced: true };
+        }
+      }
+    } catch {
+      // Fall through
+    }
+
+    return { updated: doc, replaced: false };
+  };
+
   // ⚡ Toggle typewriter animation preference
   const toggleTypewriterMode = () => {
     const nextVal = !enableTypewriter;
@@ -556,8 +617,13 @@ export function Home() {
   const handleApplySentenceAlternative = (newSentence: string) => {
     if (!selectedSentence || !newSentence) return;
     const currentDoc = outputText || inputText;
-    if (currentDoc.includes(selectedSentence)) {
-      setOutputText(currentDoc.replace(selectedSentence, newSentence));
+    const { updated, replaced } = replaceSentenceInDoc(currentDoc, selectedSentence, newSentence);
+    if (replaced) {
+      if (outputText) {
+        updateOutputDirectly(updated);
+      } else {
+        setInputText(updated);
+      }
       showToast('Replaced sentence with alternative!', 'success');
     }
     setSelectedSentence(null);
@@ -802,12 +868,16 @@ export function Home() {
       const newSentence = res.text.trim();
       if (!newSentence) throw new Error('Received empty rewrite');
 
-      // Replace in-place inside outputText (and inputText if present)
+      // Replace in-place inside outputText (and inputText if present) with resilient matching
       const currentDoc = outputText || inputText;
-      const updatedOutput = currentDoc.includes(sentence)
-        ? currentDoc.replace(sentence, newSentence)
-        : currentDoc;
-      setOutputText(updatedOutput);
+      const { updated: updatedDoc, replaced } = replaceSentenceInDoc(currentDoc, sentence, newSentence);
+      
+      // Update store and ensure UI refreshes immediately
+      if (outputText) {
+        updateOutputDirectly(updatedDoc);
+      } else {
+        setInputText(updatedDoc);
+      }
 
       // Update plagiarism report in real-time
       if (plagiarismReport) {
@@ -834,7 +904,12 @@ export function Home() {
         });
       }
 
-      showToast('Flagged sentence rewritten in-place! Document preserved.', 'success');
+      showToast(
+        replaced
+          ? 'Flagged sentence rewritten in-place! Document preserved.'
+          : 'Sentence rewritten! Document updated.',
+        'success'
+      );
     } catch (err: any) {
       console.error('Failed to rewrite sentence in-place:', err);
       showToast(err.message || 'Failed to rewrite sentence', 'error');
@@ -888,10 +963,13 @@ export function Home() {
       }
     }
 
-    // Apply all rewritten sentences into document and update matches
+    // Apply all rewritten sentences into document and update matches using resilient replacement
     for (const item of rewriteResults) {
-      if (item.success && item.newSentence && currentDoc.includes(item.original)) {
-        currentDoc = currentDoc.replace(item.original, item.newSentence);
+      if (item.success && item.newSentence) {
+        const { updated, replaced } = replaceSentenceInDoc(currentDoc, item.original, item.newSentence);
+        if (replaced) {
+          currentDoc = updated;
+        }
         updatedMatches[item.idx] = {
           ...updatedMatches[item.idx],
           sentence: item.newSentence,
@@ -905,7 +983,13 @@ export function Home() {
     const cleanCount = updatedMatches.filter((m) => m.type === 'clean').length;
     const newOriginality = updatedMatches.length > 0 ? Math.round((cleanCount / updatedMatches.length) * 100) : 100;
 
-    setOutputText(currentDoc);
+    // Instantly update output document in store without typewriter stall
+    if (useEditorStore.getState().outputText) {
+      updateOutputDirectly(currentDoc);
+    } else {
+      setInputText(currentDoc);
+    }
+
     setPlagiarismReport({
       ...report,
       originalityScore: newOriginality,

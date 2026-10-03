@@ -4,13 +4,13 @@ import { aiOrchestrator } from '../../ai/AIOrchestrator';
 import { logger } from '../../config/logger';
 import { calculateStatistics } from '../../utils/statistics';
 
-// In-memory fast cache for plagiarism scan results (15 min TTL, max 200 items)
+// In-memory fast cache for plagiarism scan results (10 min TTL, max 200 items)
 interface CachedPlagiarismResult {
   response: any;
   timestamp: number;
 }
 const PLAGIARISM_CACHE = new Map<string, CachedPlagiarismResult>();
-const CACHE_TTL_MS = 90 * 1000;
+const CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 200;
 
 interface GrammarInput {
@@ -370,10 +370,12 @@ export class ToolsService {
   async checkPlagiarism(userId: string, input: PlagiarismInput) {
     const startTime = Date.now();
 
-    // Fast-path: Check in-memory cache for identical text/model/language
+    // Fast-path: Check in-memory cache for identical normalized text/model/language
+    const normalizedText = input.text.trim().replace(/\s+/g, ' ');
+    const normalizedLang = (input.language || 'auto').toLowerCase().trim();
     const cacheKey = crypto
       .createHash('sha256')
-      .update(`${input.providerId}:${input.modelId}:${input.language || 'auto'}:${input.text.trim()}`)
+      .update(`${input.providerId}:${input.modelId}:${normalizedLang}:${normalizedText}`)
       .digest('hex');
 
     const cached = PLAGIARISM_CACHE.get(cacheKey);
