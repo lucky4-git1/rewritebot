@@ -1,0 +1,9 @@
+# RewriteBot SEO robots.txt
+# Allow search engines to index all public content
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /app/
+
+# Sitemap location
+Sitemap: https://rewritebot.com/sitemap.xml
