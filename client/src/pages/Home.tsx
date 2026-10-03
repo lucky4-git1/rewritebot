@@ -3122,7 +3122,7 @@ export function Home() {
                 </button>
                 <button
                   onClick={() => setShowPlagiarism(false)}
-                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '18px', padding: '4px' }}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', color: isDark ? 'var(--rb-text-muted)' : '#94a3b8', fontSize: '18px', padding: '4px' }}
                 >
                   ✕
                 </button>
@@ -3137,10 +3137,10 @@ export function Home() {
                     className="spinner"
                     style={{ width: '40px', height: '40px', borderWidth: '3px', borderColor: isDark ? '#cbe6ac' : '#3b6f28', borderTopColor: 'transparent' }}
                   />
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: isDark ? 'var(--rb-text)' : '#1e293b' }}>
                     Scanning text for plagiarism...
                   </div>
-                  <div style={{ fontSize: '13px', color: '#64748b', maxWidth: '320px', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '13px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', maxWidth: '320px', lineHeight: 1.5 }}>
                     Analyzing sentence structures, academic borrows, and matching against indexed web publications.
                   </div>
                 </div>
@@ -3153,16 +3153,16 @@ export function Home() {
                       borderRadius: '12px',
                       background:
                         plagiarismReport.riskLevel === 'safe'
-                          ? 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)'
+                          ? (isDark ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.06) 100%)' : 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)')
                           : plagiarismReport.riskLevel === 'moderate'
-                          ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)'
-                          : 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                          ? (isDark ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.06) 100%)' : 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)')
+                          : (isDark ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.14) 0%, rgba(185, 28, 28, 0.06) 100%)' : 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'),
                       border: `1.5px solid ${
                         plagiarismReport.riskLevel === 'safe'
-                          ? '#a7f3d0'
+                          ? (isDark ? 'rgba(16, 185, 129, 0.35)' : '#a7f3d0')
                           : plagiarismReport.riskLevel === 'moderate'
-                          ? '#fde68a'
-                          : '#fecaca'
+                          ? (isDark ? 'rgba(245, 158, 11, 0.35)' : '#fde68a')
+                          : (isDark ? 'rgba(239, 68, 68, 0.35)' : '#fecaca')
                       }`,
                       display: 'flex',
                       alignItems: 'center',
@@ -3178,18 +3178,18 @@ export function Home() {
                           width: '68px',
                           height: '68px',
                           borderRadius: '50%',
-                          background: isDark ? 'var(--rb-surface-cream)' : '#ffffff',
+                          background: isDark ? '#1f1b1c' : '#ffffff',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                          boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.35)' : '0 4px 12px rgba(0,0,0,0.06)',
                           border: `3px solid ${
                             plagiarismReport.riskLevel === 'safe'
-                              ? '#10b981'
+                              ? (isDark ? '#34d399' : '#10b981')
                               : plagiarismReport.riskLevel === 'moderate'
-                              ? '#f59e0b'
-                              : '#ef4444'
+                              ? (isDark ? '#fbbf24' : '#f59e0b')
+                              : (isDark ? '#f87171' : '#ef4444')
                           }`,
                           flexShrink: 0,
                         }}
@@ -3200,16 +3200,16 @@ export function Home() {
                             fontWeight: 800,
                             color:
                               plagiarismReport.riskLevel === 'safe'
-                                ? '#059669'
+                                ? (isDark ? '#34d399' : '#059669')
                                 : plagiarismReport.riskLevel === 'moderate'
-                                ? '#d97706'
-                                : '#dc2626',
+                                ? (isDark ? '#fbbf24' : '#d97706')
+                                : (isDark ? '#f87171' : '#dc2626'),
                             lineHeight: 1,
                           }}
                         >
                           {plagiarismReport.originalityScore}%
                         </div>
-                        <div style={{ fontSize: '9px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                        <div style={{ fontSize: '9px', color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#64748b', fontWeight: 600, marginTop: '2px', letterSpacing: '0.4px' }}>
                           ORIGINAL
                         </div>
                       </div>
@@ -3220,13 +3220,13 @@ export function Home() {
                           width: '68px',
                           height: '68px',
                           borderRadius: '50%',
-                          background: isDark ? 'var(--rb-surface-cream)' : '#ffffff',
+                          background: isDark ? '#1f1b1c' : '#ffffff',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                          border: '3px solid #BAD797',
+                          boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.35)' : '0 4px 12px rgba(0,0,0,0.06)',
+                          border: `3px solid ${isDark ? '#BAD797' : '#BAD797'}`,
                           flexShrink: 0,
                         }}
                         title="AI detector bypass score (100% = natural human cadence)"
@@ -3234,7 +3234,7 @@ export function Home() {
                         <div style={{ fontSize: '18px', fontWeight: 800, color: isDark ? '#BAD797' : '#2d5a1e', lineHeight: 1 }}>
                           {plagiarismReport.humanScore ?? 95}%
                         </div>
-                        <div style={{ fontSize: '9px', color: isDark ? 'var(--rb-text-muted)' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                        <div style={{ fontSize: '9px', color: isDark ? 'rgba(255, 255, 255, 0.7)' : '#64748b', fontWeight: 600, marginTop: '2px', letterSpacing: '0.4px' }}>
                           HUMAN
                         </div>
                       </div>
@@ -3252,16 +3252,23 @@ export function Home() {
                             letterSpacing: '0.5px',
                             background:
                               plagiarismReport.riskLevel === 'safe'
-                                ? (isDark ? 'rgba(16, 185, 129, 0.2)' : '#d1fae5')
+                                ? (isDark ? 'rgba(16, 185, 129, 0.22)' : '#d1fae5')
                                 : plagiarismReport.riskLevel === 'moderate'
-                                ? (isDark ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7')
-                                : (isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2'),
+                                ? (isDark ? 'rgba(245, 158, 11, 0.22)' : '#fef3c7')
+                                : (isDark ? 'rgba(239, 68, 68, 0.22)' : '#fee2e2'),
                             color:
                               plagiarismReport.riskLevel === 'safe'
                                 ? (isDark ? '#6ee7b7' : '#065f46')
                                 : plagiarismReport.riskLevel === 'moderate'
                                 ? (isDark ? '#fde047' : '#92400e')
                                 : (isDark ? '#fca5a5' : '#991b1b'),
+                            border: `1px solid ${
+                              plagiarismReport.riskLevel === 'safe'
+                                ? (isDark ? 'rgba(16, 185, 129, 0.4)' : 'transparent')
+                                : plagiarismReport.riskLevel === 'moderate'
+                                ? (isDark ? 'rgba(245, 158, 11, 0.4)' : 'transparent')
+                                : (isDark ? 'rgba(239, 68, 68, 0.4)' : 'transparent')
+                            }`,
                           }}
                         >
                           {plagiarismReport.riskLevel === 'safe'
@@ -3271,7 +3278,7 @@ export function Home() {
                             : '✕ High Plagiarism Risk'}
                         </span>
                       </div>
-                      <div style={{ fontSize: '13px', color: isDark ? 'var(--rb-text)' : '#334155', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: '13px', color: isDark ? 'rgba(255, 255, 255, 0.92)' : '#334155', lineHeight: 1.5 }}>
                         {plagiarismReport.riskLevel === 'safe'
                           ? 'Great job! Your text shows very high originality and natural human cadence.'
                           : plagiarismReport.riskLevel === 'moderate'
@@ -3287,7 +3294,7 @@ export function Home() {
                             marginTop: '8px',
                             padding: '6px 12px',
                             borderRadius: '6px',
-                            border: 'none',
+                            border: isDark ? '1px solid rgba(186, 215, 151, 0.3)' : 'none',
                             background: 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
                             color: '#fff',
                             fontSize: '11px',
@@ -3480,17 +3487,21 @@ export function Home() {
                               style={{
                                 display: 'inline',
                                 background: isSelected
-                                  ? '#ddd6fe'
+                                  ? (isDark ? 'rgba(199, 210, 254, 0.28)' : '#ddd6fe')
                                   : isExact
-                                  ? '#fee2e2'
+                                  ? (isDark ? 'rgba(239, 68, 68, 0.22)' : '#fee2e2')
                                   : isFlagged
-                                  ? '#fef3c7'
+                                  ? (isDark ? 'rgba(245, 158, 11, 0.22)' : '#fef3c7')
                                   : 'transparent',
-                                color: isExact ? '#991b1b' : isFlagged ? '#92400e' : 'inherit',
-                                borderBottom: isExact
-                                  ? '2px solid #ef4444'
+                                color: isExact
+                                  ? (isDark ? '#fca5a5' : '#991b1b')
                                   : isFlagged
-                                  ? '2px dashed #f59e0b'
+                                  ? (isDark ? '#fde047' : '#92400e')
+                                  : 'inherit',
+                                borderBottom: isExact
+                                  ? (isDark ? '2px solid #f87171' : '2px solid #ef4444')
+                                  : isFlagged
+                                  ? (isDark ? '2px dashed #fbbf24' : '2px dashed #f59e0b')
                                   : 'none',
                                 cursor: isFlagged ? 'pointer' : 'text',
                                 padding: isFlagged ? '1px 3px' : '0',
@@ -3510,7 +3521,7 @@ export function Home() {
                           );
                         })
                       ) : (
-                        <div style={{ color: '#64748b' }}>No sentence breakdown available.</div>
+                        <div style={{ color: isDark ? 'var(--rb-text-muted)' : '#64748b' }}>No sentence breakdown available.</div>
                       )}
                     </div>
                   </div>
@@ -3716,7 +3727,7 @@ export function Home() {
                   </div>
                 </>
               ) : (
-                <div style={{ textAlign: 'center', padding: '40px 10px', color: '#94a3b8', fontSize: '14px' }}>
+                <div style={{ textAlign: 'center', padding: '40px 10px', color: isDark ? 'var(--rb-text-muted)' : '#94a3b8', fontSize: '14px' }}>
                   No report yet. Click "Plagiarism" on the toolbar to scan your text.
                 </div>
               )}
