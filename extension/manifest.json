@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "RewriteBot — In-Page AI Paraphraser & Rewriter",
+  "version": "1.0.0",
+  "description": "Say it better, instantly. Paraphrase, humanize, and defeat AI detectors directly inside Google Docs, Gmail, Outlook, Notion, and web inputs.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "RewriteBot Studio"
+  },
+  "commands": {
+    "rewrite-selection": {
+      "suggested_key": {
+        "default": "Alt+R",
+        "mac": "Alt+R"
+      },
+      "description": "Rewrite currently selected text with RewriteBot"
+    }
+  }
+}

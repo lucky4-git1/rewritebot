@@ -1,0 +1,21 @@
+{
+  "name": "@rewritebot/extension",
+  "version": "1.0.0",
+  "description": "RewriteBot Chromium Extension — In-page AI Paraphraser, Humanizer & Thesaurus",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build && node copy-manifest.cjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rewritebot/shared": "*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.260",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  }
+}
