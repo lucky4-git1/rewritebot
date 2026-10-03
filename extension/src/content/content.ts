@@ -18,12 +18,26 @@ function removeActiveWidget() {
 }
 
 // Listen to selection changes across the webpage
-document.addEventListener('mouseup', handleTextSelection);
-document.addEventListener('keyup', (e) => {
+document.addEventListener('mouseup', (e) => {
+  // Delay slightly to let browser finalize selection range
+  setTimeout(() => handleTextSelection(e), 20);
+});
+
+// Direct in-page keyboard shortcut listener for Alt+R (or Option+R on Mac)
+document.addEventListener('keydown', (e: KeyboardEvent) => {
+  if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+    e.preventDefault();
+    const sel = window.getSelection();
+    const text = sel ? sel.toString().trim() : '';
+    if (text) {
+      currentSelectedText = text;
+      showFloatingRewriteCard(getSelectionCoordinates());
+    }
+  }
   if (e.key === 'Escape') removeActiveWidget();
 });
 
-// Listen for background triggers (context menu or Alt+R)
+// Listen for background triggers (context menu or extension command)
 chrome.runtime.onMessage.addListener((msg: any) => {
   if (msg.type === 'REWRITE_TRIGGER' || msg.type === 'REWRITE_SHORTCUT_TRIGGER') {
     const sel = window.getSelection();
@@ -38,13 +52,16 @@ chrome.runtime.onMessage.addListener((msg: any) => {
 function getSelectionCoordinates(): { x: number; y: number } {
   const sel = window.getSelection();
   if (sel && sel.rangeCount > 0) {
-    const rect = sel.getRangeAt(0).getBoundingClientRect();
-    return {
-      x: Math.max(16, rect.left + window.scrollX),
-      y: rect.bottom + window.scrollY + 8,
-    };
+    const range = sel.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    if (rect.width > 0 || rect.height > 0) {
+      return {
+        x: Math.max(16, rect.left + window.scrollX),
+        y: rect.bottom + window.scrollY + 8,
+      };
+    }
   }
-  return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  return { x: window.innerWidth / 2 - 180, y: Math.max(80, window.scrollY + 120) };
 }
 
 function handleTextSelection(e: MouseEvent) {
@@ -67,8 +84,19 @@ function handleTextSelection(e: MouseEvent) {
   currentSelectedText = text;
   currentTargetElement = document.activeElement as HTMLElement;
 
-  // Show small trigger badge near cursor
-  showFloatingTriggerBadge(e.pageX, e.pageY);
+  // Use selection range rectangle for accurate anchor placement near the selected text
+  let anchorX = e.pageX;
+  let anchorY = e.pageY;
+  if (selection && selection.rangeCount > 0) {
+    const rect = selection.getRangeAt(0).getBoundingClientRect();
+    if (rect.width > 0) {
+      anchorX = rect.right + window.scrollX;
+      anchorY = rect.bottom + window.scrollY;
+    }
+  }
+
+  // Show small trigger badge near selection
+  showFloatingTriggerBadge(anchorX, anchorY);
 }
 
 function showFloatingTriggerBadge(x: number, y: number) {

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { ParaphraseController } from './paraphrase.controller';
 import { errorHandler } from '../../middleware/errorHandler';
-import { authenticate } from '../../middleware/auth';
+import { optionalAuthenticate } from '../../middleware/auth';
 import { aiRateLimit } from '../../middleware/rateLimit';
 
 export async function paraphraseRoutes(fastify: FastifyInstance) {
@@ -10,8 +10,8 @@ export async function paraphraseRoutes(fastify: FastifyInstance) {
   // Set error handler
   fastify.setErrorHandler(errorHandler as any);
 
-  // All routes require authentication
-  fastify.addHook('preHandler', authenticate);
+  // Allow authenticated users or guests/extension
+  fastify.addHook('preHandler', optionalAuthenticate);
 
   // Paraphrase (non-streaming)
   fastify.post('/', {
