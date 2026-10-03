@@ -6,4 +6,4 @@ Disallow: /api/
 Disallow: /app/
 
 # Sitemap location
-Sitemap: https://rewritebot.com/sitemap.xml
+Sitemap: https://rewritebot-client.vercel.app/sitemap.xml
