@@ -238,7 +238,7 @@ export class AIOrchestrator {
       frozenTerms: [],
       providerId: params.providerId,
       modelId: params.modelId,
-      plagiarismGuard: false,
+      plagiarismGuard: true,
     };
 
     return this.generate(request);

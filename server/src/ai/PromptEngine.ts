@@ -138,16 +138,23 @@ export class PromptEngine {
 
     // Rule 8: Turnitin/Copyleaks Anti-Plagiarism & N-Gram Decoupling Protocol
     if (request.plagiarismGuard !== false) {
-      parts.push('ANTI-PLAGIARISM & N-GRAM DECOUPLING PROTOCOL (PASS TURNITIN / COPYLEAKS 0% PLAGIARISM):');
+      parts.push('ANTI-PLAGIARISM & N-GRAM DECOUPLING PROTOCOL (PASS TURNITIN / COPYLEAKS 0% PLAGIARISM ON GENERATION 1):');
       parts.push('1. MAXIMUM 3-WORD N-GRAM LIMIT: Under NO circumstances should any sequence of 4 or more consecutive words from the source text appear in your output (except for isolated proper nouns or frozen terms).');
       parts.push('2. ZERO PATCHWRITING OR SENTENCE-SKELETON MIMICRY: Plagiarism detectors track grammatical templates. Never replace words while keeping the original sentence skeleton intact (e.g. do not just change "The purpose of this study is to assess..." to "This study aims to evaluate..."). You MUST alter the syntactic architecture:');
       parts.push('   - Invert sentence sequence: Lead with the research question, findings, methodology, condition, or conclusion rather than the generic introductory subject.');
       parts.push('   - Synthesize or divide clauses: Merge adjacent related ideas or split compound sentences so the original paragraph fingerprint is dissolved.');
-      parts.push('3. DECOUPLE FIXED TECHNICAL & FACTUAL ANCHORS: When names, numbers, dates, locations, or clinical terms (e.g. disease names, acronyms) must be preserved:');
+      parts.push('3. FEW-SHOT SYNTACTIC INVERSION EXAMPLES (STUDY THESE PATTERNS):');
+      parts.push('   * Source: "Because temperature was elevated, the reaction proceeded rapidly, resulting in byproduct degradation."');
+      parts.push('     Inversion: "Byproduct degradation accelerated as a direct consequence of thermal increases driving rapid reaction kinetics." (Flipped effect -> condition -> cause)');
+      parts.push('   * Source: "The researchers investigated 500 patients over a 12-month period to evaluate efficacy."');
+      parts.push('     Inversion: "Efficacy assessments spanned 500 patient cohorts throughout a full year of structured clinical observation." (Shifted object to subject, decoupled timeline)');
+      parts.push('   * Source: "In addition to dysmenorrhea, other menstrual abnormalities were also recorded during the study."');
+      parts.push('     Inversion: "Broader menstrual irregularities were systematically documented alongside dysmenorrhea throughout the investigation." (Inverted list, varied passive verb)');
+      parts.push('4. DECOUPLE FIXED TECHNICAL & FACTUAL ANCHORS: When names, numbers, dates, locations, or clinical terms (e.g. disease names, acronyms) must be preserved:');
       parts.push('   - Do NOT line them up in the original sequence.');
       parts.push('   - Separate them across new clauses and distinct grammatical roles so Turnitin cannot match multi-word chains.');
-      parts.push('4. INVERT COMPOUND PHRASES & LISTS: Never copy multi-word lists verbatim (e.g. invert "dysmenorrhea, and other menstrual abnormalities" into "other menstrual irregularities, including dysmenorrhea"; invert "pain management techniques employed by girls" into "analgesic relief measures reported by participants").');
-      parts.push('5. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
+      parts.push('5. INVERT COMPOUND PHRASES & LISTS: Never copy multi-word lists verbatim (e.g. invert "dysmenorrhea, and other menstrual abnormalities" into "other menstrual irregularities, including dysmenorrhea"; invert "pain management techniques employed by girls" into "analgesic relief measures reported by participants").');
+      parts.push('6. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
       parts.push('');
     }
 
