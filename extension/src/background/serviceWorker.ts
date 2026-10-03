@@ -15,10 +15,36 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('[RewriteBot] Extension initialized & context menu registered');
 });
 
+// Helper to safely send message to a tab, injecting content script if not already present
+async function sendSafeTabMessage(tabId: number, message: any) {
+  try {
+    await chrome.tabs.sendMessage(tabId, message);
+  } catch (_err) {
+    // If receiving end does not exist (e.g. page was loaded before extension was installed), inject and retry
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['content.js'],
+      });
+      // Short delay to allow script initialization
+      setTimeout(async () => {
+        try {
+          await chrome.tabs.sendMessage(tabId, message);
+        } catch (retryErr) {
+          console.warn('[RewriteBot] Content script communication ignored on restricted page:', retryErr);
+        }
+      }, 100);
+    } catch (injectErr) {
+      // Chrome internal pages (chrome://, edge://) restrict script injection
+      console.warn('[RewriteBot] Cannot inject into protected browser page:', injectErr);
+    }
+  }
+}
+
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => {
   if (info.menuItemId === 'rewritebot-selection' && tab?.id) {
-    chrome.tabs.sendMessage(tab.id, {
+    sendSafeTabMessage(tab.id, {
       type: 'REWRITE_TRIGGER',
       text: info.selectionText,
     });
@@ -30,7 +56,7 @@ chrome.commands.onCommand.addListener((command: string) => {
   if (command === 'rewrite-selection') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs: chrome.tabs.Tab[]) => {
       if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
+        sendSafeTabMessage(tabs[0].id, {
           type: 'REWRITE_SHORTCUT_TRIGGER',
         });
       }
