@@ -1,45 +1,40 @@
 /**
  * RewriteBot Popup Studio Script
- * Handles studio rewrites, user authentication, and provider configuration.
+ * Manages in-popup paraphrasing, user account display, and AI provider selection.
  */
 
 let selectedMode = 'standard';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Elements: Studio
   const inputEl = document.getElementById('input-text') as HTMLTextAreaElement;
   const outputEl = document.getElementById('output-text') as HTMLDivElement;
   const btnRewrite = document.getElementById('btn-rewrite') as HTMLButtonElement;
   const btnCopy = document.getElementById('btn-copy') as HTMLButtonElement;
   const modeButtons = document.querySelectorAll<HTMLButtonElement>('.mode-btn');
 
-  // Account UI elements
-  const btnToggleAccount = document.getElementById('btn-toggle-account') as HTMLButtonElement;
-  const accountBtnLabel = document.getElementById('account-btn-label') as HTMLSpanElement;
-  const accountBtnIcon = document.getElementById('account-btn-icon') as HTMLSpanElement;
-  const accountPanel = document.getElementById('account-panel') as HTMLDivElement;
-  const loggedInView = document.getElementById('logged-in-view') as HTMLDivElement;
-  const loggedOutView = document.getElementById('logged-out-view') as HTMLDivElement;
-  const userDisplayName = document.getElementById('user-display-name') as HTMLElement;
-  const userDisplayEmail = document.getElementById('user-display-email') as HTMLElement;
+  // Elements: Account
+  const loggedInCard = document.getElementById('logged-in-card') as HTMLDivElement;
+  const loggedOutCard = document.getElementById('logged-out-card') as HTMLDivElement;
+  const userAvatar = document.getElementById('user-avatar') as HTMLDivElement;
+  const userName = document.getElementById('user-name') as HTMLSpanElement;
+  const userEmail = document.getElementById('user-email') as HTMLSpanElement;
   const providerSelect = document.getElementById('provider-select') as HTMLSelectElement;
   const btnLogout = document.getElementById('btn-logout') as HTMLButtonElement;
+
+  // Elements: Login Form
   const authEmailInput = document.getElementById('auth-email') as HTMLInputElement;
   const authPasswordInput = document.getElementById('auth-password') as HTMLInputElement;
   const btnSubmitLogin = document.getElementById('btn-submit-login') as HTMLButtonElement;
   const btnSyncTab = document.getElementById('btn-sync-tab') as HTMLButtonElement;
-  const authStatusMsg = document.getElementById('auth-status-msg') as HTMLDivElement;
+  const authMsg = document.getElementById('auth-msg') as HTMLDivElement;
 
-  // Server elements
+  // Elements: Server
   const serverStatusEl = document.getElementById('server-status');
   const changeServerEl = document.getElementById('change-server');
 
-  // Toggle account panel
-  btnToggleAccount?.addEventListener('click', () => {
-    accountPanel?.classList.toggle('open');
-  });
-
-  // Load session status on mount
-  await refreshSessionUI();
+  // Load session directly on popup open
+  await checkSessionState();
 
   // Mode button switcher
   modeButtons.forEach((btn) => {
@@ -79,19 +74,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Handle Login form submit
+  // Handle Login submission
   btnSubmitLogin?.addEventListener('click', async () => {
     const email = authEmailInput.value.trim();
     const password = authPasswordInput.value;
 
     if (!email || !password) {
-      showAuthMsg('Please enter email and password', 'error');
+      setAuthMsg('Please enter your email and password.', 'error');
       return;
     }
 
     btnSubmitLogin.disabled = true;
-    btnSubmitLogin.innerText = 'Logging in…';
-    showAuthMsg('Authenticating with RewriteBot…');
+    btnSubmitLogin.innerText = 'Signing in…';
+    setAuthMsg('Connecting to RewriteBot account…', 'info');
 
     chrome.runtime.sendMessage(
       {
@@ -102,37 +97,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnSubmitLogin.disabled = false;
         btnSubmitLogin.innerText = 'Log In';
 
-        if (res?.success) {
-          showAuthMsg('✓ Logged in successfully!', 'success');
-          setTimeout(() => {
-            refreshSessionUI();
-            accountPanel?.classList.remove('open');
-          }, 800);
+        if (res?.success && res.data?.user) {
+          setAuthMsg('✓ Logged in successfully!', 'success');
+          renderLoggedInUI(res.data.user, res.data.providers || []);
         } else {
-          showAuthMsg(res?.error || 'Login failed', 'error');
+          setAuthMsg(res?.error || 'Invalid email or password.', 'error');
         }
       }
     );
   });
 
-  // Handle Web Tab Sync
+  // Handle 1-Click Sync from web tab
   btnSyncTab?.addEventListener('click', async () => {
     btnSyncTab.disabled = true;
     btnSyncTab.innerText = 'Syncing…';
-    showAuthMsg('Inspecting active web tab for RewriteBot credentials…');
+    setAuthMsg('Inspecting browser tabs for RewriteBot login session…', 'info');
 
     chrome.runtime.sendMessage({ type: 'SYNC_ACTIVE_TAB_AUTH' }, (res: any) => {
       btnSyncTab.disabled = false;
-      btnSyncTab.innerText = '⚡ Sync Web Tab';
+      btnSyncTab.innerText = '⚡ 1-Click Sync';
 
-      if (res?.success) {
-        showAuthMsg('✓ Synced account from web app!', 'success');
-        setTimeout(() => {
-          refreshSessionUI();
-          accountPanel?.classList.remove('open');
-        }, 800);
+      if (res?.success && res.data?.user) {
+        setAuthMsg('✓ Synced from RewriteBot web tab!', 'success');
+        renderLoggedInUI(res.data.user, res.data.providers || []);
       } else {
-        showAuthMsg(res?.error || 'Could not sync from active tab', 'error');
+        setAuthMsg(res?.error || 'No active RewriteBot login session found in open tabs.', 'error');
       }
     });
   });
@@ -140,14 +129,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Handle Logout
   btnLogout?.addEventListener('click', async () => {
     chrome.runtime.sendMessage({ type: 'AUTH_LOGOUT' }, () => {
-      refreshSessionUI();
+      renderLoggedOutUI();
     });
   });
 
-  // Server URL change handler
+  // Server URL display & change
   chrome.storage.local.get(['serverUrl'], (res) => {
     const currentUrl = res.serverUrl || 'http://localhost:3000/api/v1';
-    if (serverStatusEl) serverStatusEl.innerText = currentUrl.replace('http://', '').replace('https://', '');
+    if (serverStatusEl) {
+      serverStatusEl.innerText = currentUrl.replace('http://', '').replace('https://', '');
+    }
   });
 
   changeServerEl?.addEventListener('click', () => {
@@ -156,60 +147,68 @@ document.addEventListener('DOMContentLoaded', async () => {
       const newUrl = prompt('Enter RewriteBot API Server URL:', current);
       if (newUrl && newUrl.trim()) {
         chrome.storage.local.set({ serverUrl: newUrl.trim() }, () => {
-          if (serverStatusEl) serverStatusEl.innerText = newUrl.trim().replace('http://', '').replace('https://', '');
+          if (serverStatusEl) {
+            serverStatusEl.innerText = newUrl.trim().replace('http://', '').replace('https://', '');
+          }
         });
       }
     });
   });
 
-  function showAuthMsg(msg: string, type: 'error' | 'success' | 'info' = 'info') {
-    if (!authStatusMsg) return;
-    authStatusMsg.innerText = msg;
-    authStatusMsg.className = `auth-status-msg ${type}`;
+  function setAuthMsg(msg: string, type: 'error' | 'success' | 'info') {
+    if (!authMsg) return;
+    authMsg.innerText = msg;
+    authMsg.className = `auth-msg ${type}`;
   }
 
-  async function refreshSessionUI() {
-    chrome.runtime.sendMessage({ type: 'AUTH_GET_SESSION' }, (session: any) => {
-      if (!session) return;
+  async function checkSessionState() {
+    const stored = await chrome.storage.local.get([
+      'isLoggedIn',
+      'currentUser',
+      'providers',
+      'selectedProviderId',
+    ]);
 
-      if (session.isLoggedIn && session.user) {
-        // Update header button
-        accountBtnIcon.innerText = '👤';
-        accountBtnLabel.innerText = session.user.name || session.user.email.split('@')[0];
-
-        // Show logged-in view
-        loggedInView.style.display = 'block';
-        loggedOutView.style.display = 'none';
-
-        userDisplayName.innerText = session.user.name || 'User';
-        userDisplayEmail.innerText = session.user.email || '';
-
-        // Populate providers
-        populateProvidersDropdown(session.providers || [], session.selectedProviderId);
-      } else {
-        // Show logged-out view
-        accountBtnIcon.innerText = '🔑';
-        accountBtnLabel.innerText = 'Log In';
-
-        loggedInView.style.display = 'none';
-        loggedOutView.style.display = 'block';
-      }
-    });
+    if (stored.isLoggedIn && stored.currentUser) {
+      renderLoggedInUI(stored.currentUser, stored.providers || [], stored.selectedProviderId);
+    } else {
+      renderLoggedOutUI();
+    }
   }
 
-  function populateProvidersDropdown(providers: any[], selectedId?: string) {
-    if (!providerSelect) return;
+  function renderLoggedInUI(user: any, providers: any[], selectedProviderId?: string) {
+    if (!loggedInCard || !loggedOutCard) return;
+
+    loggedInCard.style.display = 'block';
+    loggedOutCard.style.display = 'none';
+
+    const displayName = user.name || user.email?.split('@')[0] || 'User';
+    userAvatar.innerText = displayName.charAt(0).toUpperCase();
+    userName.innerText = displayName;
+    userEmail.innerText = user.email || '';
+
+    // Populate providers
     providerSelect.innerHTML = '<option value="">Default AI Provider</option>';
+    if (Array.isArray(providers)) {
+      providers.forEach((p) => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.name} (${p.modelId || p.type})`;
+        if (selectedProviderId === p.id) {
+          opt.selected = true;
+        }
+        providerSelect.appendChild(opt);
+      });
+    }
+  }
 
-    providers.forEach((p) => {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = `${p.name} (${p.modelId || p.type})`;
-      if (selectedId === p.id) {
-        opt.selected = true;
-      }
-      providerSelect.appendChild(opt);
-    });
+  function renderLoggedOutUI() {
+    if (!loggedInCard || !loggedOutCard) return;
+
+    loggedInCard.style.display = 'none';
+    loggedOutCard.style.display = 'block';
+    authPasswordInput.value = '';
+    setAuthMsg('', 'info');
   }
 
   async function triggerRewrite() {

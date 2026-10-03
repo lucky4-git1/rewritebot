@@ -234,46 +234,62 @@ async function fetchProviders(tokenOverride?: string) {
  * Checks active tab's localStorage for accessToken (e.g. if user is logged into web app)
  */
 async function syncActiveTabAuth() {
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const activeTab = tabs[0];
-  if (!activeTab?.id) {
-    throw new Error('No active tab found');
+  const allTabs = await chrome.tabs.query({});
+  // Prioritize open RewriteBot web app tab, then active tab
+  let targetTab = allTabs.find(
+    (t) => t.id && t.url && (t.url.includes('localhost:5173') || t.url.includes('localhost:3000') || t.url.includes('rewritebot'))
+  );
+
+  if (!targetTab) {
+    const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    targetTab = activeTabs[0];
   }
 
-  // Inject small script to extract accessToken from localStorage
-  const results = await chrome.scripting.executeScript({
-    target: { tabId: activeTab.id },
-    func: () => {
-      try {
-        return localStorage.getItem('accessToken');
-      } catch (_e) {
-        return null;
-      }
-    },
-  });
+  if (!targetTab?.id) {
+    throw new Error('No open web tab found.');
+  }
 
-  const extractedToken = results?.[0]?.result;
+  let extractedToken: string | null = null;
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: targetTab.id },
+      func: () => {
+        try {
+          return localStorage.getItem('accessToken') || localStorage.getItem('token') || null;
+        } catch (_e) {
+          return null;
+        }
+      },
+    });
+    extractedToken = results?.[0]?.result;
+  } catch (_injectErr: any) {
+    throw new Error('Could not read credentials from web tab. Please log in directly below.');
+  }
+
   if (!extractedToken) {
-    throw new Error('No active login session found on the current web tab. Please log in directly.');
+    throw new Error('No logged-in session found in your open RewriteBot tab. Please log in with email and password below.');
   }
 
   const serverUrl = await getServerUrl();
-  // Fetch user info with this token
-  const meResponse = await fetch(`${serverUrl}/auth/me`, {
-    headers: {
-      Authorization: `Bearer ${extractedToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  let meResponse: Response;
+  try {
+    meResponse = await fetch(`${serverUrl}/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${extractedToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (err: any) {
+    throw new Error(`Cannot reach RewriteBot server at ${serverUrl}`);
+  }
 
   if (!meResponse.ok) {
-    throw new Error('Extracted token has expired or is invalid.');
+    throw new Error('Login token has expired. Please log in again.');
   }
 
   const meData = await meResponse.json();
   const user = meData.data;
 
-  // Save auth
   await chrome.storage.local.set({
     authToken: extractedToken,
     currentUser: user,

@@ -33,60 +33,119 @@
         align-items: center;
         gap: 6px;
       }
-      .account-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 4px 10px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
+
+      /* Account Box */
+      .account-card {
         background: #fdfaf6;
-        color: #670626;
+        border: 1px solid #f2e8dc;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+      }
+      .user-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #670626;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .user-names {
+        display: flex;
+        flex-direction: column;
+      }
+      .user-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: #171314;
+      }
+      .user-email {
+        font-size: 11px;
+        color: #6b7280;
+      }
+      .btn-signout {
+        padding: 4px 10px;
+        border: 1px solid #d1d5db;
+        background: #ffffff;
+        color: #4b5563;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.15s ease;
+        transition: background 0.15s ease;
       }
-      .account-btn:hover {
-        background: #f8ecef;
+      .btn-signout:hover {
+        background: #f3f4f6;
+        color: #dc2626;
       }
-      .account-panel {
-        display: none;
+
+      /* Provider Selector in Card */
+      .provider-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-top: 6px;
+        border-top: 1px solid #eee4d6;
+      }
+      .provider-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #8c6e5a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .provider-select {
+        width: 100%;
+        padding: 5px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #ffffff;
+        font-size: 11px;
+        font-weight: 600;
+        color: #1f2937;
+        outline: none;
+      }
+      .provider-select:focus {
+        border-color: #670626;
+      }
+
+      /* Logged-out Form */
+      .login-box {
         background: #fafafa;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         padding: 12px;
-        margin-bottom: 12px;
-        animation: fadeIn 0.15s ease;
+        margin-bottom: 10px;
       }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-3px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .account-panel.open {
-        display: block;
-      }
-      .panel-title {
+      .login-title {
         font-size: 12px;
         font-weight: 700;
         color: #374151;
         margin-bottom: 8px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        gap: 5px;
       }
       .form-group {
         margin-bottom: 8px;
       }
-      .form-label {
-        display: block;
-        font-size: 10px;
-        font-weight: 600;
-        color: #6b7280;
-        margin-bottom: 3px;
-        text-transform: uppercase;
-      }
-      .form-input, .form-select {
+      .form-input {
         width: 100%;
         padding: 6px 8px;
         border: 1px solid #d1d5db;
@@ -94,46 +153,48 @@
         font-size: 12px;
         outline: none;
       }
-      .form-input:focus, .form-select:focus {
+      .form-input:focus {
         border-color: #670626;
       }
       .btn-row {
         display: flex;
         gap: 6px;
-        margin-top: 10px;
+        margin-top: 8px;
       }
-      .btn-sm-primary {
+      .btn-primary-sm {
         flex: 1;
-        padding: 6px;
+        padding: 6px 12px;
         background: #670626;
         color: #ffffff;
         border: none;
         border-radius: 6px;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
       }
-      .btn-sm-secondary {
+      .btn-secondary-sm {
         padding: 6px 10px;
-        background: #e5e7eb;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
         color: #374151;
-        border: none;
         border-radius: 6px;
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
       }
-      .auth-status-msg {
+      .auth-msg {
         font-size: 11px;
         margin-top: 6px;
-        color: #6b7280;
+        font-weight: 500;
       }
-      .auth-status-msg.error {
+      .auth-msg.error {
         color: #dc2626;
       }
-      .auth-status-msg.success {
+      .auth-msg.success {
         color: #16a34a;
       }
+
+      /* Modes */
       .modes {
         display: flex;
         gap: 4px;
@@ -156,9 +217,11 @@
         color: #ffffff;
         border-color: #670626;
       }
+
+      /* Textarea & Output */
       textarea {
         width: 100%;
-        height: 80px;
+        height: 75px;
         padding: 8px 10px;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
@@ -172,8 +235,8 @@
       }
       .output-area {
         width: 100%;
-        min-height: 80px;
-        max-height: 130px;
+        min-height: 75px;
+        max-height: 125px;
         overflow-y: auto;
         padding: 8px 10px;
         background: #fdfaf6;
@@ -186,6 +249,8 @@
         user-select: text;
         word-break: break-word;
       }
+
+      /* Action Buttons */
       .actions {
         display: flex;
         justify-content: space-between;
@@ -210,6 +275,8 @@
         font-weight: 600;
         cursor: pointer;
       }
+
+      /* Footer */
       .footer-bar {
         margin-top: 10px;
         padding-top: 8px;
@@ -225,50 +292,45 @@
   <body>
     <div class="header">
       <div class="logo">✍️ RewriteBot</div>
-      <button class="account-btn" id="btn-toggle-account">
-        <span id="account-btn-icon">🔑</span>
-        <span id="account-btn-label">Log In</span>
-      </button>
+      <a href="http://localhost:5173" target="_blank" style="font-size: 11px; color: #670626; text-decoration: none; font-weight: 600;">Open Studio ↗</a>
     </div>
 
-    <!-- Account / Login / Provider Management Panel -->
-    <div class="account-panel" id="account-panel">
-      <!-- Logged-in View -->
-      <div id="logged-in-view" style="display: none;">
-        <div class="panel-title">
-          <span>Connected Account</span>
-          <button class="btn-sm-secondary" id="btn-logout" style="padding: 2px 8px; font-size: 10px;">Sign Out</button>
+    <!-- LOGGED-IN VIEW (Shows user details prominently) -->
+    <div class="account-card" id="logged-in-card" style="display: none;">
+      <div class="user-info-row">
+        <div class="user-profile">
+          <div class="user-avatar" id="user-avatar">U</div>
+          <div class="user-names">
+            <span class="user-name" id="user-name">User</span>
+            <span class="user-email" id="user-email">email@example.com</span>
+          </div>
         </div>
-        <div style="font-size: 12px; color: #1f2937; margin-bottom: 10px;">
-          <strong id="user-display-name">User</strong> (<span id="user-display-email" style="color: #6b7280;">email</span>)
-        </div>
-        <div class="form-group">
-          <label class="form-label">Active AI Provider</label>
-          <select class="form-select" id="provider-select">
-            <option value="">Default AI Provider</option>
-          </select>
-        </div>
+        <button class="btn-signout" id="btn-logout">Sign Out</button>
       </div>
+      <div class="provider-row">
+        <label class="provider-label">AI Provider</label>
+        <select class="provider-select" id="provider-select">
+          <option value="">Default AI Provider</option>
+        </select>
+      </div>
+    </div>
 
-      <!-- Logged-out View -->
-      <div id="logged-out-view">
-        <div class="panel-title">
-          <span>Log In to RewriteBot</span>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" class="form-input" id="auth-email" placeholder="you@example.com" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" id="auth-password" placeholder="••••••••" />
-        </div>
-        <div class="btn-row">
-          <button class="btn-sm-primary" id="btn-submit-login">Log In</button>
-          <button class="btn-sm-secondary" id="btn-sync-tab" title="Sync auth from active web page">⚡ Sync Web Tab</button>
-        </div>
-        <div class="auth-status-msg" id="auth-status-msg"></div>
+    <!-- LOGGED-OUT VIEW (Shows sign-in prompt) -->
+    <div class="login-box" id="logged-out-card">
+      <div class="login-title">
+        <span>🔑 Log In to RewriteBot</span>
       </div>
+      <div class="form-group">
+        <input type="email" class="form-input" id="auth-email" placeholder="Email (e.g. winrewrite@gmail.com)" />
+      </div>
+      <div class="form-group">
+        <input type="password" class="form-input" id="auth-password" placeholder="Password" />
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary-sm" id="btn-submit-login">Log In</button>
+        <button class="btn-secondary-sm" id="btn-sync-tab" title="Sync auth from active web tab">⚡ 1-Click Sync</button>
+      </div>
+      <div class="auth-msg" id="auth-msg"></div>
     </div>
 
     <!-- Paraphrase Modes -->
@@ -280,17 +342,17 @@
       <button class="mode-btn" data-mode="shorten">Shorten</button>
     </div>
 
-    <!-- Input & Output -->
+    <!-- Text Input & Output -->
     <textarea id="input-text" placeholder="Paste or type text to rephrase…"></textarea>
     <div class="output-area" id="output-text">Rewritten output will appear here…</div>
 
-    <!-- Bottom Actions -->
+    <!-- Actions -->
     <div class="actions">
       <button class="btn-copy" id="btn-copy">📋 Copy</button>
       <button class="btn-rewrite" id="btn-rewrite">⚡ Paraphrase</button>
     </div>
 
-    <!-- Server Bar -->
+    <!-- Footer -->
     <div class="footer-bar">
       <span>Server: <strong id="server-status" style="color: #16a34a;">localhost:3000</strong></span>
       <span id="change-server" style="cursor: pointer; color: #670626; text-decoration: underline;">Change</span>
