@@ -67,6 +67,12 @@ export class NVIDIAProvider extends GenericOpenAIProvider {
     // Estimate tokens (roughly 3.5 chars per token)
     const estimatedInputTokens = Math.max(Math.ceil(inputChars / 3.5), 1);
     
+    // In shorten mode, tighten maxTokens to enforce concise compression (min 96, max 1024)
+    if (request.mode === 'shorten') {
+      const shortenTokens = Math.max(Math.ceil(estimatedInputTokens * 1.2), 96);
+      return Math.min(shortenTokens, this.defaultMaxTokens);
+    }
+
     // Paraphrased text is comparable to input; allow 2.0x with a minimum floor of 512 tokens
     const targetTokens = Math.max(Math.ceil(estimatedInputTokens * 2.0), 512);
     
@@ -80,6 +86,8 @@ export class NVIDIAProvider extends GenericOpenAIProvider {
   async generate(request: AIRequest): Promise<AIResponse> {
     const modelId = this.getModelId(request);
     const maxTokens = this.calculateMaxTokens(request);
+    const temperature = this.resolveTemperature(request);
+    const messages = this.buildMessages(request);
     const timeout = (request.options?.timeout as number) || this.timeoutMs;
     const signal = (request.options?.signal as AbortSignal) || undefined;
     const startTime = Date.now();
@@ -89,20 +97,15 @@ export class NVIDIAProvider extends GenericOpenAIProvider {
     const estTokens = Math.ceil(inputChars / 3.5);
 
     logger.info(
-      `[NVIDIA] request=${requestId} model=${modelId} chars=${inputChars} tokens_est=${estTokens} max_tokens=${maxTokens} timeout=${timeout}ms streaming=false`
+      `[NVIDIA] request=${requestId} model=${modelId} chars=${inputChars} tokens_est=${estTokens} max_tokens=${maxTokens} temp=${temperature} timeout=${timeout}ms streaming=false`
     );
 
     try {
       const completion = await this.openai.chat.completions.create(
         {
           model: modelId,
-          messages: [
-            {
-              role: 'user',
-              content: request.text,
-            },
-          ],
-          temperature: request.options?.temperature ?? this.options.temperature ?? 0.7,
+          messages,
+          temperature,
           max_tokens: maxTokens,
           top_p: request.options?.topP ?? this.options.topP,
           stream: false,
@@ -147,6 +150,8 @@ export class NVIDIAProvider extends GenericOpenAIProvider {
   async *stream(request: AIRequest): AsyncGenerator<AIChunk, void, unknown> {
     const modelId = this.getModelId(request);
     const maxTokens = this.calculateMaxTokens(request);
+    const temperature = this.resolveTemperature(request);
+    const messages = this.buildMessages(request);
     const timeout = (request.options?.timeout as number) || this.timeoutMs;
     const signal = (request.options?.signal as AbortSignal) || undefined;
     const startTime = Date.now();
@@ -156,20 +161,15 @@ export class NVIDIAProvider extends GenericOpenAIProvider {
     const estTokens = Math.ceil(inputChars / 3.5);
 
     logger.info(
-      `[NVIDIA] request=${requestId} model=${modelId} chars=${inputChars} tokens_est=${estTokens} max_tokens=${maxTokens} timeout=${timeout}ms streaming=true`
+      `[NVIDIA] request=${requestId} model=${modelId} chars=${inputChars} tokens_est=${estTokens} max_tokens=${maxTokens} temp=${temperature} timeout=${timeout}ms streaming=true`
     );
 
     try {
       const stream = await this.openai.chat.completions.create(
         {
           model: modelId,
-          messages: [
-            {
-              role: 'user',
-              content: request.text,
-            },
-          ],
-          temperature: request.options?.temperature ?? this.options.temperature ?? 0.7,
+          messages,
+          temperature,
           max_tokens: maxTokens,
           top_p: request.options?.topP ?? this.options.topP,
           stream: true,

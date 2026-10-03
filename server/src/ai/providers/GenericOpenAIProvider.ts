@@ -103,22 +103,58 @@ export class GenericOpenAIProvider extends BaseProvider {
   }
 
   /**
+   * Resolve dynamic temperature scaled to synonym & structural intensity
+   */
+  protected resolveTemperature(request: AIRequest): number {
+    if (request.options?.temperature !== undefined) {
+      return request.options.temperature;
+    }
+    if (this.options.temperature !== undefined) {
+      return this.options.temperature;
+    }
+    // Dynamic QuillBot-calibrated temperature scaling by synonym/structural intensity:
+    const level = request.synonymLevel ?? 2;
+    const baseTemp = level === 1 ? 0.45 : level === 2 ? 0.65 : level === 3 ? 0.80 : 0.90;
+
+    // In shorten mode, keep temperature slightly tighter to maintain high compression
+    if (request.mode === 'shorten') {
+      return Math.min(baseTemp, 0.65);
+    }
+    return baseTemp;
+  }
+
+  /**
+   * Build OpenAI chat completion messages separating system instructions and user text
+   */
+  protected buildMessages(request: AIRequest): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
+    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+    if (request.systemPrompt) {
+      messages.push({
+        role: 'system',
+        content: request.systemPrompt,
+      });
+    }
+    messages.push({
+      role: 'user',
+      content: request.text,
+    });
+    return messages;
+  }
+
+  /**
    * Generate completion
    */
   async generate(request: AIRequest): Promise<AIResponse> {
     const modelId = this.getModelId(request);
     const startTime = Date.now();
+    const temperature = this.resolveTemperature(request);
+    const messages = this.buildMessages(request);
 
     try {
       const completion = await this.openai.chat.completions.create({
         model: modelId,
-        messages: [
-          {
-            role: 'user',
-            content: request.text,
-          },
-        ],
-        temperature: request.options?.temperature ?? this.options.temperature ?? 0.7,
+        messages,
+        temperature,
         max_tokens: request.options?.maxTokens ?? this.options.maxTokens,
         top_p: request.options?.topP ?? this.options.topP,
         stream: false,
@@ -150,17 +186,14 @@ export class GenericOpenAIProvider extends BaseProvider {
    */
   async *stream(request: AIRequest): AsyncGenerator<AIChunk, void, unknown> {
     const modelId = this.getModelId(request);
+    const temperature = this.resolveTemperature(request);
+    const messages = this.buildMessages(request);
 
     try {
       const stream = await this.openai.chat.completions.create({
         model: modelId,
-        messages: [
-          {
-            role: 'user',
-            content: request.text,
-          },
-        ],
-        temperature: request.options?.temperature ?? this.options.temperature ?? 0.7,
+        messages,
+        temperature,
         max_tokens: request.options?.maxTokens ?? this.options.maxTokens,
         top_p: request.options?.topP ?? this.options.topP,
         stream: true,

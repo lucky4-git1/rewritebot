@@ -64,12 +64,13 @@ export class AIOrchestrator {
       );
     }
 
-    // Build prompt from original text
-    // DO NOT replace request.text - that's the user's input
-    const prompt = this.promptEngine.buildPrompt(request);
+    // Build authoritative system prompt and clean user prompt
+    const systemPrompt = request.systemPrompt || this.promptEngine.buildSystemPrompt(request);
+    const userPrompt = request.systemPrompt ? request.text : this.promptEngine.buildUserPrompt(request);
     
     diag?.log('PROMPT_BUILT', {
-      promptLength: prompt.length,
+      systemPromptLength: systemPrompt.length,
+      userPromptLength: userPrompt.length,
       mode: request.mode,
       synonymLevel: request.synonymLevel,
     });
@@ -80,11 +81,11 @@ export class AIOrchestrator {
       // Measure latency
       const startTime = Date.now();
       
-      // Create a new request with the full prompt as text
-      // The provider will receive the complete prompt, not the raw user text
+      // Pass separated system prompt and user text to provider
       const providerRequest: AIRequest = {
         ...request,
-        text: prompt, // Send the full prompt to the provider
+        systemPrompt,
+        text: userPrompt,
       };
       
       diag?.log('PROVIDER_REQUEST_START', {
@@ -142,8 +143,9 @@ export class AIOrchestrator {
       );
     }
 
-    // Build prompt from original text
-    const prompt = this.promptEngine.buildPrompt(request);
+    // Build authoritative system prompt and clean user prompt
+    const systemPrompt = request.systemPrompt || this.promptEngine.buildSystemPrompt(request);
+    const userPrompt = request.systemPrompt ? request.text : this.promptEngine.buildUserPrompt(request);
 
     logger.info(`Streaming with provider: ${provider.name}, model: ${request.modelId}`);
 
@@ -153,10 +155,11 @@ export class AIOrchestrator {
       // Emit start event
       yield responseNormalizer.createStartChunk();
 
-      // Create a new request with the full prompt as text
+      // Pass separated system prompt and user text to provider
       const providerRequest: AIRequest = {
         ...request,
-        text: prompt,
+        systemPrompt,
+        text: userPrompt,
       };
 
       // Stream from provider

@@ -43,96 +43,102 @@ CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact
  */
 export class PromptEngine {
   /**
-   * Build a complete prompt for AI generation
+   * Build an authoritative system prompt that enforces:
+   * 1. Single cohesive output only (no multiple drafts / alternative paragraphs)
+   * 2. QuillBot-level structural and syntactic restructuring
+   * 3. Mode-specific calibration (especially Shorten compression ratio and Expand depth)
+   * 4. Scaled syntactic intensity according to synonymLevel
+   * 5. Strict prohibition of meta-chatter, options, or preambles
    */
-  buildPrompt(request: AIRequest): string {
+  buildSystemPrompt(request: AIRequest): string {
     const parts: string[] = [];
 
-    // System-level instructions
-    parts.push('You are an expert AI paraphrasing and rewriting engine. Your primary objective is to rewrite text by fundamentally restructuring its sentence syntax and clause architecture.');
+    parts.push('You are RewriteBot, an elite editorial paraphrasing and syntactic restructuring engine.');
     parts.push('');
 
-    // Mode-specific instructions
-    const modePrompt = this.getModePrompt(request.mode, request.customInstruction);
-    parts.push(modePrompt);
+    // Rule 1: Single output only (strictly eliminates multiple alternative paragraphs / word bloat)
+    parts.push('CRITICAL OUTPUT CONSTRAINTS:');
+    parts.push('1. SINGLE COHESIVE VERSION ONLY: Output exactly ONE single rewritten version of the text. Under NO circumstances should you output multiple drafts, alternative paragraphs, numbered variations, or bulleted options.');
+    parts.push('2. ZERO META-TEXT: Return ONLY the rewritten text. Never include conversational preambles (e.g. "Here is the rewritten text:"), option headers, labels, or explanatory commentary.');
+    parts.push('3. 100% FACTUAL PRESERVATION: Maintain all underlying facts, numbers, dates, citations (e.g. [1], [4]), and proper nouns with absolute fidelity.');
     parts.push('');
 
-    // QuillBot-grade Syntactic & Structural Restructuring Directive
-    parts.push('MANDATORY SENTENCE-LEVEL STRUCTURAL RESTRUCTURING DIRECTIVE:');
-    parts.push('You must transform the grammatical architecture and clause order of every sentence. Do NOT perform 1:1 word-for-word synonym swapping.');
-    parts.push('');
-    parts.push('NEGATIVE CONSTRAINT (DO NOT DO THIS - LAZY PATCHWRITING):');
-    parts.push('Input: "Because the storm caused severe flooding, the city council decided to evacuate the coastal residents."');
-    parts.push('Bad output: "Since the tempest produced intense inundation, the town board resolved to relocate the seaside inhabitants."');
-    parts.push('Error: Every word was merely substituted in the exact same grammatical slot. This is lazy patchwriting.');
-    parts.push('');
-    parts.push('POSITIVE DEMONSTRATIONS (MANDATORY SENTENCE RESTRUCTURING):');
-    parts.push('- Clause Inversion (Flip order of clauses):');
-    parts.push('  "The city council evacuated coastal residents after severe flooding struck the area."');
-    parts.push('- Voice & Subject Inversion (Object/Causal phrase becomes subject):');
-    parts.push('  "Severe coastal flooding prompted municipal leaders to order an immediate evacuation."');
-    parts.push('- Fronted Prepositional / Participial Opener:');
-    parts.push('  "Following catastrophic flooding from the storm, coastal residents were swiftly evacuated by local officials."');
-    parts.push('');
-    parts.push('RULES FOR EVERY SENTENCE:');
-    parts.push('1. Clause Reordering: If a sentence contains two or more clauses, invert their sequence or front the conditional/purpose clause.');
-    parts.push('2. Subject Transformation: Change the grammatical subject of the sentence where natural (e.g. active <-> passive voice, or nominalize verbs).');
-    parts.push('3. Dynamic Sentence Length: Combine choppy sentences into compound structures, or divide verbose run-on sentences into crisp, punchy ideas.');
-    parts.push('4. Varied Openings: Never start consecutive sentences with the same word or syntactic structure.');
-    parts.push('5. 100% Fact & Semantic Preservation: Keep all numbers, proper nouns, facts, and underlying intent completely accurate.');
+    // Rule 2: QuillBot-grade Structural Transformation Directive
+    parts.push('QUILLBOT-GRADE STRUCTURAL RESTRUCTURING DIRECTIVE:');
+    parts.push('You must actively transform the grammatical architecture and clause order of every sentence. Do NOT perform lazy 1:1 word-for-word synonym swapping into the original sentence template.');
+    parts.push('- Invert clause sequence: flip cause-and-effect, conditional, and main clauses.');
+    parts.push('- Shift grammatical voice (active <-> passive) and change the sentence subject where natural.');
+    parts.push('- Front prepositional phrases, adverbial modifiers, or participial openers for varied sentence beginnings.');
+    parts.push('- You may split dense, convoluted run-on clauses into crisp, high-impact statements, or synthesize choppy clauses into balanced compound structures.');
+    parts.push('- Never reuse the identical main predicate or grammatical template across consecutive sentences.');
     parts.push('');
 
-    // Length constraints for Standard, Fluency, Simple, and Humanize modes
-    if (request.mode === 'standard') {
-      parts.push('LENGTH CALIBRATION RULE:');
-      parts.push('- Maintain a natural, proportional length: keep the word count strictly within 10% of the input text (strictly do NOT exceed +10% longer).');
-      parts.push('- Do NOT over-expand into multiple paragraphs or add unnecessary padding.');
+    // Rule 3: Mode-specific instructions and calibrated length limits
+    const mode = request.mode;
+    if (mode === 'shorten') {
+      parts.push('MODE: SHORTEN (HIGH COMPRESSION MANDATE):');
+      parts.push('- The rewritten output MUST be significantly shorter than the input text.');
+      parts.push('- Target length: 40% to 65% of the input word count.');
+      parts.push('- Strip non-essential modifiers, eliminate wordy transitions, and synthesize the core assertion into a single, punchy, high-impact sentence or tight paragraph.');
+      parts.push('- Under NO circumstances should you expand or output multiple alternative versions.');
       parts.push('');
-    } else if (request.mode === 'fluency' || request.mode === 'simple' || request.mode === 'humanize') {
-      parts.push('STRICT LENGTH PRESERVATION RULE (CRITICAL FOR THIS MODE):');
-      parts.push('- The rewritten output MUST closely match the input length (word count strictly within ±10% of the input text).');
-      parts.push('- Do NOT add unsolicited explanations, conversational filler, background context, or descriptive padding.');
-      parts.push('- Do NOT treat this mode like an Expand mode. Keep the prose tight, proportional, and directly focused on the source ideas.');
+    } else if (mode === 'expand') {
+      parts.push('MODE: EXPAND (NUANCED ELABORATION MANDATE):');
+      parts.push('- Elaborate ideas with analytical depth, rich subordinate clauses, and contextual precision without inventing ungrounded facts.');
+      parts.push('- Target length: +20% to +45% longer than input text.');
+      parts.push('');
+    } else {
+      // Standard, Fluency, Humanize, Formal, Academic, Simple, Creative, Custom
+      const modePrompt = this.getModePrompt(mode, request.customInstruction);
+      parts.push(`MODE: ${mode.toUpperCase()}`);
+      parts.push(modePrompt);
+      parts.push('');
+      parts.push('LENGTH PROPORTIONALITY:');
+      parts.push('- Keep the total word count natural and proportional (within ±15% to ±20% of the input text).');
+      parts.push('- Do NOT bloat into extra paragraphs, add padding, or invent external context.');
       parts.push('');
     }
 
-    // Synonym level instructions
-    if (request.synonymLevel > 1) {
-      parts.push(this.getSynonymLevelInstruction(request.synonymLevel));
-      parts.push('');
-    }
+    // Rule 4: Synonym & Structural Intensity Slider (Levels 1 to 4)
+    parts.push(this.getSynonymLevelInstruction(request.synonymLevel || 2));
+    parts.push('');
 
-    // Frozen terms instructions
+    // Rule 5: Frozen terms
     if (request.frozenTerms && request.frozenTerms.length > 0) {
       parts.push(this.getFrozenTermsInstruction(request.frozenTerms));
       parts.push('');
     }
 
-    // Language instruction
+    // Rule 6: Language
     if (request.language && request.language !== 'auto') {
-      parts.push(`Language: Keep the text in ${this.getLanguageName(request.language)}.`);
+      parts.push(`LANGUAGE: Keep the output in ${this.getLanguageName(request.language)}.`);
       parts.push('');
     }
 
-    // Output format instructions
-    parts.push('IMPORTANT: Return ONLY the rewritten text. Do not include explanations, notes, or meta-commentary.');
-    parts.push('');
-
-    // Plagiarism Guard instructions (default active)
+    // Rule 7: Plagiarism Guard
     if (request.plagiarismGuard !== false) {
-      parts.push('ORIGINALITY & ANTI-PLAGIARISM DIRECTIVE:');
-      parts.push('- Ensure the output text is completely original with zero verbatim plagiarism or patchwriting.');
-      parts.push('- Reorganize clause order, vary syntax structures, and substitute fresh vocabulary while preserving 100% of facts and meaning.');
+      parts.push('ANTI-PLAGIARISM DIRECTIVE: Ensure the output exhibits zero verbatim copying or patchwriting by completely recasting sentence trees while keeping meaning intact.');
       parts.push('');
     }
-
-    // Input text
-    parts.push('TEXT TO REWRITE:');
-    parts.push('---');
-    parts.push(request.text);
-    parts.push('---');
 
     return parts.join('\n');
+  }
+
+  /**
+   * Build the clean user prompt containing only the text to rewrite
+   */
+  buildUserPrompt(request: AIRequest): string {
+    const action = request.mode === 'shorten' ? 'Shorten and structurally rewrite' : 'Rewrite and structurally restructure';
+    return `${action} the following text:\n\n${request.text}`;
+  }
+
+  /**
+   * Build a complete prompt for AI generation (legacy / single-string fallback)
+   */
+  buildPrompt(request: AIRequest): string {
+    const systemPart = this.buildSystemPrompt(request);
+    const userPart = this.buildUserPrompt(request);
+    return `${systemPart}\n\n---\n${userPart}`;
   }
 
   /**
@@ -153,10 +159,10 @@ export class PromptEngine {
    */
   private getSynonymLevelInstruction(level: number): string {
     const instructions = {
-      1: 'SYNTACTIC & LEXICAL INTENSITY: Level 1 (Mild). Use minimal lexical changes and light clause adjustments. Preserve core phrasing, modifying words only when necessary for natural flow.',
-      2: 'SYNTACTIC & LEXICAL INTENSITY: Level 2 (Balanced). Use moderate synonym substitution and active clause inversion. Flip cause-and-effect clauses and vary sentence openings while preserving original tone.',
-      3: 'SYNTACTIC & LEXICAL INTENSITY: Level 3 (QuillBot Standard — High Structural Restructuring). Aggressively transform sentence architecture: flip dependent and independent clauses, alternate between active and passive constructions, front prepositional/adverbial modifiers, split or merge clauses for dynamic cadence, and substitute fresh, elevated vocabulary across all sentences.',
-      4: 'SYNTACTIC & LEXICAL INTENSITY: Level 4 (Maximum Structural Transformation). Radically reconstruct sentence syntax and grammatical layout: completely re-sequence ideas within each sentence, employ advanced clause subordination, transform parts of speech (e.g. nominalize actions into concepts), and maximize lexical variation while preserving 100% of underlying facts.',
+      1: 'STRUCTURAL & LEXICAL INTENSITY: Level 1 (Mild). Use subtle phrasing shifts and light clause adjustments while preserving familiar cadence and tone.',
+      2: 'STRUCTURAL & LEXICAL INTENSITY: Level 2 (Balanced). Actively invert cause-and-effect clauses, alternate sentence openings, and substitute fresh vocabulary.',
+      3: 'STRUCTURAL & LEXICAL INTENSITY: Level 3 (High — QuillBot Standard). Aggressively transform sentence architecture: invert clause hierarchies, change sentence subjects, front participial/prepositional modifiers, and combine or divide clauses for dynamic cadence.',
+      4: 'STRUCTURAL & LEXICAL INTENSITY: Level 4 (Max — Radical Syntactic Transformation). Rebuild sentence syntax from the ground up: completely re-sequence ideas, invert main and subordinate clauses, transform parts of speech, and maximize structural variety while preserving 100% of underlying facts.',
     };
 
     return instructions[level as 1 | 2 | 3 | 4] || instructions[2];
