@@ -5,7 +5,7 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, shift between active and passive constructions where natural, and refresh vocabulary without retaining the source sentence's exact grammatical template. Maintain strict 1:1 length parity without adding unnecessary padding, inflated synonyms, or bloated paragraphs.`,
+  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, shift between active and passive constructions where natural, break 4+ word consecutive source sequences to eliminate patchwriting, and maintain strict 1:1 length parity without adding unnecessary padding, inflated synonyms, or bloated paragraphs.`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
 - Reorganizing clause order and sentence structure for natural, effortless human cadence
@@ -23,7 +23,7 @@ CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact
 
   formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, and polished formal transitions while preserving all original facts and maintaining strict 1:1 length parity without pompous circumlocutions.`,
 
-  academic: `Rewrite the following text in a scholarly peer-reviewed academic style. Reframe sentences by fronting evidence, methodology, or conditional clauses, alternating passive/active constructions for objective detachment, and synthesizing conceptual relationships with varied sentence architecture while maintaining strict 1:1 length parity.`,
+  academic: `Rewrite the following text in a scholarly peer-reviewed academic style. Invert sentence structures by leading with research questions, evidence, methodology, or conditional clauses rather than generic introductory subjects. Decouple non-negotiable technical terms across newly framed clauses to eliminate n-gram overlap and patchwriting, alternating passive/active constructions for objective detachment while maintaining strict 1:1 length parity.`,
 
   simple: `Simplify the following text to make it effortless to understand. Break convoluted, nested clauses into clean, direct sentences with clear subject-verb-object order, and reorder ideas chronologically or logically while keeping meaning 100% accurate and maintaining direct, concise phrasing.`,
 
@@ -135,9 +135,17 @@ export class PromptEngine {
       parts.push('');
     }
 
-    // Rule 8: Plagiarism Guard
+    // Rule 8: Turnitin/Copyleaks Anti-Plagiarism & N-Gram Decoupling Protocol
     if (request.plagiarismGuard !== false) {
-      parts.push('ANTI-PLAGIARISM DIRECTIVE: Ensure the output exhibits zero verbatim copying or patchwriting by completely recasting sentence trees while keeping meaning intact.');
+      parts.push('ANTI-PLAGIARISM & N-GRAM DECOUPLING PROTOCOL (PASS TURNITIN / COPYLEAKS 0% PLAGIARISM):');
+      parts.push('1. MAXIMUM 3-WORD N-GRAM LIMIT: Under NO circumstances should any sequence of 4 or more consecutive words from the source text appear in your output (except for isolated proper nouns or frozen terms).');
+      parts.push('2. ZERO PATCHWRITING OR SENTENCE-SKELETON MIMICRY: Plagiarism detectors track grammatical templates. Never replace words while keeping the original sentence skeleton intact (e.g. do not just change "The purpose of this study is to assess..." to "This study aims to evaluate..."). You MUST alter the syntactic architecture:');
+      parts.push('   - Invert sentence sequence: Lead with the research question, findings, methodology, condition, or conclusion rather than the generic introductory subject.');
+      parts.push('   - Synthesize or divide clauses: Merge adjacent related ideas or split compound sentences so the original paragraph fingerprint is dissolved.');
+      parts.push('3. DECOUPLE FIXED TECHNICAL & FACTUAL ANCHORS: When names, numbers, dates, locations, or clinical terms (e.g. disease names, acronyms) must be preserved:');
+      parts.push('   - Do NOT line them up in the original sequence.');
+      parts.push('   - Separate them across new clauses and distinct grammatical roles so Turnitin cannot match multi-word chains.');
+      parts.push('4. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
       parts.push('');
     }
 
@@ -155,16 +163,16 @@ export class PromptEngine {
     if (mode === 'shorten') {
       const minWords = Math.max(3, Math.round(inputWordCount * 0.40));
       const maxWords = Math.max(minWords, Math.round(inputWordCount * 0.65));
-      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Do not bloat or output multiple versions:\n\n${request.text}`;
+      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Break all 4+ word source sequences to prevent patchwriting, with zero bloat:\n\n${request.text}`;
     }
 
     if (mode === 'expand') {
-      return `Expand the following text (${inputWordCount} words) with nuanced depth:\n\n${request.text}`;
+      return `Expand the following text (${inputWordCount} words) with nuanced depth while breaking 4+ word source sequences:\n\n${request.text}`;
     }
 
     const minWords = Math.max(1, Math.round(inputWordCount * 0.95));
     const maxWords = Math.max(inputWordCount, Math.round(inputWordCount * 1.08));
-    return `Rewrite and structurally restructure the following text (${inputWordCount} words) maintaining strict 1:1 word count parity (${minWords}-${maxWords} words) with zero fluff or bloated synonyms:\n\n${request.text}`;
+    return `Rewrite and structurally restructure the following text (${inputWordCount} words) maintaining strict 1:1 word count parity (${minWords}-${maxWords} words), zero fluff, zero bloated synonyms, and zero patchwriting (break all 4+ word source sequences):\n\n${request.text}`;
   }
 
   /**
