@@ -8,7 +8,7 @@ let activeShadowRoot: ShadowRoot | null = null;
 let currentSelectedText: string = '';
 let currentTargetElement: HTMLElement | null = null;
 
-// Clean up existing floating card
+// Clean up existing floating widget
 function removeActiveWidget() {
   if (activeShadowHost) {
     activeShadowHost.remove();
@@ -17,98 +17,180 @@ function removeActiveWidget() {
   }
 }
 
-// Listen to selection changes across the webpage
-document.addEventListener('mouseup', (e) => {
-  // Delay slightly to let browser finalize selection range
-  setTimeout(() => handleTextSelection(e), 20);
-});
+function getHostParent(): HTMLElement {
+  return (document.fullscreenElement as HTMLElement) || document.body || document.documentElement;
+}
 
-// Direct in-page keyboard shortcut listener for Alt+R (or Option+R on Mac)
-document.addEventListener('keydown', (e: KeyboardEvent) => {
-  if (e.altKey && (e.key === 'r' || e.key === 'R')) {
-    e.preventDefault();
-    const sel = window.getSelection();
-    const text = sel ? sel.toString().trim() : '';
-    if (text) {
-      currentSelectedText = text;
-      showFloatingRewriteCard(getSelectionCoordinates());
+interface SelectionInfo {
+  text: string;
+  coords: { x: number; y: number };
+  targetEl?: HTMLElement | null;
+}
+
+/**
+ * Extracts selected text and viewport coordinates across normal DOM elements,
+ * textareas, inputs, and rich text editors.
+ */
+function getSelectionInfo(mouseEvent?: MouseEvent): SelectionInfo | null {
+  // 1. Check input or textarea active elements
+  const activeEl = document.activeElement;
+  if (
+    activeEl instanceof HTMLTextAreaElement ||
+    (activeEl instanceof HTMLInputElement && /^(text|search|url|tel)$/i.test(activeEl.type || 'text'))
+  ) {
+    const start = activeEl.selectionStart ?? 0;
+    const end = activeEl.selectionEnd ?? 0;
+    if (end > start) {
+      const selectedText = activeEl.value.substring(start, end).trim();
+      if (selectedText.length >= 2) {
+        const rect = activeEl.getBoundingClientRect();
+        return {
+          text: selectedText,
+          coords: {
+            x: Math.min(window.innerWidth - 130, Math.max(16, rect.right - 110)),
+            y: Math.min(window.innerHeight - 50, Math.max(16, rect.bottom + 8)),
+          },
+          targetEl: activeEl,
+        };
+      }
     }
   }
-  if (e.key === 'Escape') removeActiveWidget();
-});
 
-// Listen for background triggers (context menu or extension command)
-chrome.runtime.onMessage.addListener((msg: any) => {
-  if (msg.type === 'REWRITE_TRIGGER' || msg.type === 'REWRITE_SHORTCUT_TRIGGER') {
-    const sel = window.getSelection();
-    const text = sel ? sel.toString().trim() : '';
-    if (text) {
-      currentSelectedText = text;
-      showFloatingRewriteCard(getSelectionCoordinates());
-    }
-  }
-});
-
-function getSelectionCoordinates(): { x: number; y: number } {
+  // 2. Check standard DOM window selection
   const sel = window.getSelection();
-  if (sel && sel.rangeCount > 0) {
+  const text = sel ? sel.toString().trim() : '';
+  if (text && text.length >= 2 && sel && sel.rangeCount > 0) {
     const range = sel.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     if (rect.width > 0 || rect.height > 0) {
+      let pillY = rect.bottom + 8;
+      // If near bottom of viewport, place pill above selection
+      if (pillY + 45 > window.innerHeight) {
+        pillY = Math.max(12, rect.top - 40);
+      }
       return {
-        x: Math.max(16, rect.left + window.scrollX),
-        y: rect.bottom + window.scrollY + 8,
+        text,
+        coords: {
+          x: Math.min(window.innerWidth - 130, Math.max(16, rect.right + 6)),
+          y: Math.min(window.innerHeight - 45, Math.max(12, pillY)),
+        },
+        targetEl: (sel.anchorNode?.parentElement as HTMLElement) || null,
       };
     }
   }
-  return { x: window.innerWidth / 2 - 180, y: Math.max(80, window.scrollY + 120) };
-}
 
-function handleTextSelection(e: MouseEvent) {
-  // If clicked inside our own Shadow DOM widget, don't dismiss
-  if (activeShadowHost && e.composedPath().includes(activeShadowHost)) {
-    return;
+  // 3. Fallback to mouse event if provided
+  if (text && text.length >= 2 && mouseEvent) {
+    return {
+      text,
+      coords: {
+        x: Math.min(window.innerWidth - 130, Math.max(16, mouseEvent.clientX + 8)),
+        y: Math.min(window.innerHeight - 50, Math.max(16, mouseEvent.clientY + 8)),
+      },
+      targetEl: (mouseEvent.target as HTMLElement) || null,
+    };
   }
 
-  const selection = window.getSelection();
-  const text = selection ? selection.toString().trim() : '';
+  return null;
+}
 
-  if (!text || text.length < 3) {
-    // Only remove if we haven't opened the card
-    if (activeShadowHost && !activeShadowRoot?.querySelector('.rb-card-open')) {
+// Listen to selection changes across the webpage
+let selectionDebounceTimer: any = null;
+['mouseup', 'pointerup', 'keyup'].forEach((evt) => {
+  window.addEventListener(evt, (e: any) => {
+    // If interaction occurs inside our widget, don't dismiss or reposition
+    if (activeShadowHost && e.composedPath && e.composedPath().includes(activeShadowHost)) {
+      return;
+    }
+
+    clearTimeout(selectionDebounceTimer);
+    selectionDebounceTimer = setTimeout(() => {
+      // Don't disturb if full rewrite card is already open
+      if (activeShadowRoot?.querySelector('.rb-card-open')) {
+        return;
+      }
+
+      const info = getSelectionInfo(e instanceof MouseEvent ? e : undefined);
+      if (info) {
+        currentSelectedText = info.text;
+        currentTargetElement = info.targetEl || null;
+        showFloatingTriggerBadge(info.coords.x, info.coords.y);
+      } else {
+        removeActiveWidget();
+      }
+    }, 60);
+  });
+});
+
+// Direct in-page keyboard shortcut listener for Alt+R (or Option+R on Mac)
+window.addEventListener(
+  'keydown',
+  (e: KeyboardEvent) => {
+    const isAltR = e.altKey && (e.key === 'r' || e.key === 'R' || e.code === 'KeyR');
+    if (isAltR) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const info = getSelectionInfo();
+      if (info && info.text) {
+        currentSelectedText = info.text;
+        currentTargetElement = info.targetEl || null;
+        showFloatingRewriteCard(info.coords);
+      } else {
+        // If no text is selected, check active element or open centered studio prompt
+        const activeEl = document.activeElement;
+        let existingText = '';
+        if (activeEl instanceof HTMLTextAreaElement || activeEl instanceof HTMLInputElement) {
+          existingText = activeEl.value.trim();
+          currentTargetElement = activeEl;
+        }
+        currentSelectedText = existingText;
+        showFloatingRewriteCard({
+          x: Math.max(20, Math.round((window.innerWidth - 380) / 2)),
+          y: Math.max(60, Math.round(window.innerHeight * 0.15)),
+        });
+      }
+    }
+
+    if (e.key === 'Escape') {
       removeActiveWidget();
     }
-    return;
-  }
+  },
+  true // Use capture phase so host web apps cannot intercept or suppress Alt+R
+);
 
-  currentSelectedText = text;
-  currentTargetElement = document.activeElement as HTMLElement;
-
-  // Use selection range rectangle for accurate anchor placement near the selected text
-  let anchorX = e.pageX;
-  let anchorY = e.pageY;
-  if (selection && selection.rangeCount > 0) {
-    const rect = selection.getRangeAt(0).getBoundingClientRect();
-    if (rect.width > 0) {
-      anchorX = rect.right + window.scrollX;
-      anchorY = rect.bottom + window.scrollY;
+// Listen for background triggers (context menu or extension shortcut)
+chrome.runtime.onMessage.addListener((msg: any) => {
+  if (msg.type === 'REWRITE_TRIGGER' || msg.type === 'REWRITE_SHORTCUT_TRIGGER') {
+    const info = getSelectionInfo();
+    if (info && info.text) {
+      currentSelectedText = info.text;
+      currentTargetElement = info.targetEl || null;
+      showFloatingRewriteCard(info.coords);
+    } else {
+      if (msg.text) {
+        currentSelectedText = msg.text.trim();
+      }
+      showFloatingRewriteCard({
+        x: Math.max(20, Math.round((window.innerWidth - 380) / 2)),
+        y: Math.max(60, Math.round(window.innerHeight * 0.15)),
+      });
     }
   }
-
-  // Show small trigger badge near selection
-  showFloatingTriggerBadge(anchorX, anchorY);
-}
+});
 
 function showFloatingTriggerBadge(x: number, y: number) {
   removeActiveWidget();
 
   activeShadowHost = document.createElement('div');
   activeShadowHost.id = 'rewritebot-extension-root';
-  activeShadowHost.style.position = 'absolute';
+  activeShadowHost.style.position = 'fixed';
   activeShadowHost.style.zIndex = '2147483647';
-  activeShadowHost.style.left = `${x + 10}px`;
-  activeShadowHost.style.top = `${y + 10}px`;
-  document.body.appendChild(activeShadowHost);
+  activeShadowHost.style.left = `${Math.max(12, Math.min(window.innerWidth - 120, x))}px`;
+  activeShadowHost.style.top = `${y}px`;
+
+  const hostParent = getHostParent();
+  hostParent.appendChild(activeShadowHost);
 
   activeShadowRoot = activeShadowHost.attachShadow({ mode: 'open' });
 
@@ -118,7 +200,7 @@ function showFloatingTriggerBadge(x: number, y: number) {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 12px;
+      padding: 6px 14px;
       background: linear-gradient(135deg, #670626 0%, #4a031a 100%);
       color: #ffffff;
       border-radius: 20px;
@@ -126,17 +208,22 @@ function showFloatingTriggerBadge(x: number, y: number) {
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(103, 6, 38, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 16px rgba(103, 6, 38, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.25);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       user-select: none;
+      animation: rbPillPop 0.15s ease-out;
+    }
+    @keyframes rbPillPop {
+      0% { opacity: 0; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1); }
     }
     .rb-pill:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(103, 6, 38, 0.45);
+      transform: translateY(-1px) scale(1.03);
+      box-shadow: 0 6px 20px rgba(103, 6, 38, 0.5);
     }
     .rb-icon {
-      font-size: 14px;
+      font-size: 13px;
     }
   `;
 
@@ -156,26 +243,33 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   if (!activeShadowRoot || !activeShadowHost) {
     activeShadowHost = document.createElement('div');
     activeShadowHost.id = 'rewritebot-extension-root';
-    activeShadowHost.style.position = 'absolute';
+    activeShadowHost.style.position = 'fixed';
     activeShadowHost.style.zIndex = '2147483647';
-    document.body.appendChild(activeShadowHost);
+    const hostParent = getHostParent();
+    hostParent.appendChild(activeShadowHost);
     activeShadowRoot = activeShadowHost.attachShadow({ mode: 'open' });
+  } else {
+    activeShadowHost.style.position = 'fixed';
   }
 
-  activeShadowHost.style.left = `${Math.min(window.innerWidth - 380, Math.max(16, coords.x))}px`;
-  activeShadowHost.style.top = `${coords.y}px`;
+  const cardWidth = 380;
+  const leftPos = Math.min(window.innerWidth - cardWidth - 16, Math.max(16, coords.x));
+  const topPos = Math.min(window.innerHeight - 360, Math.max(16, coords.y));
+
+  activeShadowHost.style.left = `${leftPos}px`;
+  activeShadowHost.style.top = `${topPos}px`;
 
   activeShadowRoot.innerHTML = '';
 
   const style = document.createElement('style');
   style.textContent = `
     .rb-card {
-      width: 360px;
+      width: 380px;
       background: #ffffff;
       color: #171314;
       border-radius: 12px;
       border: 1px solid #e5e7eb;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.08);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
       display: flex;
@@ -209,6 +303,10 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       background: none;
       border: none;
       padding: 0;
+      line-height: 1;
+    }
+    .rb-close:hover {
+      color: #374151;
     }
     .rb-body {
       padding: 12px 14px;
@@ -220,7 +318,7 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       display: flex;
       gap: 4px;
       overflow-x: auto;
-      padding-bottom: 4px;
+      padding-bottom: 2px;
     }
     .rb-mode-btn {
       padding: 4px 10px;
@@ -232,15 +330,31 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .rb-mode-btn:hover {
+      background: #f3f4f6;
     }
     .rb-mode-btn.active {
       background: #670626;
       color: #ffffff;
       border-color: #670626;
     }
+    .rb-input-area {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 55px;
+      max-height: 90px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      font-family: inherit;
+      font-size: 12px;
+      resize: vertical;
+    }
     .rb-output-box {
-      min-height: 80px;
-      max-height: 180px;
+      min-height: 75px;
+      max-height: 160px;
       overflow-y: auto;
       padding: 10px;
       background: #fcfcfc;
@@ -249,12 +363,13 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       font-size: 13px;
       line-height: 1.5;
       color: #1f2937;
+      word-break: break-word;
     }
     .rb-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 6px;
+      padding-top: 4px;
     }
     .rb-btn-primary {
       padding: 6px 14px;
@@ -265,6 +380,10 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .rb-btn-primary:hover {
+      background: #4a031a;
     }
     .rb-btn-secondary {
       padding: 6px 12px;
@@ -276,9 +395,16 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       font-weight: 600;
       cursor: pointer;
     }
+    .rb-btn-secondary:hover {
+      background: #e5e7eb;
+    }
     .rb-spinner {
       color: #670626;
       font-style: italic;
+      font-size: 12px;
+    }
+    .rb-error {
+      color: #dc2626;
       font-size: 12px;
     }
   `;
@@ -289,25 +415,35 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   let selectedMode = 'standard';
   let rewrittenResultText = '';
 
+  const hasInitialText = Boolean(currentSelectedText && currentSelectedText.trim().length > 0);
+
   card.innerHTML = `
     <div class="rb-header">
       <div class="rb-title">✍️ RewriteBot</div>
       <button class="rb-close" id="rb-btn-close">✕</button>
     </div>
     <div class="rb-body">
+      ${
+        !hasInitialText
+          ? `<textarea class="rb-input-area" id="rb-manual-input" placeholder="Type or paste text to rewrite..."></textarea>`
+          : ''
+      }
       <div class="rb-modes">
         <button class="rb-mode-btn active" data-mode="standard">Standard</button>
-        <button class="rb-mode-btn" data-mode="academic">Academic</button>
         <button class="rb-mode-btn" data-mode="fluency">Fluency</button>
+        <button class="rb-mode-btn" data-mode="academic">Academic</button>
         <button class="rb-mode-btn" data-mode="humanize">Humanize</button>
         <button class="rb-mode-btn" data-mode="shorten">Shorten</button>
       </div>
       <div class="rb-output-box" id="rb-output">
-        <span class="rb-spinner">Restructuring with RewriteBot…</span>
+        <span class="rb-spinner">${hasInitialText ? 'Restructuring with RewriteBot…' : 'Enter text above to rewrite'}</span>
       </div>
       <div class="rb-footer">
         <button class="rb-btn-secondary" id="rb-btn-copy">📋 Copy</button>
-        <button class="rb-btn-primary" id="rb-btn-replace">⚡ Replace in Page</button>
+        <div style="display: flex; gap: 6px;">
+          <button class="rb-btn-secondary" id="rb-btn-rerun">🔄 Re-run</button>
+          <button class="rb-btn-primary" id="rb-btn-replace">⚡ Replace in Page</button>
+        </div>
       </div>
     </div>
   `;
@@ -318,6 +454,12 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   // Close handler
   card.querySelector('#rb-btn-close')?.addEventListener('click', removeActiveWidget);
 
+  // Manual input handler if displayed
+  const manualInput = card.querySelector<HTMLTextAreaElement>('#rb-manual-input');
+  manualInput?.addEventListener('input', () => {
+    currentSelectedText = manualInput.value;
+  });
+
   // Mode switcher handler
   const modeButtons = card.querySelectorAll<HTMLButtonElement>('.rb-mode-btn');
   modeButtons.forEach((btn) => {
@@ -327,6 +469,11 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       selectedMode = btn.dataset.mode || 'standard';
       executeParaphrase();
     });
+  });
+
+  // Re-run handler
+  card.querySelector('#rb-btn-rerun')?.addEventListener('click', () => {
+    executeParaphrase();
   });
 
   // Copy handler
@@ -350,7 +497,14 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   });
 
   async function executeParaphrase() {
+    const textToRewrite = manualInput ? manualInput.value.trim() : currentSelectedText.trim();
     const outputEl = card.querySelector('#rb-output');
+
+    if (!textToRewrite) {
+      if (outputEl) outputEl.innerHTML = '<span class="rb-spinner">Please select or enter text to rewrite</span>';
+      return;
+    }
+
     if (outputEl) {
       outputEl.innerHTML = '<span class="rb-spinner">Restructuring with RewriteBot…</span>';
     }
@@ -360,7 +514,7 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
         {
           type: 'EXECUTE_PARAPHRASE',
           payload: {
-            text: currentSelectedText,
+            text: textToRewrite,
             mode: selectedMode,
           },
         },
@@ -370,18 +524,21 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
             if (outputEl) outputEl.textContent = rewrittenResultText;
           } else {
             if (outputEl) {
-              outputEl.textContent = response?.error || 'Rewrite failed. Check RewriteBot connection.';
+              const errMsg = response?.error || 'Rewrite failed. Check RewriteBot server connection.';
+              outputEl.innerHTML = `<span class="rb-error">${errMsg}</span>`;
             }
           }
         }
       );
     } catch (err: any) {
-      if (outputEl) outputEl.textContent = err.message || 'Error communicating with extension';
+      if (outputEl) outputEl.innerHTML = `<span class="rb-error">${err.message || 'Extension error'}</span>`;
     }
   }
 
-  // Trigger initial paraphrase
-  executeParaphrase();
+  // Trigger initial paraphrase if text was already selected
+  if (hasInitialText) {
+    executeParaphrase();
+  }
 }
 
 /**

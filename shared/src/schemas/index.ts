@@ -64,8 +64,8 @@ export const paraphraseSchema = z.object({
   synonymLevel: z.number().int().min(1).max(4).default(2),
   frozenTerms: z.array(z.string()).default([]),
   customInstruction: z.string().optional(),
-  providerId: z.string().uuid(),
-  modelId: z.string().min(1),
+  providerId: z.string().optional().nullable().or(z.literal('')),
+  modelId: z.string().optional().nullable().or(z.literal('')),
   plagiarismGuard: z.boolean().optional().default(true),
   options: z
     .object({

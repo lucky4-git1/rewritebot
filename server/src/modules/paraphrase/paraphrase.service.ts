@@ -13,6 +13,8 @@ export class ParaphraseService {
   async paraphrase(userId: string, input: ParaphraseInput, requestId: string): Promise<AIResponse> {
     const diag = new DiagnosticLogger(requestId);
     const startTime = Date.now();
+    let resolvedProviderId = input.providerId || '';
+    let resolvedModelId = input.modelId || '';
 
     try {
       diag.log('PARAPHRASE_SERVICE_START', {
@@ -20,6 +22,18 @@ export class ParaphraseService {
         providerId: input.providerId,
         modelId: input.modelId,
       });
+
+      if (!resolvedProviderId || !resolvedModelId) {
+        const defaultProvider =
+          (await prisma.provider.findFirst({
+            where: { isDefault: true },
+          })) || (await prisma.provider.findFirst());
+
+        if (defaultProvider) {
+          resolvedProviderId = defaultProvider.id;
+          resolvedModelId = defaultProvider.modelId || '';
+        }
+      }
 
       // Create AI request with userId for security validation
       const aiRequest: AIRequest = {
@@ -31,8 +45,8 @@ export class ParaphraseService {
         synonymLevel: input.synonymLevel,
         frozenTerms: input.frozenTerms,
         customInstruction: input.customInstruction,
-        providerId: input.providerId,
-        modelId: input.modelId,
+        providerId: resolvedProviderId,
+        modelId: resolvedModelId,
         plagiarismGuard: input.plagiarismGuard ?? true,
         options: input.options,
       };
@@ -58,16 +72,20 @@ export class ParaphraseService {
       const statistics = calculateStatistics(input.text, response.text);
 
       // Record in history asynchronously (don't block user response)
-      this.recordHistory(userId, input, response, statistics, true).catch((err) => {
-        logger.error('Background history recording failed:', err);
-      });
+      if (userId) {
+        this.recordHistory(userId, { ...input, providerId: resolvedProviderId, modelId: resolvedModelId }, response, statistics, true).catch((err) => {
+          logger.error('Background history recording failed:', err);
+        });
+      }
 
       // Record success in health manager asynchronously
-      providerHealthManager.recordSuccess(input.providerId, response.latency).catch((err) => {
-        logger.warn('Background provider health recording failed:', err);
-      });
+      if (resolvedProviderId) {
+        providerHealthManager.recordSuccess(resolvedProviderId, response.latency).catch((err) => {
+          logger.warn('Background provider health recording failed:', err);
+        });
+      }
 
-      logger.info(`Paraphrase completed for user ${userId}: ${statistics.inputWords} words`);
+      logger.info(`Paraphrase completed for user ${userId || 'guest'}: ${statistics.inputWords} words`);
 
       return response;
     } catch (error) {
@@ -81,26 +99,30 @@ export class ParaphraseService {
       });
 
       // Record failure in history
-      const statistics = calculateStatistics(input.text, '');
-      await this.recordHistory(
-        userId,
-        input,
-        {
-          text: '',
-          provider: input.providerId,
-          model: input.modelId,
-          latency,
-        },
-        statistics,
-        false,
-        error instanceof Error ? error.message : 'Unknown error'
-      );
+      if (userId && resolvedProviderId && resolvedModelId) {
+        const statistics = calculateStatistics(input.text, '');
+        await this.recordHistory(
+          userId,
+          input,
+          {
+            text: '',
+            provider: resolvedProviderId,
+            model: resolvedModelId,
+            latency,
+          },
+          statistics,
+          false,
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+      }
 
       // Record failure in health manager
-      await providerHealthManager.recordFailure(
-        input.providerId,
-        error instanceof Error ? error.message : 'Generation failed'
-      );
+      if (resolvedProviderId) {
+        await providerHealthManager.recordFailure(
+          resolvedProviderId,
+          error instanceof Error ? error.message : 'Generation failed'
+        );
+      }
 
       logger.error(`Paraphrase failed for user ${userId}:`, error);
       throw error;
@@ -125,8 +147,8 @@ export class ParaphraseService {
           documentId: input.documentId,
           operation: 'paraphrase',
           mode: input.mode,
-          providerId: input.providerId,
-          modelId: input.modelId,
+          providerId: input.providerId || response.provider || '',
+          modelId: input.modelId || response.model || '',
           input: input.text,
           output: response.text || '',
           statistics,
@@ -144,8 +166,8 @@ export class ParaphraseService {
             input: input.text,
             output: response.text,
             mode: input.mode,
-            providerId: input.providerId,
-            modelId: input.modelId,
+            providerId: input.providerId || response.provider || '',
+            modelId: input.modelId || response.model || '',
             synonymLevel: input.synonymLevel,
             frozenTerms: input.frozenTerms,
             language: input.language,

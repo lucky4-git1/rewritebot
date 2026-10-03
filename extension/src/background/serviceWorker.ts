@@ -83,7 +83,8 @@ async function handleParaphraseRequest(payload: {
   synonymLevel?: number;
 }) {
   const syncStorage = await chrome.storage.local.get(['serverUrl', 'authToken', 'selectedProviderId', 'selectedModelId']);
-  const serverUrl = syncStorage.serverUrl || DEFAULT_SERVER_URL;
+  const rawUrl = syncStorage.serverUrl || DEFAULT_SERVER_URL;
+  const serverUrl = rawUrl.replace(/\/+$/, '');
   const token = syncStorage.authToken || '';
 
   const headers: Record<string, string> = {
@@ -93,19 +94,31 @@ async function handleParaphraseRequest(payload: {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${serverUrl}/paraphrase`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      text: payload.text,
-      mode: payload.mode || 'standard',
-      synonymLevel: payload.synonymLevel ?? 3,
-      frozenTerms: [],
-      plagiarismGuard: true,
-      providerId: syncStorage.selectedProviderId,
-      modelId: syncStorage.selectedModelId,
-    }),
-  });
+  const reqBody: Record<string, any> = {
+    text: payload.text,
+    mode: payload.mode || 'standard',
+    synonymLevel: payload.synonymLevel ?? 2,
+    frozenTerms: [],
+    plagiarismGuard: true,
+  };
+
+  if (syncStorage.selectedProviderId && typeof syncStorage.selectedProviderId === 'string' && syncStorage.selectedProviderId.trim()) {
+    reqBody.providerId = syncStorage.selectedProviderId.trim();
+  }
+  if (syncStorage.selectedModelId && typeof syncStorage.selectedModelId === 'string' && syncStorage.selectedModelId.trim()) {
+    reqBody.modelId = syncStorage.selectedModelId.trim();
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${serverUrl}/paraphrase`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(reqBody),
+    });
+  } catch (netErr: any) {
+    throw new Error(`Cannot connect to RewriteBot backend at ${serverUrl}. Please ensure server is running.`);
+  }
 
   if (!response.ok) {
     const errData = await response.json().catch(() => ({}));

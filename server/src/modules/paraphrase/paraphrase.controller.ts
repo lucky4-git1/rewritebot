@@ -8,6 +8,7 @@ import { DiagnosticLogger } from '../../utils/diagnostics';
 import { calculateStatistics } from '../../utils/statistics';
 import { providerHealthManager } from '../../ai/ProviderHealthManager';
 import { logger } from '../../config/logger';
+import { prisma } from '../../database/prisma';
 
 export class ParaphraseController {
   private paraphraseService: ParaphraseService;
@@ -107,6 +108,21 @@ export class ParaphraseController {
       'X-Accel-Buffering': 'no', // Disable buffering in nginx
     });
 
+    let resolvedProviderId = input.providerId || '';
+    let resolvedModelId = input.modelId || '';
+
+    if (!resolvedProviderId || !resolvedModelId) {
+      const defaultProvider =
+        (await prisma.provider.findFirst({
+          where: { isDefault: true },
+        })) || (await prisma.provider.findFirst());
+
+      if (defaultProvider) {
+        resolvedProviderId = defaultProvider.id;
+        resolvedModelId = defaultProvider.modelId || '';
+      }
+    }
+
     // Create AI request with userId for security validation
     const aiRequest = {
       userId, // SECURITY: Validate provider ownership
@@ -117,8 +133,8 @@ export class ParaphraseController {
       synonymLevel: input.synonymLevel,
       frozenTerms: input.frozenTerms,
       customInstruction: input.customInstruction,
-      providerId: input.providerId,
-      modelId: input.modelId,
+      providerId: resolvedProviderId,
+      modelId: resolvedModelId,
       plagiarismGuard: input.plagiarismGuard ?? true,
       options: {
         ...input.options,
@@ -153,8 +169,8 @@ export class ParaphraseController {
           input,
           {
             text: accumulatedText,
-            provider: input.providerId,
-            model: input.modelId,
+            provider: resolvedProviderId,
+            model: resolvedModelId,
             latency,
           },
           statistics,
@@ -163,9 +179,11 @@ export class ParaphraseController {
           logger.error('Background streaming history recording failed:', err);
         });
 
-        providerHealthManager.recordSuccess(input.providerId, latency).catch((err: any) => {
-          logger.warn('Background provider health recording failed:', err);
-        });
+        if (resolvedProviderId) {
+          providerHealthManager.recordSuccess(resolvedProviderId, latency).catch((err: any) => {
+            logger.warn('Background provider health recording failed:', err);
+          });
+        }
       }
     } catch (error) {
       const errorChunk = {
