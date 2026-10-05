@@ -40,12 +40,22 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError<ApiResponse>) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & {
+        const originalRequest = error.config as (InternalAxiosRequestConfig & {
           _retry?: boolean;
-        };
+        }) | undefined;
 
-        // If 401 and we haven't retried yet, try to refresh token
-        if (error.response?.status === 401 && !originalRequest._retry && this.refreshToken) {
+        if (!originalRequest) {
+          return Promise.reject(error);
+        }
+
+        const requestUrl = originalRequest.url || '';
+        const isAuthEndpoint =
+          requestUrl.includes('/auth/login') ||
+          requestUrl.includes('/auth/register') ||
+          requestUrl.includes('/auth/refresh');
+
+        // If 401 on a non-auth endpoint and we haven't retried yet, try to refresh token
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint && this.refreshToken) {
           originalRequest._retry = true;
 
           try {
@@ -55,20 +65,42 @@ class ApiClient {
             );
 
             if (response.data.success && response.data.data) {
-              this.setAccessToken(response.data.data.accessToken);
-              
+              const newAccessToken = response.data.data.accessToken;
+              this.setAccessToken(newAccessToken);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('accessToken', newAccessToken);
+              }
+
               // Retry original request with new token
               if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${this.accessToken}`;
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
               }
               return this.client(originalRequest);
             }
           } catch (refreshError) {
-            // Refresh failed, clear tokens
+            // Refresh failed: completely purge tokens from memory and localStorage
             this.clearTokens();
-            window.location.href = '/login';
+
+            // ONLY redirect if the user is currently on a protected route!
+            // NEVER redirect if they are on the landing page ('/') or already on auth routes ('/login', '/register')!
+            if (typeof window !== 'undefined') {
+              const pathname = window.location.pathname;
+              const isProtected =
+                pathname.startsWith('/app') ||
+                pathname.startsWith('/studio') ||
+                pathname.startsWith('/providers');
+
+              if (isProtected) {
+                window.location.href = '/login';
+              }
+            }
             return Promise.reject(refreshError);
           }
+        }
+
+        // If 401 occurs on a protected request without refresh capability, clear stale tokens
+        if (error.response?.status === 401 && !isAuthEndpoint) {
+          this.clearTokens();
         }
 
         return Promise.reject(error);
@@ -91,6 +123,14 @@ class ApiClient {
   clearTokens() {
     this.accessToken = null;
     this.refreshToken = null;
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      } catch {
+        // Ignore storage errors
+      }
+    }
   }
 
   // Generic request methods

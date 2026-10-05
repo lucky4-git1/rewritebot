@@ -8,12 +8,36 @@ import { Providers } from '../pages/Providers';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+
+  if (!isInitialized) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          background: 'var(--rb-background)',
+        }}
+      >
+        <span className="spinner" style={{ width: '28px', height: '28px', borderWidth: '3px' }} />
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/app" />;
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+
+  if (!isInitialized) {
+    return null;
+  }
+
+  return !isAuthenticated ? <>{children}</> : <Navigate to="/app" replace />;
 }
 
 export function AppRouter() {

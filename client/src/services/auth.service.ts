@@ -91,26 +91,50 @@ class AuthService {
   }
 
   private getStoredAccessToken(): string | null {
-    return localStorage.getItem('accessToken');
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token || token === 'undefined' || token === 'null' || token.trim().length < 10) {
+        return null;
+      }
+      return token;
+    } catch {
+      return null;
+    }
   }
 
   private getStoredRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
+    try {
+      const token = localStorage.getItem('refreshToken');
+      if (!token || token === 'undefined' || token === 'null' || token.trim().length < 10) {
+        return null;
+      }
+      return token;
+    } catch {
+      return null;
+    }
   }
 
-  private clearStoredTokens() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+  clearStoredTokens() {
+    try {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+    } catch {
+      // Ignore
+    }
   }
 
   // Initialize tokens on app startup
   initializeTokens() {
     const accessToken = this.getStoredAccessToken();
     const refreshToken = this.getStoredRefreshToken();
-    
+
     if (accessToken) {
       apiClient.setAccessToken(accessToken);
+    } else {
+      apiClient.clearTokens();
+      this.clearStoredTokens();
     }
+
     if (refreshToken) {
       apiClient.setRefreshToken(refreshToken);
     }

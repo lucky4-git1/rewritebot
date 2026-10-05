@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { User } from '@rewritebot/shared';
 import { authService, RegisterData, LoginData } from '../services/auth.service';
+import { apiClient } from '../services/api';
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
 
   // Actions
@@ -20,6 +22,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
   error: null,
 
   login: async (data: LoginData) => {
@@ -82,9 +85,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   loadUser: async () => {
     // Initialize tokens from storage
     authService.initializeTokens();
-    
+
     if (!authService.isAuthenticated()) {
-      set({ isAuthenticated: false, isLoading: false });
+      set({ isAuthenticated: false, isLoading: false, isInitialized: true });
       return;
     }
 
@@ -95,14 +98,17 @@ export const useAuthStore = create<AuthState>((set) => ({
         user,
         isAuthenticated: true,
         isLoading: false,
+        isInitialized: true,
       });
     } catch (error) {
-      // Token is invalid, clear auth state
-      authService.logout();
+      // Stale or invalid token: wipe storage locally without secondary server calls
+      apiClient.clearTokens();
+      authService.clearStoredTokens();
       set({
         user: null,
         isAuthenticated: false,
         isLoading: false,
+        isInitialized: true,
       });
     }
   },
