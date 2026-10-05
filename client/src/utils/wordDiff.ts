@@ -284,7 +284,12 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
   for (let i = 0; i < wordTokens.length; i++) {
     runningSentenceWords.push(i);
     const nextTokenIdx = wordTokens[i].tokenIndex + 1;
-    const isEndOfSentence = nextTokenIdx < tokens.length && /[.!?\n]/.test(tokens[nextTokenIdx]);
+    const nextToken = tokens[nextTokenIdx] || '';
+    const tokenAfterNext = tokens[nextTokenIdx + 1] || '';
+
+    // Ignore decimal points in numbers (e.g. 78.8) or non-space following
+    const isDecimal = nextToken === '.' && /^\d+$/.test(tokenAfterNext);
+    const isEndOfSentence = !isDecimal && (/[!?\n]/.test(nextToken) || (nextToken.includes('.') && (nextTokenIdx + 1 >= tokens.length || /^\s+$/.test(tokenAfterNext))));
 
     if (isEndOfSentence || i === wordTokens.length - 1) {
       const len = runningSentenceWords.length;
@@ -325,9 +330,11 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     }
   }
 
+  const candidateStructuralWordIndices = new Set<number>();
+
   // 1. Identify Longest Unchanged Sequences (🔵 Blue)
-  // Continuous sequences of 2 or more words that appear identically in the original.
-  // Pure function/stop-word pairs (e.g. "during the", "in the", "of the") only match within local sentence context.
+  // Continuous sequences of 2 or more words that appear identically in the original IN THE SAME POSITION.
+  // Note: Relocated or reordered phrases belong to Structural Changes (🔴 Red), not Blue!
   const longestUnchangedTokens = new Set<number>();
   for (let i = 0; i < wordTokens.length; i++) {
     for (let len = 8; len >= 2; len--) {
@@ -352,8 +359,36 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
         }
 
         if (origWordString.includes(phrase)) {
-          for (let k = 0; k < len; k++) {
-            longestUnchangedTokens.add(wordTokens[i + k].tokenIndex);
+          // Check if this phrase stayed in roughly the same relative position
+          let isRelocatedPhrase = false;
+          const meta = modWordSentenceMeta[i];
+          if (meta && bestOrigSentForModSent.has(meta.sentIndex)) {
+            const origSentIdx = bestOrigSentForModSent.get(meta.sentIndex)!;
+            const firstWordClean = slice[0].clean;
+            const origSentList = origSentenceWordLists[origSentIdx];
+            const origPositions: number[] = [];
+            origSentList.forEach((w, idx) => {
+              if (w === firstWordClean) {
+                origPositions.push(origSentList.length > 1 ? idx / (origSentList.length - 1) : 0);
+              }
+            });
+            if (origPositions.length > 0) {
+              const minDist = Math.min(...origPositions.map((pos) => Math.abs(pos - meta.posInSent)));
+              if (minDist >= 0.18 && meta.sentLen >= 6) {
+                isRelocatedPhrase = true;
+              }
+            }
+          }
+
+          if (isRelocatedPhrase) {
+            // Relocated phrase! In QuillBot, rearranged/relocated phrases are RED (structural)!
+            for (let k = 0; k < len; k++) {
+              candidateStructuralWordIndices.add(i + k);
+            }
+          } else {
+            for (let k = 0; k < len; k++) {
+              longestUnchangedTokens.add(wordTokens[i + k].tokenIndex);
+            }
           }
           break;
         }
@@ -362,7 +397,6 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
   }
 
   // 2. Identify Clause-Level Structural Shifts (🔴 Red)
-  const candidateStructuralWordIndices = new Set<number>();
 
   // A. Multi-word phrase patterns
   MULTI_WORD_STRUCTURAL_PHRASES.forEach((pattern) => {
@@ -481,28 +515,56 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     }
   });
 
-  // E. Bridge Pass: if structural tokens in same sentence are separated by 1 or 2 changed words, merge them
-  for (let i = 0; i < wordTokens.length - 2; i++) {
-    if (
-      expanded.has(i) &&
-      expanded.has(i + 2) &&
-      !longestUnchangedTokens.has(wordTokens[i + 1].tokenIndex)
-    ) {
-      expanded.add(i + 1);
-    }
-    if (
-      i < wordTokens.length - 3 &&
-      expanded.has(i) &&
-      expanded.has(i + 3) &&
-      !longestUnchangedTokens.has(wordTokens[i + 1].tokenIndex) &&
-      !longestUnchangedTokens.has(wordTokens[i + 2].tokenIndex)
-    ) {
-      expanded.add(i + 1);
-      expanded.add(i + 2);
+  // E. Sentence-Level Structural Promotion & Clause Synthesis
+  // If a sentence has undergone structural reordering (e.g. clause relocation, passive voice, or structural markers)
+  // promote all modified non-blue words to the structural red block so entire clauses/sentences render in red!
+  for (let sIdx = 0; sIdx < currentSentenceIndex; sIdx++) {
+    const sWordIndices = wordTokens
+      .map((_, idx) => idx)
+      .filter((idx) => modWordSentenceMeta[idx]?.sentIndex === sIdx);
+
+    const sStructCount = sWordIndices.filter((idx) => expanded.has(idx)).length;
+    const sChangedCount = sWordIndices.filter((idx) => !origSet.has(wordTokens[idx].clean) && !longestUnchangedTokens.has(wordTokens[idx].tokenIndex)).length;
+    const sNonBlueCount = sWordIndices.filter((idx) => !longestUnchangedTokens.has(wordTokens[idx].tokenIndex)).length;
+
+    const isStructurallyRestructuredSentence = sStructCount >= 2 || (sStructCount >= 1 && sChangedCount >= 2) || (sNonBlueCount >= 3 && sStructCount >= 1);
+
+    if (isStructurallyRestructuredSentence) {
+      sWordIndices.forEach((idx) => {
+        if (!longestUnchangedTokens.has(wordTokens[idx].tokenIndex)) {
+          if (!origSet.has(wordTokens[idx].clean) || expanded.has(idx) || FUNCTION_AND_SYNTAX_WORDS.has(wordTokens[idx].clean) || STRUCTURAL_MARKERS.has(wordTokens[idx].clean)) {
+            expanded.add(idx);
+          }
+        }
+      });
     }
   }
 
-  // F. Strict Anti-Fragmentation Rule: minimum 2 words in a structural group
+  // F. Bridge Pass: if structural tokens in same sentence are separated by up to 3 non-blue words, bridge them!
+  for (let gap = 1; gap <= 3; gap++) {
+    for (let i = 0; i < wordTokens.length - (gap + 1); i++) {
+      if (
+        expanded.has(i) &&
+        expanded.has(i + gap + 1) &&
+        modWordSentenceMeta[i]?.sentIndex === modWordSentenceMeta[i + gap + 1]?.sentIndex
+      ) {
+        let allNonBlue = true;
+        for (let g = 1; g <= gap; g++) {
+          if (longestUnchangedTokens.has(wordTokens[i + g].tokenIndex)) {
+            allNonBlue = false;
+            break;
+          }
+        }
+        if (allNonBlue) {
+          for (let g = 1; g <= gap; g++) {
+            expanded.add(i + g);
+          }
+        }
+      }
+    }
+  }
+
+  // G. Strict Anti-Fragmentation Rule: minimum 2 words in a structural group
   const finalStructuralTokenIndices = new Set<number>();
   for (let i = 0; i < wordTokens.length; i++) {
     if (expanded.has(i)) {

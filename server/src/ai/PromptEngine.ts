@@ -5,12 +5,7 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and syntactic restructuring while faithfully preserving the original formatting and meaning.
-CRITICAL STANDARD MODE RULES:
-1. PRESERVE STRUCTURAL FORMATTING & SECTION HEADERS: Retain paragraph breaks, line breaks, and all structured section labels (e.g. "Methodology:", "Results:", "Findings:", "Conclusions:") exactly where they appear. Do not flatten separate sections into a single merged paragraph.
-2. 100% PRESERVATION OF NUMBERS, DATES & STATISTICAL NOTATION: Every percentage (e.g. 78.8%), sample size (e.g. 860), date/academic year (e.g. 2016/2017), and statistical value/notation (e.g. p>0.05, p=0.000, r=0.45) must be preserved verbatim in their corresponding sections.
-3. ZERO EDITORIALIZING OR ADDED EMOTION: Do not inject subjective commentary, emotional framing, or personal judgments (e.g. do not add "reveals a disturbing reality"). Maintain the original author's objective voice.
-4. WITHIN-SENTENCE CLAUSE REARRANGEMENT: Rearrange clauses and invert sentence structures within each sentence/section (e.g. flip active/passive voice, front adverbial or prepositional phrases, invert list order) to break 4+ word consecutive sequences while maintaining strict 1:1 length parity.`,
+  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, shift between active and passive constructions where natural, break 4+ word consecutive source sequences to eliminate patchwriting, and maintain strict 1:1 length parity without adding unnecessary padding, inflated synonyms, or bloated paragraphs.`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
 - Reorganizing clause order and sentence structure for natural, effortless human cadence
