@@ -47,9 +47,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnSubmitRegister = document.getElementById('btn-submit-register') as HTMLButtonElement;
   const authMsg = document.getElementById('auth-msg') as HTMLDivElement;
 
-  // Elements: Server
+  // Elements: Settings & Server
   const serverStatusEl = document.getElementById('server-status');
-  const changeServerEl = document.getElementById('change-server');
+  const btnToggleSettings = document.getElementById('btn-toggle-settings');
+  const settingsDrawer = document.getElementById('settings-drawer');
+  const customServerInput = document.getElementById('custom-server-input') as HTMLInputElement;
+  const btnSaveServer = document.getElementById('btn-save-server');
+  const serverMsg = document.getElementById('server-msg');
 
   // Check session immediately on mount
   await checkSessionState();
@@ -260,26 +264,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Server URL display & change
+  // Server URL display & hidden settings toggle
   chrome.storage.local.get(['serverUrl'], (res) => {
     const currentUrl = res.serverUrl || DEFAULT_SERVER_URL;
+    if (customServerInput) customServerInput.value = currentUrl;
     if (serverStatusEl) {
-      serverStatusEl.innerText = currentUrl.includes('code.run') ? 'Northflank (Cloud)' : 'Localhost';
+      serverStatusEl.innerText = currentUrl.includes('code.run') ? 'Cloud Connected' : (currentUrl.includes('localhost') ? 'Localhost' : 'Custom Server');
     }
   });
 
-  changeServerEl?.addEventListener('click', () => {
-    chrome.storage.local.get(['serverUrl'], (res) => {
-      const current = res.serverUrl || DEFAULT_SERVER_URL;
-      const newUrl = prompt('Enter RewriteBot API Server URL:', current);
-      if (newUrl && newUrl.trim()) {
-        chrome.storage.local.set({ serverUrl: newUrl.trim() }, () => {
-          if (serverStatusEl) {
-            serverStatusEl.innerText = newUrl.includes('code.run') ? 'Northflank (Cloud)' : 'Custom';
-          }
-        });
-      }
-    });
+  btnToggleSettings?.addEventListener('click', () => {
+    settingsDrawer?.classList.toggle('open');
+  });
+
+  btnSaveServer?.addEventListener('click', () => {
+    const newUrl = customServerInput?.value?.trim();
+    if (newUrl) {
+      chrome.storage.local.set({ serverUrl: newUrl }, () => {
+        if (serverStatusEl) {
+          serverStatusEl.innerText = newUrl.includes('code.run') ? 'Cloud Connected' : (newUrl.includes('localhost') ? 'Localhost' : 'Custom Server');
+        }
+        if (serverMsg) {
+          serverMsg.innerText = 'Server URL updated!';
+          serverMsg.className = 'auth-msg success';
+          setTimeout(() => {
+            if (serverMsg) serverMsg.innerText = '';
+            settingsDrawer?.classList.remove('open');
+          }, 1200);
+        }
+      });
+    }
   });
 
   function setAuthMsg(msg: string, type: 'error' | 'success' | 'info') {

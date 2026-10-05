@@ -1,6 +1,6 @@
 {
   "name": "@rewritebot/extension",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "RewriteBot Chromium Extension — In-page AI Paraphraser, Humanizer & Thesaurus",
   "private": true,
   "type": "module",

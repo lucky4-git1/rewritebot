@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "RewriteBot — In-Page AI Paraphraser & Rewriter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Paraphrase, humanize, and defeat AI detectors directly inside Google Docs, Gmail, Outlook, Notion, and web inputs.",
   "permissions": [
     "storage",
