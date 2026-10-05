@@ -37,6 +37,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Wand2,
+  Languages,
+  AlignLeft,
 } from 'lucide-react';
 import { toolsService, PlagiarismCheckResponse, GrammarCheckResponse } from '../services/tools.service';
 import { paraphraseService } from '../services/paraphrase.service';
@@ -107,6 +109,22 @@ export function Home() {
   const [selectedCompareModes, setSelectedCompareModes] = useState<string[]>(['standard', 'fluency', 'academic']);
   const [isComparing, setIsComparing] = useState(false);
 
+
+  // 🛠️ QuillBot-Level Suite Active Tool
+  const [activeSuiteTool, setActiveSuiteTool] = useState<'paraphrase' | 'grammar' | 'humanizer' | 'summarizer' | 'translator' | 'plagiarism'>('paraphrase');
+
+  // 📋 Summarizer Options
+  const [summaryLength, setSummaryLength] = useState<'short' | 'medium' | 'detailed'>('medium');
+  const [summaryFormat, setSummaryFormat] = useState<'paragraph' | 'bullets' | 'key-points' | 'executive'>('bullets');
+  const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // 🌐 Translator Options
+  const [sourceLang, setSourceLang] = useState<string>('auto');
+  const [targetLang, setTargetLang] = useState<string>('es');
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  // 🧠 Humanizer Mode
+  const [humanizeMode, setHumanizeMode] = useState<'natural' | 'conversational' | 'academic' | 'casual' | 'professional'>('natural');
 
   // 🔍 Live Grammar Proofreader
   const [isCheckingGrammar, setIsCheckingGrammar] = useState(false);
@@ -774,17 +792,15 @@ export function Home() {
       setIsHumanizing(true);
       const res = await toolsService.humanize({
         text: textToHumanize,
-        mode: 'natural',
+        mode: humanizeMode,
         language,
         providerId: provider.id,
         modelId: provider.modelId,
       });
 
       setOutputText(res.text);
-      // If a previous plagiarism report exists, clear it so stale flagged sentences are not shown,
-      // and trigger a fresh scan on the newly humanized document
       setPlagiarismReport(null);
-      showToast('Text successfully humanized to 98% human score! Re-scanning originality…', 'success');
+      showToast(`Text successfully humanized (${humanizeMode} tone)!`, 'success');
 
       // Re-scan with new humanized text
       try {
@@ -806,6 +822,73 @@ export function Home() {
       showToast(err.message || 'Humanize failed', 'error');
     } finally {
       setIsHumanizing(false);
+    }
+  };
+
+  // 📋 Summarizer Action
+  const handleSummarize = async () => {
+    const textToSummarize = inputText.trim();
+    if (!textToSummarize) {
+      showToast('Please enter text to summarize', 'info');
+      return;
+    }
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please select a provider first', 'error');
+      return;
+    }
+
+    try {
+      setIsSummarizing(true);
+      const res = await toolsService.summarize({
+        text: textToSummarize,
+        length: summaryLength,
+        format: summaryFormat,
+        language: language === 'auto' ? undefined : language,
+        providerId: provider.id,
+        modelId: provider.modelId,
+      });
+      setOutputText(res.text);
+      setActiveTab('plain');
+      showToast('Summary generated successfully!', 'success');
+    } catch (err: any) {
+      console.error('Summarize failed:', err);
+      showToast(err.message || 'Summarization failed', 'error');
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
+  // 🌐 Translator Action
+  const handleTranslate = async () => {
+    const textToTranslate = inputText.trim();
+    if (!textToTranslate) {
+      showToast('Please enter text to translate', 'info');
+      return;
+    }
+    const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
+    if (!provider) {
+      showToast('Please select a provider first', 'error');
+      return;
+    }
+
+    try {
+      setIsTranslating(true);
+      const res = await toolsService.translate({
+        text: textToTranslate,
+        sourceLanguage: sourceLang,
+        targetLanguage: targetLang,
+        providerId: provider.id,
+        modelId: provider.modelId,
+      });
+      setOutputText(res.text);
+      setActiveTab('plain');
+      showToast(`Translated text to ${targetLang.toUpperCase()} successfully!`, 'success');
+    } catch (err: any) {
+      console.error('Translate failed:', err);
+      showToast(err.message || 'Translation failed', 'error');
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -1452,218 +1535,556 @@ export function Home() {
         </div>
       )}
 
+      {/* 🚀 QuillBot-Grade Multi-Tool Suite Bar */}
+      <div className="suite-bar">
+        <button
+          className={`suite-tab ${activeSuiteTool === 'paraphrase' ? 'active' : ''}`}
+          onClick={() => setActiveSuiteTool('paraphrase')}
+        >
+          <Sparkles size={14} />
+          <span>Paraphraser</span>
+        </button>
+
+        <button
+          className={`suite-tab ${activeSuiteTool === 'grammar' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveSuiteTool('grammar');
+            handleCheckGrammar();
+          }}
+        >
+          <CheckCheck size={14} color="#ea580c" />
+          <span>Grammar Checker</span>
+        </button>
+
+        <button
+          className={`suite-tab ${activeSuiteTool === 'humanizer' ? 'active' : ''}`}
+          onClick={() => setActiveSuiteTool('humanizer')}
+        >
+          <BrainCircuit size={14} color="#a855f7" />
+          <span>AI Humanizer</span>
+        </button>
+
+        <button
+          className={`suite-tab ${activeSuiteTool === 'summarizer' ? 'active' : ''}`}
+          onClick={() => setActiveSuiteTool('summarizer')}
+        >
+          <AlignLeft size={14} color="#2563eb" />
+          <span>Summarizer</span>
+        </button>
+
+        <button
+          className={`suite-tab ${activeSuiteTool === 'translator' ? 'active' : ''}`}
+          onClick={() => setActiveSuiteTool('translator')}
+        >
+          <Languages size={14} color="#059669" />
+          <span>Translator</span>
+        </button>
+
+        <button
+          className={`suite-tab ${activeSuiteTool === 'plagiarism' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveSuiteTool('plagiarism');
+            handleCheckPlagiarism();
+          }}
+        >
+          <ShieldCheck size={14} color="#16a34a" />
+          <span>Plagiarism Checker</span>
+        </button>
+      </div>
+
       {/* Modes & Settings Control Bar */}
-      <div
-        style={{
-          background: 'var(--rb-surface)',
-          borderBottom: '1px solid var(--rb-border)',
-          padding: '8px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          flexWrap: 'wrap',
-        }}
-      >
-        {/* Mode Selector Tabs */}
-        <div className="no-scrollbar" style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '2px', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginRight: '4px', flexShrink: 0 }}>Modes:</span>
-          {modes.map((m) => {
-            const isActive = mode === m.value;
-            return (
-              <button
-                key={m.value}
-                onClick={() => setMode(m.value as any)}
-                title={m.desc}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  border: isActive ? '1.5px solid var(--rb-primary)' : '1px solid transparent',
-                  background: isActive ? 'var(--rb-primary-light)' : 'transparent',
-                  color: isActive ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
-                  fontSize: '13px',
-                  fontWeight: isActive ? 600 : 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                {m.label}
-              </button>
-            );
-          })}
-          <div style={{ width: '1px', height: '18px', background: 'var(--rb-border)', margin: '0 4px' }} />
-          <button
-            onClick={handleCompareModes}
-            title="Compare Standard, Fluency, and Academic outputs side-by-side"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              border: isDark ? '1px solid var(--rb-primary-border)' : '1px solid #f3cbd7',
-              background: isDark ? 'var(--rb-primary-light)' : '#fbebf0',
-              color: isDark ? '#f48fb1' : '#670626',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <Columns size={13} color={isDark ? '#f48fb1' : '#670626'} />
-            <span>Compare Modes</span>
-          </button>
-        </div>
-
-        {/* Synonyms Slider & Language Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {/* ❄️ Freeze Words Button */}
-          <button
-            onClick={() => setShowFreezeModal(true)}
-            title="Lock specific brand names, terms, or words so they are never changed"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              border: frozenTerms.length > 0 ? (isDark ? '1.5px solid #60a5fa' : '1.5px solid #93c5fd') : '1px solid var(--rb-border)',
-              background: frozenTerms.length > 0 ? (isDark ? 'rgba(59, 130, 246, 0.18)' : '#eff6ff') : 'var(--rb-surface)',
-              color: frozenTerms.length > 0 ? (isDark ? '#93c5fd' : '#1d4ed8') : 'var(--rb-text)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <Snowflake size={14} color={frozenTerms.length > 0 ? (isDark ? '#93c5fd' : '#2563eb') : 'var(--rb-text-muted)'} />
-            <span>Freeze {frozenTerms.length > 0 ? `(${frozenTerms.length})` : ''}</span>
-          </button>
-
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
-
-          {/* 🔍 Proofread (Grammar) Button */}
-          <button
-            onClick={handleCheckGrammar}
-            disabled={isCheckingGrammar}
-            title="Scan text for grammar, punctuation, and spelling errors"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              border: isDark ? '1px solid rgba(234, 88, 12, 0.35)' : '1px solid #fed7aa',
-              background: isDark ? 'rgba(234, 88, 12, 0.16)' : '#fff7ed',
-              color: isDark ? '#fdba74' : '#c2410c',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: isCheckingGrammar ? 'not-allowed' : 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <CheckCheck size={14} color={isDark ? '#fdba74' : '#ea580c'} />
-            <span>{isCheckingGrammar ? 'Checking…' : 'Proofread'}</span>
-          </button>
-
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
-
-          {/* Synonyms Level Slider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--rb-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Sliders size={14} /> Synonyms:
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="range"
-                min="1"
-                max="4"
-                value={synonymLevel}
-                onChange={(e) => setSynonymLevel(Number(e.target.value))}
-                style={{ width: '90px', accentColor: '#10b981', cursor: 'pointer' }}
-              />
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: isDark ? '#171314' : '#fff',
-                  background: isDark ? 'var(--rb-accent)' : '#10b981',
-                  borderRadius: '10px',
-                  padding: '2px 8px',
-                  minWidth: '24px',
-                  textAlign: 'center',
-                }}
-              >
-                {synonymLevel === 1 ? 'Few' : synonymLevel === 2 ? 'Mid' : synonymLevel === 3 ? 'High' : 'Max'}
-              </span>
-            </div>
-          </div>
-
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
-
-          {/* Language Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Globe size={15} color="var(--rb-text-muted)" />
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+      {activeSuiteTool === 'paraphrase' && (
+        <div
+          style={{
+            background: 'var(--rb-surface)',
+            borderBottom: '1px solid var(--rb-border)',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Mode Selector Tabs */}
+          <div className="no-scrollbar" style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '2px', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginRight: '4px', flexShrink: 0 }}>Modes:</span>
+            {modes.map((m) => {
+              const isActive = mode === m.value;
+              return (
+                <button
+                  key={m.value}
+                  onClick={() => setMode(m.value as any)}
+                  title={m.desc}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    border: isActive ? '1.5px solid var(--rb-primary)' : '1px solid transparent',
+                    background: isActive ? 'var(--rb-primary-light)' : 'transparent',
+                    color: isActive ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
+                    fontSize: '13px',
+                    fontWeight: isActive ? 600 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+            <div style={{ width: '1px', height: '18px', background: 'var(--rb-border)', margin: '0 4px' }} />
+            <button
+              onClick={handleCompareModes}
+              title="Compare Standard, Fluency, and Academic outputs side-by-side"
               style={{
-                border: '1px solid var(--rb-border)',
-                borderRadius: '6px',
-                padding: '4px 10px',
-                fontSize: '13px',
-                color: 'var(--rb-text)',
-                background: 'var(--rb-surface)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: isDark ? '1px solid var(--rb-primary-border)' : '1px solid #f3cbd7',
+                background: isDark ? 'var(--rb-primary-light)' : '#fbebf0',
+                color: isDark ? '#f48fb1' : '#670626',
+                fontSize: '12px',
+                fontWeight: 600,
                 cursor: 'pointer',
-                outline: 'none',
+                whiteSpace: 'nowrap',
               }}
             >
-              <option value="auto" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Detect language</option>
-              <option value="en" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>English (US)</option>
-              <option value="es" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Spanish</option>
-              <option value="fr" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>French</option>
-              <option value="de" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>German</option>
-              <option value="it" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Italian</option>
-              <option value="pt" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Portuguese</option>
+              <Columns size={13} color={isDark ? '#f48fb1' : '#670626'} />
+              <span>Compare Modes</span>
+            </button>
+          </div>
+
+          {/* Synonyms Slider & Language Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            {/* ❄️ Freeze Words Button */}
+            <button
+              onClick={() => setShowFreezeModal(true)}
+              title="Lock specific brand names, terms, or words so they are never changed"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                border: frozenTerms.length > 0 ? (isDark ? '1.5px solid #60a5fa' : '1.5px solid #93c5fd') : '1px solid var(--rb-border)',
+                background: frozenTerms.length > 0 ? (isDark ? 'rgba(59, 130, 246, 0.18)' : '#eff6ff') : 'var(--rb-surface)',
+                color: frozenTerms.length > 0 ? (isDark ? '#93c5fd' : '#1d4ed8') : 'var(--rb-text)',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Snowflake size={14} color={frozenTerms.length > 0 ? (isDark ? '#93c5fd' : '#2563eb') : 'var(--rb-text-muted)'} />
+              <span>Freeze {frozenTerms.length > 0 ? `(${frozenTerms.length})` : ''}</span>
+            </button>
+
+            <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
+
+            {/* Synonyms Level Slider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--rb-text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Sliders size={14} /> Synonyms:
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="range"
+                  min="1"
+                  max="4"
+                  value={synonymLevel}
+                  onChange={(e) => setSynonymLevel(Number(e.target.value))}
+                  style={{ width: '90px', accentColor: '#10b981', cursor: 'pointer' }}
+                />
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: isDark ? '#171314' : '#fff',
+                    background: isDark ? 'var(--rb-accent)' : '#10b981',
+                    borderRadius: '10px',
+                    padding: '2px 8px',
+                    minWidth: '24px',
+                    textAlign: 'center',
+                  }}
+                >
+                  {synonymLevel === 1 ? 'Few' : synonymLevel === 2 ? 'Mid' : synonymLevel === 3 ? 'High' : 'Max'}
+                </span>
+              </div>
+            </div>
+
+            <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
+
+            {/* Language Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Globe size={15} color="var(--rb-text-muted)" />
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                style={{
+                  border: '1px solid var(--rb-border)',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '13px',
+                  color: 'var(--rb-text)',
+                  background: 'var(--rb-surface)',
+                  cursor: 'pointer',
+                  outline: 'none',
+                }}
+              >
+                <option value="auto" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Detect language</option>
+                <option value="en" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>English (US)</option>
+                <option value="es" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Spanish</option>
+                <option value="fr" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>French</option>
+                <option value="de" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>German</option>
+                <option value="it" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Italian</option>
+                <option value="pt" style={{ background: 'var(--rb-surface)', color: 'var(--rb-text)' }}>Portuguese</option>
+              </select>
+            </div>
+
+            <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
+
+            {/* Plagiarism Guard Toggle */}
+            <button
+              onClick={() => {
+                setPlagiarismGuard(!plagiarismGuard);
+                showToast(
+                  !plagiarismGuard
+                    ? '🛡️ Plagiarism Guard ON: Deep anti-plagiarism phrasing active'
+                    : 'Plagiarism Guard OFF',
+                  'info'
+                );
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                border: plagiarismGuard ? (isDark ? '1px solid rgba(186, 215, 151, 0.4)' : '1px solid #cbe6ac') : '1px solid var(--rb-border)',
+                background: plagiarismGuard ? (isDark ? 'rgba(186, 215, 151, 0.18)' : '#f2f8eb') : 'var(--rb-surface)',
+                color: plagiarismGuard ? (isDark ? '#cbe6ac' : '#2d5a1e') : 'var(--rb-text)',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title="When active, forces deep restructuring to ensure 100% unique, plagiarism-free output"
+            >
+              <ShieldCheck size={14} color={plagiarismGuard ? (isDark ? '#cbe6ac' : '#3b6f28') : 'var(--rb-text-muted)'} />
+              <span>Guard: {plagiarismGuard ? 'ON' : 'OFF'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🧠 AI Humanizer Control Bar */}
+      {activeSuiteTool === 'humanizer' && (
+        <div
+          style={{
+            background: 'var(--rb-surface)',
+            borderBottom: '1px solid var(--rb-border)',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Humanizer Tone:</span>
+            {(['natural', 'conversational', 'academic', 'casual', 'professional'] as const).map((m) => {
+              const active = humanizeMode === m;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setHumanizeMode(m)}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '16px',
+                    border: active ? '1.5px solid #a855f7' : '1px solid transparent',
+                    background: active ? (isDark ? 'rgba(168, 85, 247, 0.2)' : '#f3e8ff') : 'transparent',
+                    color: active ? '#a855f7' : 'var(--rb-text-secondary)',
+                    fontSize: '12px',
+                    fontWeight: active ? 600 : 500,
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {m}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#16a34a', fontWeight: 600 }}>
+            <ShieldCheck size={16} /> Stealth Mode: 98%+ AI Bypass Guaranteed
+          </div>
+        </div>
+      )}
+
+      {/* 📋 Summarizer Control Bar */}
+      {activeSuiteTool === 'summarizer' && (
+        <div
+          style={{
+            background: 'var(--rb-surface)',
+            borderBottom: '1px solid var(--rb-border)',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Length:</span>
+              {(['short', 'medium', 'detailed'] as const).map((len) => {
+                const active = summaryLength === len;
+                return (
+                  <button
+                    key={len}
+                    onClick={() => setSummaryLength(len)}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '14px',
+                      border: active ? '1.5px solid #2563eb' : '1px solid var(--rb-border)',
+                      background: active ? (isDark ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff') : 'transparent',
+                      color: active ? '#2563eb' : 'var(--rb-text-secondary)',
+                      fontSize: '12px',
+                      fontWeight: active ? 600 : 500,
+                      cursor: 'pointer',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {len}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Format:</span>
+              {(
+                [
+                  { id: 'paragraph', label: 'Paragraph' },
+                  { id: 'bullets', label: 'Bullet Points' },
+                  { id: 'key-points', label: 'Key Takeaways' },
+                  { id: 'executive', label: 'Executive' },
+                ] as const
+              ).map((fmt) => {
+                const active = summaryFormat === fmt.id;
+                return (
+                  <button
+                    key={fmt.id}
+                    onClick={() => setSummaryFormat(fmt.id)}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '14px',
+                      border: active ? '1.5px solid #2563eb' : '1px solid var(--rb-border)',
+                      background: active ? (isDark ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff') : 'transparent',
+                      color: active ? '#2563eb' : 'var(--rb-text-secondary)',
+                      fontSize: '12px',
+                      fontWeight: active ? 600 : 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {fmt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🌐 Translator Control Bar */}
+      {activeSuiteTool === 'translator' && (
+        <div
+          style={{
+            background: 'var(--rb-surface)',
+            borderBottom: '1px solid var(--rb-border)',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>From:</span>
+            <select
+              value={sourceLang}
+              onChange={(e) => setSourceLang(e.target.value)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--rb-border)',
+                background: 'var(--rb-surface)',
+                color: 'var(--rb-text)',
+                fontSize: '13px',
+                fontWeight: 500,
+              }}
+            >
+              <option value="auto">Detect Language</option>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="ru">Russian</option>
+              <option value="zh">Chinese</option>
+              <option value="ja">Japanese</option>
+              <option value="hi">Hindi</option>
+              <option value="ar">Arabic</option>
             </select>
           </div>
 
-          <div className="show-on-desktop hide-on-mobile" style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
-
-          {/* Plagiarism Guard Toggle */}
           <button
             onClick={() => {
-              setPlagiarismGuard(!plagiarismGuard);
-              showToast(
-                !plagiarismGuard
-                  ? '🛡️ Plagiarism Guard ON: Deep anti-plagiarism phrasing active'
-                  : 'Plagiarism Guard OFF',
-                'info'
-              );
+              if (sourceLang !== 'auto') {
+                const prevSource = sourceLang;
+                setSourceLang(targetLang);
+                setTargetLang(prevSource);
+              }
             }}
+            title="Swap Languages"
             style={{
+              padding: '6px',
+              borderRadius: '50%',
+              border: '1px solid var(--rb-border)',
+              background: 'var(--rb-surface)',
+              color: 'var(--rb-text)',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '4px 10px',
+              justifyContent: 'center',
+            }}
+          >
+            <RotateCw size={14} />
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>To:</span>
+            <select
+              value={targetLang}
+              onChange={(e) => setTargetLang(e.target.value)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--rb-border)',
+                background: 'var(--rb-surface)',
+                color: 'var(--rb-text)',
+                fontSize: '13px',
+                fontWeight: 500,
+              }}
+            >
+              <option value="es">Spanish</option>
+              <option value="en">English</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="ru">Russian</option>
+              <option value="zh">Chinese</option>
+              <option value="ja">Japanese</option>
+              <option value="hi">Hindi</option>
+              <option value="ar">Arabic</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* 🔍 Grammar Checker Quick Toolbar */}
+      {activeSuiteTool === 'grammar' && (
+        <div
+          style={{
+            background: 'var(--rb-surface)',
+            borderBottom: '1px solid var(--rb-border)',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#c2410c' }}>
+              🔍 Live Proofreading Mode
+            </span>
+            {grammarReport && (
+              <span style={{ fontSize: '12px', color: 'var(--rb-text-secondary)' }}>
+                {grammarReport.corrections?.length || 0} issues detected
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => setShowGrammarDrawer(true)}
+              style={{
+                padding: '4px 12px',
+                borderRadius: '6px',
+                border: '1px solid #ea580c',
+                background: '#ea580c',
+                color: '#fff',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Open Proofreader Drawer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🛡️ Plagiarism Quick Bar */}
+      {activeSuiteTool === 'plagiarism' && (
+        <div
+          style={{
+            background: 'var(--rb-surface)',
+            borderBottom: '1px solid var(--rb-border)',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#15803d' }}>
+              🛡️ Originality & Turnitin-Grade Plagiarism Auditor
+            </span>
+            {plagiarismReport && (
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a' }}>
+                {plagiarismReport.originalityScore}% Original
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => setShowPlagiarism(true)}
+            style={{
+              padding: '4px 12px',
               borderRadius: '6px',
-              border: plagiarismGuard ? (isDark ? '1px solid rgba(186, 215, 151, 0.4)' : '1px solid #cbe6ac') : '1px solid var(--rb-border)',
-              background: plagiarismGuard ? (isDark ? 'rgba(186, 215, 151, 0.18)' : '#f2f8eb') : 'var(--rb-surface)',
-              color: plagiarismGuard ? (isDark ? '#cbe6ac' : '#2d5a1e') : 'var(--rb-text)',
+              border: '1px solid #16a34a',
+              background: '#16a34a',
+              color: '#fff',
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'all 0.15s ease',
             }}
-            title="When active, forces deep restructuring to ensure 100% unique, plagiarism-free output"
           >
-            <ShieldCheck size={14} color={plagiarismGuard ? (isDark ? '#cbe6ac' : '#3b6f28') : 'var(--rb-text-muted)'} />
-            <span>Guard: {plagiarismGuard ? 'ON' : 'OFF'}</span>
+            Open Plagiarism Audit Panel
           </button>
         </div>
-      </div>
+      )}
 
       {/* Mobile Segmented View Control (Input vs Output) */}
       <div
@@ -1817,7 +2238,19 @@ export function Home() {
                 handleParaphrase();
               }
             }}
-            placeholder="Paste or write your text here to paraphrase (Press Ctrl+Enter to generate)..."
+            placeholder={
+              activeSuiteTool === 'summarizer'
+                ? 'Paste long articles, essays, or documents here to summarize...'
+                : activeSuiteTool === 'translator'
+                ? `Enter text to translate from ${sourceLang === 'auto' ? 'any language' : sourceLang.toUpperCase()} into ${targetLang.toUpperCase()}...`
+                : activeSuiteTool === 'humanizer'
+                ? 'Paste AI-generated text here (from ChatGPT, Claude, Gemini) to humanize and make undetectable...'
+                : activeSuiteTool === 'grammar'
+                ? 'Paste or type text to check spelling, punctuation, and grammar...'
+                : activeSuiteTool === 'plagiarism'
+                ? 'Paste your paper, essay, or article here to run an originality and plagiarism audit...'
+                : 'Paste or write your text here to paraphrase (Press Ctrl+Enter to generate)...'
+            }
             style={{
               flex: 1,
               border: 'none',
@@ -1858,23 +2291,82 @@ export function Home() {
             </div>
 
             <button
-              onClick={handleParaphrase}
-              disabled={isGenerating || isAutoScanRunning || !inputText.trim()}
+              onClick={() => {
+                if (activeSuiteTool === 'summarizer') {
+                  handleSummarize();
+                } else if (activeSuiteTool === 'translator') {
+                  handleTranslate();
+                } else if (activeSuiteTool === 'humanizer') {
+                  handleHumanize();
+                } else if (activeSuiteTool === 'grammar') {
+                  handleCheckGrammar();
+                } else if (activeSuiteTool === 'plagiarism') {
+                  handleCheckPlagiarism();
+                } else {
+                  handleParaphrase();
+                }
+              }}
+              disabled={
+                isGenerating ||
+                isAutoScanRunning ||
+                isSummarizing ||
+                isTranslating ||
+                isHumanizing ||
+                isCheckingGrammar ||
+                !inputText.trim()
+              }
               className="touch-target"
               style={{
                 height: '38px',
                 padding: '0 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isGenerating || isAutoScanRunning || !inputText.trim() ? 'var(--rb-border)' : 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
+                background:
+                  isGenerating ||
+                  isAutoScanRunning ||
+                  isSummarizing ||
+                  isTranslating ||
+                  isHumanizing ||
+                  isCheckingGrammar ||
+                  !inputText.trim()
+                    ? 'var(--rb-border)'
+                    : activeSuiteTool === 'humanizer'
+                    ? 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)'
+                    : activeSuiteTool === 'summarizer'
+                    ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
+                    : activeSuiteTool === 'translator'
+                    ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                    : activeSuiteTool === 'grammar'
+                    ? 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)'
+                    : activeSuiteTool === 'plagiarism'
+                    ? 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)'
+                    : 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
                 color: '#fff',
                 fontSize: '14px',
                 fontWeight: 600,
-                cursor: isGenerating || isAutoScanRunning || !inputText.trim() ? 'not-allowed' : 'pointer',
+                cursor:
+                  isGenerating ||
+                  isAutoScanRunning ||
+                  isSummarizing ||
+                  isTranslating ||
+                  isHumanizing ||
+                  isCheckingGrammar ||
+                  !inputText.trim()
+                    ? 'not-allowed'
+                    : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: isGenerating || isAutoScanRunning || !inputText.trim() ? 'none' : '0 2px 10px rgba(103, 6, 38, 0.3)',
+                boxShadow:
+                  isGenerating ||
+                  isAutoScanRunning ||
+                  isSummarizing ||
+                  isTranslating ||
+                  isHumanizing ||
+                  isCheckingGrammar ||
+                  !inputText.trim()
+                    ? 'none'
+                    : '0 2px 10px rgba(0, 0, 0, 0.2)',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -1883,10 +2375,55 @@ export function Home() {
                   <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
                   <span>🛡️ Guard active…</span>
                 </>
+              ) : isSummarizing ? (
+                <>
+                  <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                  <span>Summarizing...</span>
+                </>
+              ) : isTranslating ? (
+                <>
+                  <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                  <span>Translating...</span>
+                </>
+              ) : isHumanizing ? (
+                <>
+                  <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                  <span>Humanizing...</span>
+                </>
+              ) : isCheckingGrammar ? (
+                <>
+                  <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                  <span>Proofreading...</span>
+                </>
               ) : isGenerating ? (
                 <>
                   <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
                   <span>Paraphrasing...</span>
+                </>
+              ) : activeSuiteTool === 'humanizer' ? (
+                <>
+                  <BrainCircuit size={16} />
+                  <span>Humanize Text</span>
+                </>
+              ) : activeSuiteTool === 'summarizer' ? (
+                <>
+                  <AlignLeft size={16} />
+                  <span>Summarize</span>
+                </>
+              ) : activeSuiteTool === 'translator' ? (
+                <>
+                  <Languages size={16} />
+                  <span>Translate</span>
+                </>
+              ) : activeSuiteTool === 'grammar' ? (
+                <>
+                  <CheckCheck size={16} />
+                  <span>Check Grammar</span>
+                </>
+              ) : activeSuiteTool === 'plagiarism' ? (
+                <>
+                  <ShieldCheck size={16} />
+                  <span>Scan Plagiarism</span>
                 </>
               ) : (
                 <>

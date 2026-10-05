@@ -1008,14 +1008,41 @@ html {
   width: 100%;
 }
 
-/* Editorial Navbar Links: Hide under 960px to prevent header collisions */
-.editorial-nav-links {
-  display: none !important;
+/* QuillBot-style Suite Bar */
+.suite-bar {
+  background: var(--rb-surface);
+  border-bottom: 1px solid var(--rb-border);
+  padding: 4px 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
-@media (min-width: 960px) {
-  .editorial-nav-links {
-    display: flex !important;
-  }
+.suite-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rb-text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.suite-tab:hover {
+  background: var(--rb-surface-cream);
+  color: var(--rb-primary);
+}
+.suite-tab.active {
+  background: var(--rb-primary-light);
+  color: var(--rb-primary);
+  border-color: var(--rb-primary-border);
 }
 
 
