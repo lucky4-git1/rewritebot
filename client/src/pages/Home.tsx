@@ -726,9 +726,13 @@ export function Home() {
 
   // 🔍 Live Grammar Proofreader
   const handleCheckGrammar = async () => {
-    const textToCheck = outputText.trim() || inputText.trim();
+    // In Grammar Checker mode, prioritize input text
+    const textToCheck = activeSuiteTool === 'grammar'
+      ? (inputText.trim() || outputText.trim())
+      : (outputText.trim() || inputText.trim());
+
     if (!textToCheck) {
-      showToast('Enter text to proofread for grammar & spelling', 'info');
+      showToast('Enter text to check for grammar, spelling & punctuation', 'info');
       return;
     }
     const provider = providers.find((p) => p.id === selectedProviderId) || providers[0];
@@ -739,7 +743,6 @@ export function Home() {
 
     try {
       setIsCheckingGrammar(true);
-      setShowGrammarDrawer(true);
       const res = await toolsService.checkGrammar({
         text: textToCheck,
         language: language === 'auto' ? 'en' : language,
@@ -747,7 +750,24 @@ export function Home() {
         modelId: provider.modelId,
       });
       setGrammarReport(res);
-      showToast(`Proofreading complete! Found ${res.corrections?.length || 0} suggestion(s)`, 'success');
+
+      if (activeSuiteTool === 'grammar') {
+        // Automatically put corrected text into Output pane and set tab to diff
+        if (res.correctedText) {
+          setOutputText(res.correctedText);
+          setActiveTab('diff');
+        }
+        const count = res.corrections?.length || 0;
+        showToast(
+          count > 0
+            ? `Found ${count} grammar issue(s). Fixed text reflected in Output!`
+            : '✓ Clean text! Zero grammar or spelling errors found.',
+          count > 0 ? 'success' : 'info'
+        );
+      } else {
+        setShowGrammarDrawer(true);
+        showToast(`Proofreading complete! Found ${res.corrections?.length || 0} suggestion(s)`, 'success');
+      }
     } catch (err: any) {
       console.error('Grammar check failed:', err);
       showToast(err.message || 'Grammar check failed', 'error');
@@ -760,16 +780,13 @@ export function Home() {
     if (!grammarReport || !grammarReport.correctedText) return;
     try {
       setIsFixingGrammar(true);
-      if (outputText) {
-        setOutputText(grammarReport.correctedText);
-      } else {
-        setInputText(grammarReport.correctedText);
-      }
+      setOutputText(grammarReport.correctedText);
+      setActiveTab('diff');
       setGrammarReport({
         ...grammarReport,
         corrections: [],
       });
-      showToast('Applied all grammar and spelling corrections!', 'success');
+      showToast('Applied all grammar and spelling corrections to Output!', 'success');
     } finally {
       setIsFixingGrammar(false);
     }
@@ -1547,10 +1564,7 @@ export function Home() {
 
         <button
           className={`suite-tab ${activeSuiteTool === 'grammar' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveSuiteTool('grammar');
-            handleCheckGrammar();
-          }}
+          onClick={() => setActiveSuiteTool('grammar')}
         >
           <CheckCheck size={14} color="#ea580c" />
           <span>Grammar Checker</span>
@@ -2478,7 +2492,7 @@ export function Home() {
                 <ArrowLeft size={13} /> Edit
               </button>
               <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--rb-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>
-                Paraphrase
+                Output
               </span>
               {outputText && (
                 <>
@@ -2975,10 +2989,26 @@ export function Home() {
                   <FileText size={28} />
                 </div>
                 <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--rb-text)', marginBottom: '6px' }}>
-                  Your Paraphrased Text Will Appear Here
+                  {activeSuiteTool === 'grammar'
+                    ? 'Corrected Output Will Appear Here'
+                    : activeSuiteTool === 'summarizer'
+                    ? 'Summary Will Appear Here'
+                    : activeSuiteTool === 'translator'
+                    ? 'Translated Output Will Appear Here'
+                    : activeSuiteTool === 'humanizer'
+                    ? 'Humanized Output Will Appear Here'
+                    : 'Output Will Appear Here'}
                 </div>
-                <p style={{ fontSize: '13px', maxWidth: '320px', lineHeight: 1.5, margin: 0, color: 'var(--rb-text-muted)' }}>
-                  Enter your text on the left, pick a mode and synonym level, and click Paraphrase.
+                <p style={{ fontSize: '13px', maxWidth: '340px', lineHeight: 1.5, margin: 0, color: 'var(--rb-text-muted)' }}>
+                  {activeSuiteTool === 'grammar'
+                    ? 'Enter text on the left and click Check Grammar to proofread and generate fixes.'
+                    : activeSuiteTool === 'summarizer'
+                    ? 'Paste your text on the left and click Summarize.'
+                    : activeSuiteTool === 'translator'
+                    ? 'Type or paste text on the left and click Translate.'
+                    : activeSuiteTool === 'humanizer'
+                    ? 'Paste your AI text on the left and click Humanize Text.'
+                    : 'Enter your text on the left, pick a mode and synonym level, and click Paraphrase.'}
                 </p>
               </div>
             )}
