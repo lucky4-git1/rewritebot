@@ -201,8 +201,23 @@ const MULTI_WORD_STRUCTURAL_PHRASES = [
   'is characterized by', 'are characterized by', 'was characterized by', 'were characterized by',
   'has been', 'have been', 'had been', 'was being', 'were being',
   'is being', 'are being', 'will be', 'would be', 'could be', 'should be',
-  'serves as', 'served as', 'acts as', 'acted as', 'functions as'
+  'serves as', 'served as', 'acts as', 'acted as', 'functions as',
+  'at the start of', 'during the', 'prior to', 'following the', 'along with',
+  'in addition to', 'was conducted', 'were conducted', 'was performed', 'were performed',
+  'was documented', 'were documented', 'was recorded', 'were recorded',
+  'took part in', 'taking part in', 'taken part in', 'participated in',
+  'how common', 'relationship to', 'relationship between', 'sources of knowledge',
+  'conducted with', 'performed on', 'aimed at', 'associated with',
+  'in relation to', 'in an effort to', 'with the goal of', 'designed to', 'intended to'
 ];
+
+const FUNCTION_AND_SYNTAX_WORDS = new Set([
+  'in', 'on', 'at', 'to', 'for', 'with', 'by', 'from', 'of', 'into', 'onto', 'upon',
+  'about', 'through', 'throughout', 'between', 'among', 'during', 'under', 'over', 'as',
+  'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+  'the', 'a', 'an', 'this', 'that', 'these', 'those', 'which', 'who', 'whom', 'whose',
+  'and', 'or', 'nor', 'but', 'so', 'while', 'where', 'when', 'how', 'its', 'their', 'our'
+]);
 
 /**
  * Tokenize text into words and punctuation with QuillBot-style 3-color diffing:
@@ -231,6 +246,10 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     origWordPositions.set(w, list);
   });
 
+  // Extract sentences from original text
+  const origSentences = original.split(/(?<=[.!?])\s+|\n+/).filter((s) => s.trim().length > 0);
+  const origSentenceWordLists = origSentences.map((s) => s.toLowerCase().match(/\b[\w'-]+\b/g) || []);
+
   // Split modified text keeping whitespace and punctuation
   const tokens = modified.split(/(\s+|[^\w\s'-]+)/);
 
@@ -252,15 +271,86 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     }
   });
 
-  // 1. Identify Longest Unchanged Sequences (🔵 Blue)
-  // Continuous sequences of 2 or more words that appear identically in the original
-  const longestUnchangedTokens = new Set<number>();
+  // Map each modified word to its sentence index and position
+  let currentSentenceIndex = 0;
+  let runningSentenceWords: number[] = [];
+  interface SentenceMeta {
+    sentIndex: number;
+    posInSent: number;
+    sentLen: number;
+  }
+  const modWordSentenceMeta: SentenceMeta[] = [];
 
   for (let i = 0; i < wordTokens.length; i++) {
-    for (let len = 6; len >= 2; len--) {
+    runningSentenceWords.push(i);
+    const nextTokenIdx = wordTokens[i].tokenIndex + 1;
+    const isEndOfSentence = nextTokenIdx < tokens.length && /[.!?\n]/.test(tokens[nextTokenIdx]);
+
+    if (isEndOfSentence || i === wordTokens.length - 1) {
+      const len = runningSentenceWords.length;
+      runningSentenceWords.forEach((wIdx, order) => {
+        modWordSentenceMeta[wIdx] = {
+          sentIndex: currentSentenceIndex,
+          posInSent: len > 1 ? order / (len - 1) : 0,
+          sentLen: len,
+        };
+      });
+      runningSentenceWords = [];
+      currentSentenceIndex++;
+    }
+  }
+
+  // Find best matching original sentence for each modified sentence
+  const bestOrigSentForModSent = new Map<number, number>();
+  for (let sIdx = 0; sIdx < currentSentenceIndex; sIdx++) {
+    const modSentWords = wordTokens
+      .filter((_, idx) => modWordSentenceMeta[idx]?.sentIndex === sIdx)
+      .map((w) => w.clean);
+
+    let bestScore = -1;
+    let bestOrigIdx = -1;
+    origSentenceWordLists.forEach((origList, oIdx) => {
+      let overlap = 0;
+      origList.forEach((w) => {
+        if (modSentWords.includes(w)) overlap++;
+      });
+      const score = overlap / Math.max(modSentWords.length, origList.length, 1);
+      if (score > bestScore && overlap >= 2) {
+        bestScore = score;
+        bestOrigIdx = oIdx;
+      }
+    });
+    if (bestOrigIdx !== -1) {
+      bestOrigSentForModSent.set(sIdx, bestOrigIdx);
+    }
+  }
+
+  // 1. Identify Longest Unchanged Sequences (🔵 Blue)
+  // Continuous sequences of 2 or more words that appear identically in the original.
+  // Pure function/stop-word pairs (e.g. "during the", "in the", "of the") only match within local sentence context.
+  const longestUnchangedTokens = new Set<number>();
+  for (let i = 0; i < wordTokens.length; i++) {
+    for (let len = 8; len >= 2; len--) {
       if (i + len <= wordTokens.length) {
         const slice = wordTokens.slice(i, i + len);
         const phrase = ' ' + slice.map((w) => w.clean).join(' ') + ' ';
+
+        const isPureStopWordPair = len === 2 && slice.every((w) => FUNCTION_AND_SYNTAX_WORDS.has(w.clean));
+        if (isPureStopWordPair) {
+          const meta = modWordSentenceMeta[i];
+          if (meta && bestOrigSentForModSent.has(meta.sentIndex)) {
+            const origSentIdx = bestOrigSentForModSent.get(meta.sentIndex)!;
+            const origSentStr = ' ' + origSentenceWordLists[origSentIdx].join(' ') + ' ';
+            if (origSentStr.includes(phrase)) {
+              for (let k = 0; k < len; k++) {
+                longestUnchangedTokens.add(wordTokens[i + k].tokenIndex);
+              }
+              break;
+            }
+          }
+          continue;
+        }
+
         if (origWordString.includes(phrase)) {
           for (let k = 0; k < len; k++) {
             longestUnchangedTokens.add(wordTokens[i + k].tokenIndex);
@@ -272,10 +362,9 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
   }
 
   // 2. Identify Clause-Level Structural Shifts (🔴 Red)
-  // Candidate structural tokens: must form multi-token cohesive clauses/phrases
   const candidateStructuralWordIndices = new Set<number>();
 
-  // A. Multi-word phrase matches (e.g. "in order to", "has been", "leading to", "which now")
+  // A. Multi-word phrase patterns
   MULTI_WORD_STRUCTURAL_PHRASES.forEach((pattern) => {
     const patternWords = pattern.split(' ');
     const pLen = patternWords.length;
@@ -288,7 +377,6 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
         }
       }
       if (matches) {
-        // Only mark if NOT already part of a blue (longest unchanged) sequence
         for (let k = 0; k < pLen; k++) {
           if (!longestUnchangedTokens.has(wordTokens[i + k].tokenIndex)) {
             candidateStructuralWordIndices.add(i + k);
@@ -298,60 +386,61 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     }
   });
 
-  // B. Relocated Clause Detection (Significant word displacement across clauses)
-  // When words moved >= 28% across document flow (e.g. clause inversion / voice change)
-  if (wordTokens.length > 3 && origWords.length > 3) {
-    const relocatedIndices: number[] = [];
-    for (let i = 0; i < wordTokens.length; i++) {
-      const wt = wordTokens[i];
-      if (longestUnchangedTokens.has(wt.tokenIndex)) continue;
+  // B. Relocated Clause Detection (Intra-sentence & inter-sentence displacement)
+  for (let i = 0; i < wordTokens.length; i++) {
+    const wt = wordTokens[i];
+    if (longestUnchangedTokens.has(wt.tokenIndex)) continue;
 
-      if (origSet.has(wt.clean)) {
-        const currentRatio = wt.wordOrderIndex / (wordTokens.length - 1);
-        const originalPositions = origWordPositions.get(wt.clean) || [];
-        const minDistance = Math.min(...originalPositions.map((pos) => Math.abs(pos - currentRatio)));
-        if (minDistance >= 0.28) {
-          relocatedIndices.push(i);
+    const meta = modWordSentenceMeta[i];
+    let isRelocated = false;
+
+    // Check sentence-local displacement (e.g. clause fronting / inversion within sentence)
+    if (meta && bestOrigSentForModSent.has(meta.sentIndex)) {
+      const origSentIdx = bestOrigSentForModSent.get(meta.sentIndex)!;
+      const origSentList = origSentenceWordLists[origSentIdx];
+      const origLocalPositions: number[] = [];
+      origSentList.forEach((w, idx) => {
+        if (w === wt.clean) {
+          origLocalPositions.push(origSentList.length > 1 ? idx / (origSentList.length - 1) : 0);
+        }
+      });
+      if (origLocalPositions.length > 0) {
+        const minLocalDist = Math.min(...origLocalPositions.map((pos) => Math.abs(pos - meta.posInSent)));
+        if (minLocalDist >= 0.18 && meta.sentLen >= 5) {
+          isRelocated = true;
         }
       }
     }
 
-    // Only clusters of relocated words (>= 2 relocated words or relocated word adjacent to structural marker)
-    relocatedIndices.forEach((idx) => {
-      const hasAdjacentRelocated =
-        relocatedIndices.includes(idx - 1) ||
-        relocatedIndices.includes(idx + 1) ||
-        (idx > 0 && STRUCTURAL_MARKERS.has(wordTokens[idx - 1].clean)) ||
-        (idx < wordTokens.length - 1 && STRUCTURAL_MARKERS.has(wordTokens[idx + 1].clean));
-
-      if (hasAdjacentRelocated) {
-        candidateStructuralWordIndices.add(idx);
-        // Include the adjacent structural marker in the phrase
-        if (idx > 0 && STRUCTURAL_MARKERS.has(wordTokens[idx - 1].clean)) {
-          candidateStructuralWordIndices.add(idx - 1);
-        }
-        if (idx < wordTokens.length - 1 && STRUCTURAL_MARKERS.has(wordTokens[idx + 1].clean)) {
-          candidateStructuralWordIndices.add(idx + 1);
-        }
+    // Also check global document displacement
+    if (!isRelocated && origSet.has(wt.clean) && wordTokens.length > 4) {
+      const currentGlobalRatio = wt.wordOrderIndex / (wordTokens.length - 1);
+      const originalPositions = origWordPositions.get(wt.clean) || [];
+      const minGlobalDistance = Math.min(...originalPositions.map((pos) => Math.abs(pos - currentGlobalRatio)));
+      if (minGlobalDistance >= 0.22) {
+        isRelocated = true;
       }
-    });
+    }
+
+    if (isRelocated) {
+      candidateStructuralWordIndices.add(i);
+    }
   }
 
-  // C. Passive Voice Predicate Restructuring ([auxiliary] [adverb]? [participle] [by]?)
-  // e.g. "was reshaped by", "has been fundamentally altered by", "is transformed into"
+  // C. Passive Voice & Copular Predicate Restructuring ([auxiliary] [adverb]? [participle] [agent prep]?)
   const AUXILIARIES = new Set(['is', 'are', 'was', 'were', 'been', 'being', 'has', 'have', 'had', 'be', 'become']);
   for (let i = 0; i < wordTokens.length - 1; i++) {
     const current = wordTokens[i].clean;
     if (AUXILIARIES.has(current) && !longestUnchangedTokens.has(wordTokens[i].tokenIndex)) {
-      // Check next 1-3 words for past participle / passive construction
       for (let span = 1; span <= 3 && i + span < wordTokens.length; span++) {
         const nextWord = wordTokens[i + span].clean;
-        const isParticiple = /ed$|en$|wn$|pt$|ld$|ne$/.test(nextWord) || ['made', 'built', 'drawn', 'sent', 'set', 'run', 'spent'].includes(nextWord);
+        const isParticiple =
+          /ed$|en$|wn$|pt$|ld$|ne$/.test(nextWord) ||
+          ['made', 'built', 'drawn', 'sent', 'set', 'run', 'spent', 'conducted', 'performed', 'surveyed', 'recorded'].includes(nextWord);
         if (isParticiple) {
-          // Check if followed by agent preposition ('by', 'via', 'through')
           const hasAgentPrep =
             i + span + 1 < wordTokens.length &&
-            ['by', 'via', 'through'].includes(wordTokens[i + span + 1].clean);
+            ['by', 'via', 'through', 'with', 'in', 'on', 'from', 'among'].includes(wordTokens[i + span + 1].clean);
           const endSpan = hasAgentPrep ? span + 1 : span;
 
           for (let k = 0; k <= endSpan; k++) {
@@ -365,28 +454,61 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     }
   }
 
-  // 3. Clause Smoothing & Bridge Pass:
-  // If structural tokens are separated by only 1 changed word (e.g. "has been" + "profoundly" + "reshaped by"),
-  // merge the entire clause into a single unified structural change
+  // D. Expand structural clusters to absorb adjacent grammatical binders / prepositions
+  const expanded = new Set(candidateStructuralWordIndices);
+  candidateStructuralWordIndices.forEach((idx) => {
+    // Look backward
+    if (idx > 0 && !longestUnchangedTokens.has(wordTokens[idx - 1].tokenIndex)) {
+      if (FUNCTION_AND_SYNTAX_WORDS.has(wordTokens[idx - 1].clean) || STRUCTURAL_MARKERS.has(wordTokens[idx - 1].clean)) {
+        expanded.add(idx - 1);
+        if (idx > 1 && !longestUnchangedTokens.has(wordTokens[idx - 2].tokenIndex)) {
+          if (FUNCTION_AND_SYNTAX_WORDS.has(wordTokens[idx - 2].clean)) {
+            expanded.add(idx - 2);
+          }
+        }
+      }
+    }
+    // Look forward
+    if (idx < wordTokens.length - 1 && !longestUnchangedTokens.has(wordTokens[idx + 1].tokenIndex)) {
+      if (FUNCTION_AND_SYNTAX_WORDS.has(wordTokens[idx + 1].clean) || STRUCTURAL_MARKERS.has(wordTokens[idx + 1].clean)) {
+        expanded.add(idx + 1);
+        if (idx < wordTokens.length - 2 && !longestUnchangedTokens.has(wordTokens[idx + 2].tokenIndex)) {
+          if (FUNCTION_AND_SYNTAX_WORDS.has(wordTokens[idx + 2].clean)) {
+            expanded.add(idx + 2);
+          }
+        }
+      }
+    }
+  });
+
+  // E. Bridge Pass: if structural tokens in same sentence are separated by 1 or 2 changed words, merge them
   for (let i = 0; i < wordTokens.length - 2; i++) {
     if (
-      candidateStructuralWordIndices.has(i) &&
-      candidateStructuralWordIndices.has(i + 2) &&
+      expanded.has(i) &&
+      expanded.has(i + 2) &&
       !longestUnchangedTokens.has(wordTokens[i + 1].tokenIndex)
     ) {
-      candidateStructuralWordIndices.add(i + 1);
+      expanded.add(i + 1);
+    }
+    if (
+      i < wordTokens.length - 3 &&
+      expanded.has(i) &&
+      expanded.has(i + 3) &&
+      !longestUnchangedTokens.has(wordTokens[i + 1].tokenIndex) &&
+      !longestUnchangedTokens.has(wordTokens[i + 2].tokenIndex)
+    ) {
+      expanded.add(i + 1);
+      expanded.add(i + 2);
     }
   }
 
-  // 4. Strict Anti-Fragmentation Rule:
-  // An isolated single word MUST NEVER remain red!
-  // In QuillBot, "Structural Changes" strictly represents contiguous clauses / phrases (length >= 2).
+  // F. Strict Anti-Fragmentation Rule: minimum 2 words in a structural group
   const finalStructuralTokenIndices = new Set<number>();
   for (let i = 0; i < wordTokens.length; i++) {
-    if (candidateStructuralWordIndices.has(i)) {
+    if (expanded.has(i)) {
       const hasNeighbor =
-        (i > 0 && candidateStructuralWordIndices.has(i - 1)) ||
-        (i < wordTokens.length - 1 && candidateStructuralWordIndices.has(i + 1));
+        (i > 0 && expanded.has(i - 1)) ||
+        (i < wordTokens.length - 1 && expanded.has(i + 1));
 
       if (hasNeighbor) {
         finalStructuralTokenIndices.add(wordTokens[i].tokenIndex);
@@ -394,9 +516,8 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     }
   }
 
-  // 5. Final Token Classification
+  // 3. Final Token Classification
   return tokens.map((token, index) => {
-    // If whitespace or punctuation, return unchanged
     if (/^\s+$/.test(token) || /^[^\w\s'-]+$/.test(token) || !token) {
       return {
         text: token,
@@ -436,7 +557,7 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
       };
     }
 
-    // 4. Default neutral unchanged word (present in original, not part of blue/red/yellow blocks)
+    // 4. Default neutral unchanged word
     return {
       text: token,
       type: 'unchanged',
