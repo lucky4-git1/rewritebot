@@ -283,15 +283,15 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
 
   for (let i = 0; i < wordTokens.length; i++) {
     runningSentenceWords.push(i);
-    const nextTokenIdx = wordTokens[i].tokenIndex + 1;
-    const nextToken = tokens[nextTokenIdx] || '';
-    const tokenAfterNext = tokens[nextTokenIdx + 1] || '';
+    const nextWordTokenIndex = i < wordTokens.length - 1 ? wordTokens[i + 1].tokenIndex : tokens.length;
+    const gapText = tokens.slice(wordTokens[i].tokenIndex + 1, nextWordTokenIndex).join('');
 
-    // Ignore decimal points in numbers (e.g. 78.8) or non-space following
-    const isDecimal = nextToken === '.' && /^\d+$/.test(tokenAfterNext);
-    const isEndOfSentence = !isDecimal && (/[!?\n]/.test(nextToken) || (nextToken.includes('.') && (nextTokenIdx + 1 >= tokens.length || /^\s+$/.test(tokenAfterNext))));
+    // Check if gapText contains sentence-ending punctuation (.!? or newline)
+    // Ignore decimal points within numbers
+    const hasPunctuation = /[!?\n]/.test(gapText) || /\.(?!\d)/.test(gapText);
+    const isEndOfSentence = hasPunctuation || i === wordTokens.length - 1;
 
-    if (isEndOfSentence || i === wordTokens.length - 1) {
+    if (isEndOfSentence) {
       const len = runningSentenceWords.length;
       runningSentenceWords.forEach((wIdx, order) => {
         modWordSentenceMeta[wIdx] = {
@@ -440,18 +440,16 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
       });
       if (origLocalPositions.length > 0) {
         const minLocalDist = Math.min(...origLocalPositions.map((pos) => Math.abs(pos - meta.posInSent)));
-        if (minLocalDist >= 0.18 && meta.sentLen >= 5) {
+        if (minLocalDist >= 0.25 && meta.sentLen >= 6) {
           isRelocated = true;
         }
       }
-    }
-
-    // Also check global document displacement
-    if (!isRelocated && origSet.has(wt.clean) && wordTokens.length > 4) {
+    } else if (origSet.has(wt.clean) && wordTokens.length > 4) {
+      // Unmatched sentence fallback to global document displacement
       const currentGlobalRatio = wt.wordOrderIndex / (wordTokens.length - 1);
       const originalPositions = origWordPositions.get(wt.clean) || [];
       const minGlobalDistance = Math.min(...originalPositions.map((pos) => Math.abs(pos - currentGlobalRatio)));
-      if (minGlobalDistance >= 0.22) {
+      if (minGlobalDistance >= 0.28) {
         isRelocated = true;
       }
     }
@@ -530,9 +528,17 @@ export function computeWordDiff(original: string, modified: string): DiffToken[]
     const isStructurallyRestructuredSentence = sStructCount >= 2 || (sStructCount >= 1 && sChangedCount >= 2) || (sNonBlueCount >= 3 && sStructCount >= 1);
 
     if (isStructurallyRestructuredSentence) {
+      // In a restructured sentence, promote grammatical binders, connectives, and words adjacent to structural shifts to red,
+      // but PRESERVE lexical vocabulary substitutions / synonyms as YELLOW so users can click them in the thesaurus!
       sWordIndices.forEach((idx) => {
         if (!longestUnchangedTokens.has(wordTokens[idx].tokenIndex)) {
-          if (!origSet.has(wordTokens[idx].clean) || expanded.has(idx) || FUNCTION_AND_SYNTAX_WORDS.has(wordTokens[idx].clean) || STRUCTURAL_MARKERS.has(wordTokens[idx].clean)) {
+          const clean = wordTokens[idx].clean;
+          const isGrammarOrMarker = FUNCTION_AND_SYNTAX_WORDS.has(clean) || STRUCTURAL_MARKERS.has(clean);
+          const hasAdjacentStructural =
+            (idx > 0 && candidateStructuralWordIndices.has(idx - 1)) ||
+            (idx < wordTokens.length - 1 && candidateStructuralWordIndices.has(idx + 1));
+
+          if (isGrammarOrMarker && hasAdjacentStructural) {
             expanded.add(idx);
           }
         }
