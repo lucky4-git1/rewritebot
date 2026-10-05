@@ -1,286 +1,260 @@
 <div align="center">
 
 # ⚡ RewriteBot
+### The Open-Source, Privacy-First AI Writing & Paraphrasing Suite
 
-**Your Private, High-Performance, Provider-Agnostic AI Writing Workspace**
+**A high-performance, self-hostable alternative to QuillBot with zero subscriptions, BYO-AI flexibility, and Turnitin-grade originality auditing.**
 
-### 🚀 [Visit RewriteBot - AI Writing Workspace](https://rewritebot-client.vercel.app/) to experience the application!
+<br/>
 
-[![Live Application](https://img.shields.io/badge/Live%20Demo-rewritebot--client.vercel.app-10b981?style=for-the-badge&logo=vercel&logoColor=white)](https://rewritebot-client.vercel.app/)
-<br/><br/>
+[![Live Production App](https://img.shields.io/badge/Live%20App-rewritebot--client.vercel.app-670626?style=for-the-badge&logo=vercel&logoColor=white)](https://rewritebot-client.vercel.app/)
+[![Browser Extension](https://img.shields.io/badge/Edge%20%2F%20Chrome%20Store-v1.0.1%20Ready-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](https://rewritebot-client.vercel.app/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+<br/>
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Fastify](https://img.shields.io/badge/Fastify-4.x-000000?logo=fastify&logoColor=white)](https://fastify.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Prisma](https://img.shields.io/badge/Prisma-5.x-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
+<br/>
+
 [Try Live Demo](https://rewritebot-client.vercel.app/) •
-[Key Features](#-key-features) •
+[Why RewriteBot?](#-why-rewritebot) •
+[Full Suite Tools](#-the-all-in-one-writing-suite) •
+[Key Engineering Highlights](#-key-engineering-highlights) •
 [Architecture](#-architecture) •
 [Quickstart](#-quickstart) •
-[AI Providers](#-supported-ai-providers) •
-[Security](#-security--privacy) •
-[API Reference](#-api-endpoints)
+[Supported AI Engines](#-supported-ai-providers) •
+[Browser Extension](#-browser-extension) •
+[Privacy & Encryption](#-security--privacy)
 
 </div>
 
 ---
 
-## 📖 Overview
+## 💡 Why RewriteBot?
 
-**RewriteBot** is a production-grade, privacy-first AI writing and paraphrasing platform built on the **Bring Your Own AI (BYO-AI)** philosophy. 
+Most modern writing assistants (like QuillBot, Grammarly, and Wordtune) suffer from three critical problems:
+1. **Aggressive Paywalls**: Basic features like academic phrasing, unlimited words, or plagiarism checks cost $10–$20/month.
+2. **Black-Box Privacy**: Your essays, proprietary articles, and emails are processed through opaque servers and potentially used to train models.
+3. **Plagiarism & AI Flags**: Standard rewriting tools often produce formulaic phrasing that triggers Turnitin, Copyleaks, or GPTZero detection.
 
-Unlike proprietary writing assistants that lock you into recurring subscriptions with hidden rate-limits and proprietary black-box models, RewriteBot lets you connect directly to any cloud AI provider (NVIDIA, Groq, OpenAI, Anthropic, Gemini, DeepSeek, Mistral) or local LLM runtime (Ollama, LM Studio) using your own API credentials or local hardware.
-
-Your credentials remain encrypted on your terms, your text is never used for model training, and AI inference happens at raw provider cost and speed.
+**RewriteBot solves all three:**
+- **Bring Your Own AI (BYO-AI)**: Plug in a free Groq key, Google Gemini, OpenAI, Claude, or run 100% offline with local Ollama models. Pay raw provider cost ($0.00) with zero markup.
+- **Enterprise-Grade Privacy**: Your API keys are encrypted with **AES-256-GCM**. Prompts and documents are never sold, logged, or used for training.
+- **QuillBot-Level Suite**: Paraphraser, Live Grammar Checker, AI Humanizer, Summarizer, Translator, and Deep Plagiarism Auditor all in one unified, responsive workspace.
 
 ---
 
-## ✨ Key Features
+## 🧰 The All-in-One Writing Suite
 
-### 🚀 Real-Time Streaming Paraphraser
-- **Instant TTFB (< 500ms)**: Real-time Server-Sent Events (SSE) stream tokens to the screen as soon as the provider generates them.
-- **Dynamic Typing Cursor**: Visual live feedback as output streams into the editor.
-- **Graceful Auto-Fallback**: Automatically falls back to standard non-streaming generation if client network proxies disrupt SSE.
+RewriteBot gives you a comprehensive suite of writing tools right out of the box:
 
-### 🎯 9 Specialized Writing Modes
-- **Standard**: Balanced rewriting preserving core meaning.
-- **Fluency**: Polish grammatical structure, flow, and readability.
-- **Formal**: Elevate vocabulary for professional and corporate communications.
-- **Academic**: Rigorous scholarly tone with sophisticated vocabulary.
-- **Simple**: Clear, plain-language prose accessible to broad audiences.
-- **Creative**: Expressive, evocative imagery and varied sentence cadences.
-- **Expand**: Elaborate concepts with illustrative depth and detail.
-- **Shorten**: Concise, high-density editing eliminating redundancy.
-- **Humanize**: Natural cadence that smooths robotic AI phrasing.
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  ✍️ Paraphraser  •  🔍 Grammar Checker  •  🧠 AI Humanizer  •  📋 Summarizer  •  🌐 Translator  •  🛡️ Plagiarism  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-### 🔍 Interactive Word Diff & Thesaurus
-- **Visual Diff Highlighting**: Instantly see changes color-coded against your original text.
-- **Click-to-Swap Thesaurus**: Click any highlighted altered word to browse contextual synonyms and swap them in one click.
-- **Change Percentage & Metrics**: Live telemetry on word count, reading time, and alteration ratio.
+### 1. ✍️ Intelligent Multi-Mode Paraphraser
+- **9 Specialized Writing Tones**:
+  - **Standard**: Balanced rewriting preserving core meaning and nuance.
+  - **Fluency**: Eliminates clunky phrasing and boosts syntactic flow.
+  - **Formal**: Polished, corporate-ready communication.
+  - **Academic**: Scholarly diction, complex sentence logic, and research-grade phrasing.
+  - **Simple**: Plain language, high accessibility, and high readability.
+  - **Creative**: Evocative vocabulary and expressive cadence.
+  - **Expand**: Elaborates ideas with relevant detail and examples.
+  - **Shorten**: Dense, concise prose removing verbal clutter.
+  - **Humanize**: Organic sentence structures designed to flow naturally.
+- **Interactive 3-Color Highlight Diff**: Instantly distinguishes **Changed Words** (yellow), **Longest Unchanged** (blue), and **Structural Shifts** (red).
+- **Click-to-Swap Synonym Thesaurus**: Click any highlighted word to inspect contextual synonyms and swap them in one click.
+- **Sentence Alternative Cycler (`< 1 of 3 >`)**: Click any sentence in the editor to cycle through AI-suggested variations and replace in-place.
+- **Freeze Words**: Protect brand names, technical jargon, or quotes with one-click word freezing.
+- **Compare Modes**: Side-by-side multi-pane view comparing up to 4 rewrite modes simultaneously.
 
-### 🛡️ Bring Your Own AI (BYO-AI)
-- **Zero Markup**: Connect your existing cloud keys or local models.
-- **Encrypted Credential Vault**: Stored API keys are encrypted at rest with authenticated **AES-256-GCM**.
-- **Model Agnostic**: Compatible with any model supporting standard chat completions.
+### 2. 🔍 Interactive Grammar & Spelling Checker
+- **Deep Syntactic Proofreader**: Detects grammatical agreement errors, typographical mistakes, punctuation flaws, and awkward stylistic choices.
+- **Color-Coded Diagnostic Tags**: Categorized badges for `Spelling` (red), `Grammar` (amber), `Punctuation` (indigo), and `Style` (purple).
+- **One-Click Auto-Fix**: Automatically inspects input text and renders corrected, polished prose directly into the output panel.
+- **Granular Drawer**: Inspect why an error was flagged with original-to-corrected visual diffs and linguistic explanations.
 
-### 📂 Productivity & Workspace Tools
-- **Version History**: Automatically records every generation with input/output comparison, metrics, and timestamps.
-- **Export Options**: Export rewritten documents in `.txt`, `.md`, `.docx`, or `.pdf` formats.
-- **Document Management**: Create, edit, and organize multiple active drafts.
+### 3. 🧠 AI Humanizer (Stealth Mode)
+- **Natural Cadence Engine**: Strips repetitive AI hallmarks (e.g., *"delve"*, *"testament"*, *"tapestry"*, uniform sentence lengths) to produce genuine human burstiness and rhythm.
+- **Targeted Humanizer Tones**: Choose between *Natural*, *Conversational*, *Academic*, *Casual*, and *Professional*.
+- **Live Authenticity Score**: Displays an estimated human authenticity index (up to 98%+) to verify that output sounds natural.
+
+### 4. 📋 Document Summarizer
+- **Customizable Length**: Choose between *Short* (concise summary), *Medium* (balanced overview), or *Detailed* (exhaustive breakdown).
+- **Versatile Formats**:
+  - *Paragraph*: Continuous narrative summary.
+  - *Bullet Points*: Fast, scannable list of key details.
+  - *Key Takeaways*: Crucial conclusions and action items.
+  - *Executive Summary*: High-impact professional briefing.
+
+### 5. 🌐 Polyglot Translator
+- **Dual-Pane Bilingual Workspace**: Translate text seamlessly between 12+ world languages (English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Hindi, Arabic, etc.).
+- **Automatic Language Detection**: Auto-detects input language instantly.
+- **One-Click Language Swap**: Quickly reverse source and target languages with a single button.
+
+### 6. 🛡️ Plagiarism & Originality Auditor
+- **Turnitin-Grade N-Gram Analysis**: Evaluates consecutive matching sequences against indexed web datasets to identify matching phrases.
+- **Source Breakdown & Match Percentages**: Detailed breakdown of similar sources, matching URLs, and sentence-by-sentence similarity risk.
+- **Instant In-Place Sentence Re-writing**: Click any flagged sentence to rephrase it in-place and watch the originality score rise in real time.
+- **Downloadable PDF Audit Certificate**: Export professional, publication-ready PDF audit reports formatted with timestamp, source logs, and originality certification.
+
+---
+
+## ⚡ Key Engineering Highlights
+
+| Feature | How It Works | Benefit |
+| :--- | :--- | :--- |
+| **Server-Sent Events (SSE)** | Streams tokens via Fastify & Axios using chunked HTTP streams | Sub-500ms time-to-first-token (TTFB) |
+| **AES-256-GCM Vault** | Every API key is encrypted with a unique 12-byte IV and authentication tag | Your keys remain completely safe at rest |
+| **Dual Fallback Pipeline** | If streaming is blocked by a proxy, the client falls back to standard HTTP | 100% reliable responses under any network condition |
+| **Turnitin Consecutive Matching** | Tracks 4+ token consecutive identical subsequences rather than naive string matches | Eliminates false-positive plagiarism warnings |
+| **In-Memory Caching** | Hot-caches AI responses and plagiarism analyses (10-minute TTL) | Zero unnecessary API costs on repeated scans |
+| **Responsive Studio Engine** | Optimized layout that works on ultra-narrow mobile screens up to 4K displays | Full writing experience on phone, tablet, and desktop |
 
 ---
 
 ## 🏗️ Architecture
 
-RewriteBot is structured as an npm monorepo with strict separation of concerns, built for sub-second responses and low memory footprint.
+RewriteBot is structured as a modern TypeScript monorepo with clean boundary isolation:
 
 ```
 rewritebot/
-├── client/          # Single-Page Application (React 18 + Vite + TypeScript)
-├── server/          # High-performance REST & SSE API (Node.js + Fastify + Prisma)
-├── shared/          # Shared TypeScript interfaces, types, and Zod validation schemas
-├── prisma/          # Database schema and migration tracking
-└── docker-compose.yml
+├── client/              # React 18 + Vite SPA (Lucide icons, Zustand, Editorial Design)
+├── server/              # Node.js + Fastify backend with REST, SSE streaming & Prisma ORM
+├── shared/              # Shared types, Zod schemas, and data contracts
+├── extension/           # Edge / Chrome Manifest V3 Browser Extension
+├── prisma/              # Schema definitions and database migrations
+└── docker-compose.yml   # Multi-container orchestration (Fastify + Postgres + Redis)
 ```
 
-### High-Level Request Pipeline
-
-```
-[ Browser (React SPA) ]
-       │
-       ▼ (HTTPS / WSS / SSE)
-[ Edge / CDN (Vercel) ]
-       │
-       ▼ (Reverse Proxy / Envoy)
-[ Fastify Backend (Northflank Container) ]
-       ├── Authentication (JWT + Argon2)
-       ├── In-Memory Provider Cache (Zero DB roundtrip overhead)
-       ├── Fast-fail Redis Rate Limiter (Non-blocking fail-open)
-       │
-       ├─────────────────────────┬─────────────────────────┐
-       ▼                         ▼                         ▼
-[ Neon PostgreSQL ]      [ Upstash Redis ]        [ AI Providers ]
-  • User Profiles          • Token Rate Limits     • NVIDIA NIM
-  • Encrypted Keys         • Cache Invalidation    • Groq LPU
-  • History Logs                                   • OpenAI / Anthropic
-                                                   • Ollama / LM Studio
+```mermaid
+graph TD
+    Client["React 18 Studio / Chrome Extension"] -->|REST / SSE Streaming| Fastify["Fastify Backend API"]
+    Fastify --> Auth["Argon2 + JWT Auth"]
+    Fastify --> Encrypt["AES-256-GCM Key Vault"]
+    Fastify --> Cache["In-Memory & Redis Cache"]
+    Fastify --> DB[("PostgreSQL (Neon / Supabase)")]
+    Fastify --> Orchestrator["AI Orchestrator"]
+    Orchestrator --> Groq["Groq LPU (Sub-second)"]
+    Orchestrator --> OpenAI["OpenAI (GPT-4o / GPT-4o-mini)"]
+    Orchestrator --> Gemini["Google Gemini (1.5 Flash / Pro)"]
+    Orchestrator --> Anthropic["Anthropic (Claude 3.5 Sonnet)"]
+    Orchestrator --> Ollama["Ollama (Local / 100% Offline)"]
 ```
 
 ---
 
-## ⚡ Quickstart
+## 🚀 Quickstart
 
 ### Prerequisites
 - **Node.js**: v18.0.0 or higher
 - **npm**: v9.0.0 or higher
-- **PostgreSQL**: v14+ (or free serverless Neon instance)
-- **Redis**: v7+ (or free serverless Upstash instance)
+- **PostgreSQL**: Local or serverless (Neon, Supabase, Railway)
+- **Redis**: Optional, for distributed rate-limiting
 
-### 1. Clone & Install
-
+### 1. Clone & Install Dependencies
 ```bash
 git clone https://github.com/lucky4-git1/rewritebot.git
 cd rewritebot
 npm install
 ```
 
-### 2. Environment Configuration
-
-Copy the example environment configuration:
-
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
 
-Key environment variables:
+Key environment configurations:
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/rewritebot?schema=public"
+JWT_SECRET="your-super-secret-jwt-key"
+JWT_REFRESH_SECRET="your-super-secret-refresh-jwt-key"
+CREDENTIAL_ENCRYPTION_KEY="32-byte-base64-encoded-key"
+PORT=3000
+APP_URL="http://localhost:5173"
+API_URL="http://localhost:3000"
+CORS_ORIGIN="http://localhost:5173"
+```
+*(Tip: Generate a 32-byte key using `node -e "console.log(crypto.randomBytes(32).toString('base64'))"`)*
 
-| Variable | Description | Example |
-| :--- | :--- | :--- |
-| `DATABASE_URL` | PostgreSQL connection URL | `postgresql://user:pass@host:5432/rewrite?sslmode=require` |
-| `REDIS_URL` | Redis connection URL | `rediss://default:token@host:6379` |
-| `JWT_SECRET` | 32+ char secret for JWT access tokens | `openssl rand -base64 32` |
-| `JWT_REFRESH_SECRET` | 32+ char secret for refresh tokens | `openssl rand -base64 32` |
-| `CREDENTIAL_ENCRYPTION_KEY` | 32-byte Base64 key for AES-256-GCM | `openssl rand -base64 32` |
-| `APP_URL` | Frontend URL | `http://localhost:5173` |
-| `API_URL` | Backend URL | `http://localhost:3000` |
-| `CORS_ORIGIN` | Allowed CORS origins | `http://localhost:5173` |
-
-### 3. Initialize Database
-
-Run Prisma migrations to set up tables and relations:
-
+### 3. Initialize Database Migrations
 ```bash
 npm run db:migrate
 ```
 
-### 4. Run Development Servers
-
+### 4. Run Development Server
 ```bash
 npm run dev
 ```
-
-* **Frontend**: `http://localhost:5173`
-* **API Server**: `http://localhost:3000`
-* **API Healthcheck**: `http://localhost:3000/health`
-
----
-
-## 🐳 Docker Deployment
-
-Run the complete multi-tier application stack with Docker Compose:
-
-```bash
-# Build and run containers in background
-docker compose up -d
-
-# View container logs
-docker compose logs -f
-
-# Stop containers
-docker compose down
-```
+- **Web App**: `http://localhost:5173`
+- **Backend API**: `http://localhost:3000`
+- **Health Check**: `http://localhost:3000/health`
 
 ---
 
 ## 🤖 Supported AI Providers
 
-RewriteBot supports all major commercial providers, specialized low-latency inference clouds, and local self-hosted engines:
+RewriteBot works with any provider that supports OpenAI-compatible chat completions or native APIs:
 
-| Provider | Type | Recommended Models | Performance Profile |
-| :--- | :--- | :--- | :--- |
-| **NVIDIA NIM** | Cloud API | `meta/llama-3.2-11b-vision-instruct` | High speed (~1.1s latency, enterprise grade) |
-| **Groq** | Cloud LPU | `qwen/qwen3.8-27b`, `llama-3.3-70b-versatile` | Ultra-low TTFB (< 300ms) |
-| **OpenAI** | Cloud API | `gpt-4o-mini`, `gpt-4o` | High accuracy & instruction following |
-| **Anthropic** | Cloud API | `claude-3-5-haiku`, `claude-3-5-sonnet` | Nuanced, human-like cadence |
-| **Google Gemini** | Cloud API | `gemini-1.5-flash`, `gemini-1.5-pro` | Large context windows |
-| **Ollama** | Local Engine | `llama3.2:latest`, `mistral:7b` | 100% offline, zero API cost |
-| **LM Studio** | Local Engine | Any local GGUF model | GUI-driven local inference |
-| **OpenAI-Compatible** | Any Endpoint | Custom | Compatible with any OpenAI API clone |
+| Provider | Type | Recommended Model | Latency | Cost |
+| :--- | :--- | :--- | :--- | :--- |
+| **Groq** | Cloud LPU | `llama-3.3-70b-versatile` | **~250ms** | Free tier available |
+| **OpenAI** | Cloud API | `gpt-4o-mini`, `gpt-4o` | ~700ms | Pay-as-you-go |
+| **Google Gemini** | Cloud API | `gemini-1.5-flash` | ~600ms | Free tier available |
+| **Anthropic** | Cloud API | `claude-3-5-sonnet` | ~900ms | Pay-as-you-go |
+| **NVIDIA NIM** | Cloud API | `meta/llama-3.2-11b-vision-instruct` | ~1.1s | Free trial credits |
+| **Ollama** | Local Hardware | `llama3.2`, `mistral` | Variable | **100% Free & Offline** |
+| **Custom OpenAI API** | Any Endpoint | Any custom model | Variable | Self-managed |
 
-### Configuring NVIDIA NIM
-1. Register on [NVIDIA Build](https://build.nvidia.com/) and generate an API key (`nvapi-...`).
-2. In RewriteBot, open **Providers** → **Add Provider**.
-3. Select **NVIDIA**.
-4. Set Base URL: `https://integrate.api.nvidia.com/v1`
-5. Select Model: `meta/llama-3.2-11b-vision-instruct` (vetted for fast, non-reasoning sub-second paraphrasing).
-6. Click **Test & Save**.
+---
 
-### Configuring Local Ollama
-1. Download and start [Ollama](https://ollama.ai/):
-   ```bash
-   ollama run llama3.2
-   ```
-2. In RewriteBot, select **Ollama** under Providers.
-3. Set Base URL: `http://localhost:11434` (or `http://host.docker.internal:11434` in Docker).
-4. Save and begin offline writing.
+## 🧩 Browser Extension
+
+RewriteBot includes a full Manifest V3 browser extension for **Google Chrome**, **Microsoft Edge**, and **Brave**:
+
+- **Inline Floating Bubble**: Select any text on any webpage to instantly rephrase, summarize, or fix grammar without leaving your tab.
+- **Popup Mini Studio**: Quick paraphrasing directly from your browser toolbar.
+- **1-Click Sync**: Synchronizes authenticated sessions from your web dashboard automatically.
+- **Discreet Settings**: Clean end-user experience with technical backend URLs neatly tucked into an Advanced Settings drawer.
+
+### Building the Extension
+```bash
+cd extension
+npm install
+npm run build
+```
+Load the unpacked `extension/dist` folder into `chrome://extensions` or `edge://extensions`.
 
 ---
 
 ## 🔒 Security & Privacy
 
-* **Zero Content Logging**: Prompts, input documents, and paraphrased text are never logged to server log files or transmitted to external observability platforms.
-* **Encrypted Secrets**: Provider API keys are encrypted at rest with **AES-256-GCM** using unique per-credential initialization vectors (`iv`) and authentication tags (`tag`).
-* **SSRF Guard**: Custom provider endpoints are strictly validated to prevent Server-Side Request Forgery against internal infrastructure.
-* **Brute-Force & Rate Protection**: Redis-backed distributed rate limiters throttle login attempts and generation spam.
-* **Memory Provider Isolation**: Provider instances are cached safely in memory per unique provider ID and invalidated immediately upon credential revocation or deletion.
+1. **Authenticated Encryption (AES-256-GCM)**: All API keys stored in the database are encrypted with authenticated cipher blocks. Even database administrators cannot read your plain credentials.
+2. **Zero Text Retention**: Your prompts and generated outputs are never collected, logged into external monitoring services, or indexed to train public models.
+3. **SSRF Protection**: Custom base URLs undergo strict URL protocol and host sanitization to block Server-Side Request Forgery attacks.
+4. **Argon2 Password Hashing**: State-of-the-art password security resistant to GPU cracking and rainbow table attacks.
 
 ---
 
-## 📡 API Endpoints
+## 📜 License
 
-All core API routes are prefixed under `/api/v1`:
-
-### Authentication
-* `POST /api/v1/auth/register` — Register new user account.
-* `POST /api/v1/auth/login` — Authenticate and receive access + refresh JWTs.
-* `POST /api/v1/auth/refresh` — Rotate expired access tokens.
-* `GET /api/v1/auth/me` — Retrieve authenticated user profile.
-
-### AI Providers
-* `GET /api/v1/providers` — List user-configured AI providers.
-* `POST /api/v1/providers` — Add and encrypt new AI provider credentials.
-* `PUT /api/v1/providers/:id` — Update provider configuration or model.
-* `DELETE /api/v1/providers/:id` — Delete provider and revoke cached instances.
-* `POST /api/v1/providers/:id/test` — Test provider connection latency.
-
-### Paraphrasing & Writing
-* `POST /api/v1/paraphrase` — Execute standard paraphrasing request.
-* `POST /api/v1/paraphrase/stream` — Real-time Server-Sent Events (SSE) streaming paraphrasing.
-
-### Workspace & History
-* `GET /api/v1/history` — Fetch user's generation history.
-* `DELETE /api/v1/history/:id` — Delete history record.
-* `GET /api/v1/documents` — List saved user documents.
-* `POST /api/v1/documents` — Create new workspace document.
-
----
-
-## 🌐 Experience RewriteBot
-
-Experience the live application in production:
-
-👉 **[RewriteBot - AI Writing Workspace](https://rewritebot-client.vercel.app/)**
-
----
-
-## 🛠️ Tech Stack Reference
-
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Lucide React, Zustand.
-- **Backend**: Node.js, Fastify, Prisma ORM, ioredis, fast-jwt, Argon2.
-- **Infrastructure**: Docker, Neon PostgreSQL, Upstash Redis.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
+Distributed under the **MIT License**. Free for commercial and non-commercial use. See [`LICENSE`](LICENSE) for details.
 
 ---
 
 <div align="center">
-Built with ❤️ for writers and engineers who value speed, privacy, and full control over their AI tools.
+
+**Built with passion by writers and engineers who believe world-class AI writing tools should be open, private, and subscription-free.**
+
+⭐ **Star this repo on GitHub if you find it helpful!**
+
 </div>
