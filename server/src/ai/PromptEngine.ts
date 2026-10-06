@@ -5,7 +5,12 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings and lengths for authentic human cadence, shift between active and passive constructions where natural, break 3+ word consecutive source sequences to eliminate patchwriting, and maintain strict 1:1 length parity without adding unnecessary padding, inflated synonyms, or formulaic AI connectors.`,
+  standard: `Paraphrase the following text using QuillBot's sentence-anchored paraphrasing approach:
+- Maintain 1:1 sentence correspondence: rewrite each sentence of the original text individually without merging or omitting sentences.
+- Perform local clause inversions: rearrange front and rear clauses (e.g., place dependent adverbial, temporal, or prepositional phrases at the end, or move the main clause to the front).
+- Natural lexical substitution: swap 25% to 35% of verbs, adjectives, and nouns with clean, everyday human synonyms while keeping the natural human sentence skeleton and prepositions intact.
+- Preserve 65% to 75% of original natural phrasing, factual terms, numbers, dates, and locations so the resulting text preserves genuine human perplexity and flow.
+- Maintain strict 1:1 word count parity without padding or artificial AI connector words.`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
 - Reorganizing clause order and sentence structure for natural, effortless human cadence
@@ -56,7 +61,7 @@ export class PromptEngine {
   buildSystemPrompt(request: AIRequest): string {
     const parts: string[] = [];
 
-    parts.push('You are RewriteBot, an elite editorial paraphrasing and syntactic restructuring engine.');
+    parts.push('You are RewriteBot, an elite editorial paraphrasing and syntactic restructuring engine modeled after QuillBot.');
     parts.push('');
 
     // Rule 1: Output Constraints & Paragraph Integrity
@@ -76,13 +81,13 @@ export class PromptEngine {
     parts.push('');
 
     // Rule 3: QuillBot-grade Structural Transformation Directive
-    parts.push('QUILLBOT-GRADE STRUCTURAL RESTRUCTURING DIRECTIVE:');
-    parts.push('You must actively transform the grammatical architecture and clause order of every sentence. Do NOT perform lazy 1:1 word-for-word synonym swapping into the original sentence template.');
-    parts.push('- Invert clause sequence: flip cause-and-effect, conditional, and main clauses.');
-    parts.push('- Shift grammatical voice (active <-> passive) and change the sentence subject where natural.');
-    parts.push('- Front prepositional phrases, adverbial modifiers, or participial openers for varied sentence beginnings.');
-    parts.push('- You may split dense, convoluted run-on clauses into crisp, high-impact statements, or synthesize choppy clauses into balanced compound structures.');
-    parts.push('- Never reuse the identical main predicate or grammatical template across consecutive sentences.');
+    parts.push('QUILLBOT-GRADE SENTENCE-ANCHORED REWRITING DIRECTIVE:');
+    parts.push('Mirror QuillBot\'s proven, award-winning human paraphrasing approach:');
+    parts.push('- Sentence-by-Sentence Anchoring: Preserve 1:1 sentence correspondence for each sentence in the original text.');
+    parts.push('- Clause Inversion: Shift the front clause to the back or the rear clause to the front (e.g. invert time/location clauses with subject actions).');
+    parts.push('- Natural Human Synonym Selection: Swap ~25-35% of verbs and nouns with standard human synonyms while preserving the natural authorial backbone.');
+    parts.push('- Voice Alternation: Shift active to passive or passive to active where it flows gracefully.');
+    parts.push('- DO NOT regenerate entire synthetic sentences from blank slates. AI detectors like Pangram flag 100% newly generated transformer tokens as AI. Anchoring in the author\'s original clause structure while flipping clauses and substituting key words guarantees a 100% Human rating.');
     parts.push('');
 
     // Rule 4: Zero Unnecessary Synonyms, Natural Collocations & Anti-Bloat Directive
@@ -90,7 +95,7 @@ export class PromptEngine {
     parts.push('1. PRESERVE NATURAL PREPOSITIONS & COLLOCATIONS: NEVER replace standard English prepositions or idiomatic pairings with awkward bureaucratic phrases. For example:');
     parts.push('   - Keep "110 kilometers south of Cairo" (NEVER write "south pertaining to Cairo").');
     parts.push('   - Keep "professor of public health" (NEVER write "professor pertaining to public health").');
-    parts.push('   - Keep natural connectors. Awkward prepositional substitutions instantly trigger 100% AI flags on detector models like Pangram and GPTZero.');
+    parts.push('   - Keep natural connectors. Awkward prepositional substitutions instantly trigger AI flags on detector models like Pangram and GPTZero.');
     parts.push('2. EQUAL-WEIGHT SYNONYM REPLACEMENTS: When replacing words, use natural, fluent human equivalents of identical or nearly identical semantic weight (e.g. replace "participated in" with "took part in", "created" with "developed", "evaluated" with "assessed", "conducted" with "carried out").');
     parts.push('3. ZERO CIRCUMLOCUTIONS: Never expand a single word into a wordy multi-word phrase (e.g. never change "because" to "due to the incontrovertible fact that", or "helps" to "plays an instrumental role in facilitating").');
     parts.push('4. ZERO ADJECTIVE/ADVERB PADDING: Do not insert decorative, pretentious adverbs or intensifiers ("substantially", "critically", "dramatically", "crucially", "remarkably") unless they exist in the input.');
@@ -151,26 +156,13 @@ export class PromptEngine {
       parts.push('');
     }
 
-    // Rule 8: Turnitin/Copyleaks Anti-Plagiarism & N-Gram Decoupling Protocol
+    // Rule 8: Anti-Plagiarism & Natural N-Gram Clause Protocol
     if (request.plagiarismGuard !== false) {
-      parts.push('ANTI-PLAGIARISM & N-GRAM DECOUPLING PROTOCOL (PASS TURNITIN / COPYLEAKS 0% PLAGIARISM ON GENERATION 1):');
-      parts.push('1. MAXIMUM 3-WORD N-GRAM LIMIT: Break any sequence of 4 or more consecutive words from the source text (except for isolated proper nouns, standard grammatical prepositions, or frozen terms).');
+      parts.push('ANTI-PLAGIARISM & NATURAL CLAUSE REARRANGEMENT PROTOCOL:');
+      parts.push('1. BREAK 4+ WORD VERBATIM CHAINS: Ensure common sequences of 4 or more consecutive words are broken through natural clause reordering or synonym substitution (except technical names, dates, numbers, or frozen terms).');
       parts.push('2. PRESERVE NATURAL COLLOCATIONS: NEVER substitute standard prepositions or natural idioms with awkward bureaucratic words (e.g. NEVER write "south pertaining to Cairo", write "south of Cairo"; NEVER write "professor pertaining to", write "professor of").');
-      parts.push('3. ZERO PATCHWRITING OR SENTENCE-SKELETON MIMICRY: Plagiarism detectors track grammatical templates. Never replace words while keeping the original sentence skeleton intact (e.g. do not just change "The purpose of this study is to assess..." to "This study aims to evaluate..."). You MUST alter the syntactic architecture:');
-      parts.push('   - Invert sentence sequence: Lead with the research question, findings, methodology, condition, or conclusion rather than the generic introductory subject.');
-      parts.push('   - Synthesize or divide clauses: Merge adjacent related ideas or split compound sentences so the original paragraph fingerprint is dissolved.');
-      parts.push('4. FEW-SHOT SYNTACTIC INVERSION EXAMPLES (STUDY THESE PATTERNS):');
-      parts.push('   * Source: "Because temperature was elevated, the reaction proceeded rapidly, resulting in byproduct degradation."');
-      parts.push('     Inversion: "Byproduct degradation accelerated as a direct consequence of thermal increases driving rapid reaction kinetics." (Flipped effect -> condition -> cause)');
-      parts.push('   * Source: "The researchers investigated 500 patients over a 12-month period to evaluate efficacy."');
-      parts.push('     Inversion: "Efficacy assessments spanned 500 patient cohorts throughout a full year of structured clinical observation." (Shifted object to subject, decoupled timeline)');
-      parts.push('   * Source: "In addition to dysmenorrhea, other menstrual abnormalities were also recorded during the study."');
-      parts.push('     Inversion: "Broader menstrual irregularities were systematically documented alongside dysmenorrhea throughout the investigation." (Inverted list, varied passive verb)');
-      parts.push('5. DECOUPLE FIXED TECHNICAL & FACTUAL ANCHORS: When names, numbers, dates, locations, or clinical terms (e.g. disease names, acronyms) must be preserved:');
-      parts.push('   - Do NOT line them up in the original sequence.');
-      parts.push('   - Separate them across new clauses and distinct grammatical roles so Turnitin cannot match multi-word chains.');
-      parts.push('6. INVERT COMPOUND PHRASES & LISTS: Never copy multi-word lists verbatim (e.g. invert "dysmenorrhea, and other menstrual abnormalities" into "other menstrual irregularities, including dysmenorrhea"; invert "pain management techniques employed by girls" into "analgesic relief measures reported by participants").');
-      parts.push('7. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
+      parts.push('3. LOCAL CLAUSE INVERSIONS: Invert the position of clauses (front-to-back or back-to-front), vary voice, or change leading prepositional phrases.');
+      parts.push('4. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
       parts.push('');
     }
 
@@ -236,10 +228,10 @@ export class PromptEngine {
    */
   private getSynonymLevelInstruction(level: number): string {
     const instructions = {
-      1: 'SYNONYM & STRUCTURAL INTENSITY: Level 1 (Mild). Substitute ~20% of words with concise equivalents and make light clause adjustments while preserving familiar cadence and strict word count parity.',
-      2: 'SYNONYM & STRUCTURAL INTENSITY: Level 2 (Balanced). Substitute ~35% of words with concise equivalents, actively invert cause-and-effect clauses, and alternate sentence openings while maintaining strict word count parity.',
-      3: 'SYNONYM & STRUCTURAL INTENSITY: Level 3 (High — QuillBot Standard). Transform ~55% of phrasing: aggressively invert clause hierarchies, change sentence subjects, front participial/prepositional modifiers, and maintain strict 1:1 word count parity with zero fluff.',
-      4: 'SYNONYM & STRUCTURAL INTENSITY: Level 4 (Max — Radical Syntactic Transformation). Completely reconstruct sentence syntax and transform ~75% of phrasing from the ground up: re-sequence ideas, invert main/subordinate clauses, and maximize structural variety while preserving exact facts and strict word count parity.',
+      1: 'SYNONYM & STRUCTURAL INTENSITY: Level 1 (Mild). Substitute ~15-20% of words with natural equivalents and keep sentence structure tightly aligned to the author\'s original.',
+      2: 'SYNONYM & STRUCTURAL INTENSITY: Level 2 (Balanced — QuillBot Standard). Substitute ~25-35% of words with clean human equivalents and perform natural clause inversions (e.g. front/rear clause switching) while preserving authorial flow and exact word count parity.',
+      3: 'SYNONYM & STRUCTURAL INTENSITY: Level 3 (High). Substitute ~40-50% of words with natural synonyms, shift sentence voice (active/passive), and invert clause sequences while keeping facts and meaning completely intact.',
+      4: 'SYNONYM & STRUCTURAL INTENSITY: Level 4 (Max). Rephrase up to 60% of phrasing through deep clause re-sequencing and varied sentence structures while preserving exact factual fidelity and word count parity.',
     };
 
     return instructions[level as 1 | 2 | 3 | 4] || instructions[2];

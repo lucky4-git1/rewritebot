@@ -114,15 +114,15 @@ export class GenericOpenAIProvider extends BaseProvider {
     }
     // Stealth human cadence & perplexity calibration:
     if (request.mode === 'humanize') {
-      return 0.90;
+      return 0.82;
     }
     const level = request.synonymLevel ?? 2;
-    // Calibrated to elevate perplexity beyond robotic top-1 certainty:
-    const baseTemp = level === 1 ? 0.65 : level === 2 ? 0.78 : level === 3 ? 0.88 : 0.94;
+    // Calibrated to QuillBot's sweet spot for sentence-anchored paraphrasing:
+    const baseTemp = level === 1 ? 0.50 : level === 2 ? 0.60 : level === 3 ? 0.72 : 0.85;
 
     // In shorten mode, keep temperature slightly tighter to maintain high compression
     if (request.mode === 'shorten') {
-      return Math.min(baseTemp, 0.65);
+      return Math.min(baseTemp, 0.55);
     }
     return baseTemp;
   }
