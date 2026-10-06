@@ -53,3 +53,7 @@ docker-compose.override.yml
 # Build
 .turbo
 .cache
+
+# Presentation (Ignored)
+prestation/
+presentation/
