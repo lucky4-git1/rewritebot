@@ -5,40 +5,52 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Paraphrase the text with QuillBot-level human fluency, natural clause restructuring, and authentic vocabulary:
-1. ACTIVE SYNTACTIC RESTRUCTURING (RED DIFF): Invert sentence architecture naturally. Move introductory prepositional, spatial, or temporal clauses to the sentence predicate, or bring trailing modifying clauses to the front (e.g. "[At time X], [Subject did Y in place Z]" -> "[Subject did Y in place Z] [at time X]"). Shift between active and passive constructions where it enhances human flow.
-2. RICH VOCABULARY SUBSTITUTION (YELLOW DIFF): Rephrase key verbs, nouns, and modifying adjectives with crisp, idiomatic human synonyms while keeping factual numbers, dates, citations, and proper nouns intact.
-3. AUTHENTIC HUMAN CADENCE (DEFEAT AI DETECTORS): Vary sentence length and complexity naturally. Eliminate predictable AI connectors. Never use bizarre bureaucratic substitutions ("commencement within", "capital within", "drawn from a pair of").
-4. 1:1 SENTENCE AND PARAGRAPH INTEGRITY: Rewrite each sentence in its corresponding position. Preserve all factual claims and stop immediately when the input ends.`,
+  standard: `Paraphrase the text with natural human fluency, clear sentence structure, and authentic phrasing:
+- Restructure sentences and rearrange clauses where it improves clarity and flow.
+- Choose natural, precise wording while preserving all core facts, figures, citations, and proper nouns.
+- Maintain authentic human cadence without artificial filler or awkward phrasing.
+- Preserve paragraph boundaries and stop immediately when the input text finishes.`,
 
-  fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
-- Reorganizing clause order and sentence structure for natural, effortless human cadence
-- Inverting dependent and independent clauses where it enhances readability
-- Fronting transitional modifiers, participial openers, and varied sentence beginnings
-- Eliminating awkward phrasing, word repetition, and monotonous rhythm
-- Preserving strict 1:1 length parity and factual fidelity with zero verbose padding or bloated synonyms.`,
+  fluency: `Improve the grammatical flow, cadence, and readability of the text:
+- Refine sentence transitions and clause connections for effortless reading.
+- Correct awkward constructions and monotonous rhythms.
+- Keep the vocabulary clear, natural, and idiomatic without unnecessary complexity.
+- Preserve factual meaning, numbers, and paragraph structure.`,
 
-  humanize: `Rewrite the following text with deep sentence-level variety to sound naturally authored and defeat AI detectors. Focus on:
-- Dynamic burstiness: mix punchy short sentences with natural, flowing compound-complex clauses
-- Inverted conversational clause structures and authentic human cadence
-- Organic discourse transitions rather than formulaic AI connectors (strictly avoid "Furthermore", "Moreover", "Additionally", "In conclusion", "It is crucial to note", "delve into", "testament", "pivotal role", "beacon")
-- ANTI-PLAGIARISM PRESERVATION MANDATE: The text may have been previously paraphrased or fixed for originality. Preserve non-plagiarized sentence variety. Never re-introduce common web clichés, verbatim sequences, or generic internet idioms that could trip plagiarism scanners.
-- Maintain 100% unique phrasing while sounding effortlessly human (target 96-99% human authenticity score).
-CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact. Maintain strict 1:1 length parity. Do NOT expand, explain, elaborate, or add conversational padding, filler stories, or introductory fluff.`,
+  humanize: `Rewrite the text to sound naturally and individually authored:
+- Vary sentence length and pacing with dynamic, organic rhythm.
+- Use natural conversational phrasing and organic transitions rather than rigid, formulaic connectors.
+- Maintain the author's original meaning, facts, and paragraph boundaries without adding speculative commentary.`,
 
-  formal: `Rewrite the following text in an authoritative, sophisticated professional style. Reframe sentences using elevated grammatical construction, inverted clause hierarchies, and polished formal transitions while preserving all original facts and maintaining strict 1:1 length parity without pompous circumlocutions.`,
+  formal: `Rewrite the text in an authoritative, polished professional style:
+- Use sophisticated grammatical structure, clear clause relationships, and precise professional terminology.
+- Maintain objective detachment and clarity without becoming pompous or convoluted.
+- Preserve all facts, figures, proper names, and paragraph structure.`,
 
-  academic: `Rewrite the following text in a scholarly peer-reviewed academic style. Invert sentence structures by leading with research questions, evidence, methodology, or conditional clauses rather than generic introductory subjects. Decouple non-negotiable technical terms across newly framed clauses to eliminate n-gram overlap and patchwriting, alternating passive/active constructions for objective detachment while maintaining strict 1:1 length parity.`,
+  academic: `Rewrite the text in a scholarly, peer-reviewed academic style:
+- Frame ideas around evidence, methodology, and analytical context.
+- Use precise disciplinary vocabulary, balancing passive and active voice for scholarly rigor.
+- Preserve technical terms, factual assertions, numbers, and citations intact.`,
 
-  simple: `Simplify the following text to make it effortless to understand. Break convoluted, nested clauses into clean, direct sentences with clear subject-verb-object order, and reorder ideas chronologically or logically while keeping meaning 100% accurate and maintaining direct, concise phrasing.`,
+  simple: `Simplify the text to make it easy and direct to understand:
+- Break complex, nested clauses into clean, straightforward sentences.
+- Use clear everyday vocabulary while preserving 100% of the underlying meaning.
+- Keep ideas organized logically and maintain paragraph structure.`,
 
-  creative: `Rewrite the following text with expressive, imaginative phrasing and dynamic sentence pacing. Radically vary sentence rhythms, restructure narrative clause order, employ evocative syntactic flow, and alternate between punchy short clauses and rich compound structures while preserving core meaning and avoiding artificial padding.`,
+  creative: `Rewrite the text with expressive phrasing and dynamic sentence pacing:
+- Introduce evocative imagery, varied rhythmic cadence, and fresh phrasing.
+- Keep core ideas intact while giving the narrative voice vitality and distinct character.
+- Preserve paragraph structure without introducing unrelated claims.`,
 
-  expand: `Expand the following text with contextual nuance, explanatory depth, and elaborated sentence structures without inventing unsupported claims. Combine ideas into sophisticated compound-complex sentences with rich subordinate clauses and nuanced descriptors.`,
+  expand: `Elaborate on the text with explanatory depth and nuance:
+- Develop core concepts with richer subordinate clauses and detailed descriptive context.
+- Build nuanced compound-complex sentences without introducing ungrounded factual claims.`,
 
-  shorten: `Condense the following text into high-impact, concise sentences. Merge redundant clauses, eliminate filler, and invert syntax for maximal economy of language while keeping every essential fact.`,
+  shorten: `Condense the text into concise, high-impact prose:
+- Remove redundancies, tighten wordy phrases, and distill core arguments to their essence.
+- Preserve every essential fact, figure, and conclusion.`,
 
-  custom: `Follow these instructions to rewrite the text with full sentence restructuring:
+  custom: `Follow these instructions to rewrite the text:
 
 {customInstruction}`,
 };
@@ -49,49 +61,38 @@ CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact
 export class PromptEngine {
   /**
    * Build an authoritative system prompt that enforces:
-   * 1. Single cohesive output only (no multiple drafts / alternative paragraphs)
-   * 2. QuillBot-level structural and syntactic restructuring
-   * 3. Mode-specific calibration (especially Shorten compression ratio and Expand depth)
-   * 4. Scaled syntactic intensity according to synonymLevel
-   * 5. Strict prohibition of meta-chatter, options, or preambles
-   * 6. Human cadence burstiness & anti-AI detection (0% AI score)
-   * 7. Turnitin/Copyleaks zero-plagiarism n-gram decoupling
+   * 1. Output constraints & paragraph integrity
+   * 2. Calibrated transformation depth based on level (1 to 4)
+   * 3. Mode-specific calibration
+   * 4. Natural linguistic fluency and factual preservation
    */
   buildSystemPrompt(request: AIRequest): string {
     const parts: string[] = [];
 
-    parts.push('You are RewriteBot, an editorial paraphrasing engine engineered to produce authentic, human-authored text that achieves a 100% Human rating on AI detectors like Pangram Labs and GPTZero.');
+    parts.push('You are RewriteBot, an expert editorial paraphrasing engine that rewrites text with authentic human craftsmanship, natural sentence variety, and strict factual preservation.');
     parts.push('');
 
     // Rule 1: Output Constraints & Paragraph Integrity
     parts.push('CRITICAL OUTPUT CONSTRAINTS:');
-    parts.push('1. EXACT 1:1 PARAGRAPH STRUCTURE: If the input contains multiple paragraphs separated by blank lines, your output MUST contain the EXACT same number of paragraphs separated by blank lines (\\n\\n). Rewrite each paragraph in its corresponding position. NEVER merge separate paragraphs into a single wall of text or move sentences across paragraphs.');
-    parts.push('2. ZERO HALLUCINATED SUMMARY SENTENCES OR COMMENTARY: Terminate your output IMMEDIATELY when the last sentence of the input has been rewritten. NEVER invent, extrapolate, or append closing summary statements (e.g. NEVER add "The study\'s findings could inform...", "ensured academic rigor...", or "further research is needed"). Every single sentence in your output must map directly to a sentence in the input.');
-    parts.push('3. SINGLE COHESIVE VERSION ONLY: Output exactly ONE single rewritten version of the text. Under NO circumstances should you output multiple drafts, alternative paragraphs, numbered variations, or bulleted options.');
-    parts.push('4. ZERO META-TEXT: Return ONLY the rewritten text. Never include conversational preambles (e.g. "Here is the rewritten text:"), option headers, labels, or explanatory commentary.');
-    parts.push('5. 100% FACTUAL PRESERVATION: Maintain all underlying facts, numbers, dates, citations (e.g. [1], [4]), and proper nouns with absolute fidelity.');
+    parts.push('1. EXACT PARAGRAPH INTEGRITY: If the input has multiple paragraphs separated by blank lines, your output MUST preserve the exact same paragraph structure separated by blank lines (\\n\\n). Never merge paragraphs into a single block or move sentences between paragraphs.');
+    parts.push('2. ZERO HALLUCINATED ADDITIONS: Stop immediately when the input text is fully rewritten. Never invent conclusions, summary observations, or editorial remarks (e.g. do NOT append "In summary...", "This highlights...", or "Further research is required").');
+    parts.push('3. SINGLE OUTPUT ONLY: Output exactly ONE finished rewritten version. Never output multiple variations, alternative phrasing, options, or numbered lists.');
+    parts.push('4. ZERO META-TEXT: Return ONLY the rewritten text itself. Never include conversational preambles (e.g. "Here is the rewritten text:"), headers, or notes.');
+    parts.push('5. FACTUAL PRESERVATION: Retain all quantitative figures, statistics, dates, citations (e.g. [1], [4]), formulas, and proper nouns with complete accuracy.');
     parts.push('');
 
-    // Rule 2: Anti-AI Detection & Burstiness Directive (Defeat GPTZero, Turnitin AI, CopyLeaks)
-    parts.push('BURSTINESS & ANTI-AI DETECTION PROTOCOL (DEFEAT GPTZERO, TURNITIN AI, COPYLEAKS, PANGRAM):');
-    parts.push('1. DYNAMIC BURSTINESS (VARY SENTENCE LENGTH): Never produce sentences of uniform length. AI detectors flag text when every sentence has 18-24 words. Alternate cadence naturally between concise sentences and flowing compound clauses.');
-    parts.push('2. ZERO AI DISCOURSE CLICHÉS (UNIVERSAL BAN ACROSS ALL MODES): Strictly NEVER use robotic AI transitional formulas: "Furthermore", "Moreover", "Additionally", "In conclusion", "It is crucial to note", "It is worth noting", "plays a pivotal role", "serves as a testament to", "delve into", "beacon", "realm", "tapestry", "crucial", "notably". Let clauses connect naturally through semantic flow rather than forced connectors.');
-    parts.push('3. NATURAL HUMAN IDIOMS: Keep natural prepositions ("capital of the governorate", "south of Cairo", "professor of public health"). Never use bizarre bureaucratic substitutions like "commencement within", "capital within", or "drawn from a pair of".');
-    parts.push('');
-
-    // Rule 3: QuillBot-grade Structural Transformation Directive
-    parts.push('QUILLBOT 100% HUMAN TRANSFORMATION BLUEPRINT:');
-    parts.push('Apply QuillBot\'s proven 3-pillar human paraphrasing approach:');
-    parts.push('1. Local Clause Reordering: Rearrange introductory clauses, adverbials, and main clauses naturally (e.g. swap temporal or prepositional openers to the end of the sentence or vice versa).');
-    parts.push('2. Active/Passive Syntactic Shifts: Invert sentence subjects and adjust voice where it enhances natural readability and eliminates formulaic AI phrasing.');
-    parts.push('3. Preserve Authentic Authorial Meaning (~70-75% vocabulary anchor): Retain the underlying semantic terms while substituting key verbs, adjectives, and connecting phrases with crisp, natural human alternatives.');
+    // Rule 2: Natural Style & Phrasing Standards
+    parts.push('STYLE & FLUENCY STANDARDS:');
+    parts.push('1. NATURAL IDIOMATIC USAGE: Always use natural English collocations and prepositions (e.g. "capital of the province", "south of Cairo", "professor of public health"). Never generate awkward, bureaucratic phrasing like "capital within", "commencement within", or "pertaining to".');
+    parts.push('2. ORGANIC TRANSITIONS: Let ideas connect naturally through the logic of the sentences rather than relying on repetitive formulaic transitional crutches.');
+    parts.push('3. VARIED CADENCE: Alternate naturally between shorter, direct statements and longer, multi-clause sentences.');
     parts.push('');
 
     // Calculate dynamic word count metrics
     const rawWords = request.text.trim().split(/\s+/).filter(Boolean);
     const inputWordCount = rawWords.length;
 
-    // Rule 4: Mode-specific instructions and calibrated length limits
+    // Rule 3: Mode-specific instructions and calibrated length limits
     const mode = request.mode;
     if (mode === 'shorten') {
       const minWords = Math.max(3, Math.round(inputWordCount * 0.40));
@@ -99,8 +100,7 @@ export class PromptEngine {
       parts.push('MODE: SHORTEN (HIGH COMPRESSION MANDATE):');
       parts.push(`- Input length: ${inputWordCount} words.`);
       parts.push(`- TARGET COMPRESSION LENGTH: Approximately ${minWords} to ${maxWords} words (40% to 65% of input).`);
-      parts.push('- Strip non-essential modifiers, eliminate wordy transitions, and synthesize the core assertion into a single, punchy, high-impact sentence or tight paragraph.');
-      parts.push('- Under NO circumstances should you expand or output multiple alternative versions.');
+      parts.push('- Strip non-essential modifiers, eliminate wordy transitions, and synthesize the core assertion into concise, punchy phrasing.');
       parts.push('');
     } else if (mode === 'expand') {
       const minWords = Math.round(inputWordCount * 1.20);
@@ -111,41 +111,38 @@ export class PromptEngine {
       parts.push('- Elaborate ideas with analytical depth, rich subordinate clauses, and contextual precision without inventing ungrounded facts.');
       parts.push('');
     } else {
-      // Standard, Fluency, Humanize, Formal, Academic, Simple, Creative, Custom
       const modePrompt = this.getModePrompt(mode, request.customInstruction);
       parts.push(`MODE: ${mode.toUpperCase()}`);
       parts.push(modePrompt);
       parts.push('');
-      parts.push('NATURAL LENGTH & CONCISE CADENCE:');
+      parts.push('NATURAL LENGTH PREFERENCE:');
       parts.push(`- Input length: Approximately ${inputWordCount} words.`);
-      parts.push('- SOFT LENGTH PREFERENCE: Maintain natural, balanced length proportional to the input. Prioritize genuine meaning preservation, effortless readability, and concise phrasing over artificial word-count inflation or padding.');
-      parts.push('- STRICT RESTRAINT: Do NOT bloat into extra sentences, add conversational filler, or append closing remarks.');
+      parts.push('- Maintain natural, balanced length proportional to the original. Prioritize faithful meaning and readability over artificial length expansion.');
       parts.push('');
     }
 
-    // Rule 5: Synonym & Structural Intensity Slider (Levels 1 to 4)
+    // Rule 4: Transformation Depth / Synonym Level (Levels 1 to 4)
     parts.push(this.getSynonymLevelInstruction(request.synonymLevel || 2));
     parts.push('');
 
-    // Rule 6: Frozen terms
+    // Rule 5: Frozen terms
     if (request.frozenTerms && request.frozenTerms.length > 0) {
       parts.push(this.getFrozenTermsInstruction(request.frozenTerms));
       parts.push('');
     }
 
-    // Rule 7: Language
+    // Rule 6: Language
     if (request.language && request.language !== 'auto') {
       parts.push(`LANGUAGE: Keep the output in ${this.getLanguageName(request.language)}.`);
       parts.push('');
     }
 
-    // Rule 8: Anti-Plagiarism & Natural N-Gram Clause Protocol
+    // Rule 7: Originality & Clause Rearrangement Protocol
     if (request.plagiarismGuard !== false) {
-      parts.push('ANTI-PLAGIARISM & NATURAL CLAUSE REARRANGEMENT PROTOCOL:');
-      parts.push('1. BREAK 4+ WORD VERBATIM CHAINS: Ensure common sequences of 4 or more consecutive words are broken through natural clause reordering or synonym substitution (except technical names, dates, numbers, or frozen terms).');
-      parts.push('2. PRESERVE NATURAL COLLOCATIONS: NEVER substitute standard prepositions or natural idioms with awkward bureaucratic words (e.g. NEVER write "south pertaining to Cairo", write "south of Cairo"; NEVER write "professor pertaining to", write "professor of").');
-      parts.push('3. LOCAL CLAUSE INVERSIONS: Invert the position of clauses (front-to-back or back-to-front), vary voice, or change leading prepositional phrases.');
-      parts.push('4. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
+      parts.push('ORIGINALITY & CLAUSE REARRANGEMENT GUIDANCE:');
+      parts.push('- Break long verbatim runs through genuine syntactic reframing and clause restructuring.');
+      parts.push('- Keep domain-standard terminology and idiomatic collocations intact.');
+      parts.push('- Ensure all underlying facts, quantitative measurements, and scientific assertions remain 100% faithful.');
       parts.push('');
     }
 
@@ -163,19 +160,19 @@ export class PromptEngine {
     if (mode === 'shorten') {
       const minWords = Math.max(3, Math.round(inputWordCount * 0.40));
       const maxWords = Math.max(minWords, Math.round(inputWordCount * 0.65));
-      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Maintain 1:1 paragraph structure, vary cadence naturally, avoid AI transition clichés, zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
+      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Maintain paragraph structure, preserve essential facts, and return only the rewritten text:\n\n${request.text}`;
     }
 
     if (mode === 'expand') {
-      return `Expand the following text (${inputWordCount} words) with nuanced depth. Maintain 1:1 paragraph structure, apply natural burstiness, preserve natural idioms, and stop when the content finishes:\n\n${request.text}`;
+      return `Expand the following text (${inputWordCount} words) with nuanced depth. Maintain paragraph structure, preserve facts, and return only the rewritten text:\n\n${request.text}`;
     }
 
     if (mode === 'humanize') {
       const tonePart = request.customInstruction ? ` (${request.customInstruction})` : '';
-      return `Humanize the following text (${inputWordCount} words) to sound 100% authentically human-authored${tonePart}. Maintain exact 1:1 paragraph separation, preserve natural prepositions and idioms (never use awkward replacements like 'pertaining to'), zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
+      return `Rewrite the following text (${inputWordCount} words) with authentic human voice and natural phrasing${tonePart}. Maintain paragraph structure, preserve all facts, and return only the rewritten text:\n\n${request.text}`;
     }
 
-    return `Rewrite the following text (${inputWordCount} words) with QuillBot-grade human fluency and precision. Maintain exact 1:1 paragraph separation, preserve natural prepositions and idioms (never use awkward replacements like 'pertaining to'), zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
+    return `Rewrite the following text (${inputWordCount} words) with high fluency and precision. Maintain paragraph structure, preserve all facts, and return only the rewritten text:\n\n${request.text}`;
   }
 
   /**
@@ -205,14 +202,38 @@ export class PromptEngine {
   }
 
   /**
-   * Get synonym level instruction
+   * Get transformation intensity instruction based on level (1 to 4)
+   *
+   * Level 1 (Light): Subtle polish; high lexical preservation; minor phrasing tweaks.
+   * Level 2 (Balanced): Balanced rewrite; standard clause reordering; natural vocabulary adjustments.
+   * Level 3 (High): Deep structural reconstruction; clause inversion, voice shifts, sentence splitting/merging.
+   * Level 4 (Max): Deep independent recast; maximum syntactic freedom while strictly preserving core facts and entities.
    */
   private getSynonymLevelInstruction(level: number): string {
     const instructions = {
-      1: 'TRANSFORMATION INTENSITY: Level 1 (Light). Make natural phrasing adjustments and gentle clause smoothing while strictly preserving key vocabulary and facts.',
-      2: 'TRANSFORMATION INTENSITY: Level 2 (Balanced — QuillBot Standard). Actively invert opening/closing clauses, alternate active/passive structures, and substitute ~30-45% of key verbs, nouns, and adjectives with natural human synonyms.',
-      3: 'TRANSFORMATION INTENSITY: Level 3 (Dynamic). Dynamically restructure sentence architecture: invert dependent and independent clauses, vary sentence pacing and burstiness, and introduce expressive vocabulary (~50-65% transformation) while keeping all facts 100% accurate.',
-      4: 'TRANSFORMATION INTENSITY: Level 4 (Comprehensive). Thoroughly re-articulate the prose from the ground up: completely recast syntactic clause order and employ rich human vocabulary (~70-80% transformation) to achieve zero AI predictability and maximum original flow.',
+      1: `TRANSFORMATION INTENSITY: Level 1 (Light / Subtle Polish)
+- Purpose: Light editorial polish with minimal disruption.
+- Architecture: Keep original sentence structures and clause orders largely intact.
+- Phrasing: Make subtle, selective word choices and gentle phrasing improvements where needed.
+- Result: High original text retention with clean, natural flow.`,
+
+      2: `TRANSFORMATION INTENSITY: Level 2 (Balanced / Moderate Rewrite)
+- Purpose: A balanced, natural rewrite with moderate structural and vocabulary change.
+- Architecture: Reorder dependent and independent clauses where it improves rhythm; shift prepositional or adverbial openers naturally.
+- Phrasing: Rephrase key verbs, nouns, and modifying phrases with natural synonyms, keeping technical terms intact.
+- Result: A well-balanced blend of original phrasing, fresh vocabulary, and reorganized sentence elements.`,
+
+      3: `TRANSFORMATION INTENSITY: Level 3 (High / Deep Structural Reconstruction)
+- Purpose: Deep structural transformation without turning into a thesaurus swap.
+- Architecture: Substantially reconstruct sentence blueprints. Reorder clauses, shift between active and passive constructions, front trailing modifiers, and split long sentences or merge related short ones.
+- Phrasing: Frame concepts using fresh, natural phrasing rather than mechanical word-for-word substitution.
+- Result: Significant structural and syntactic movement with substantially altered sentence architecture, while keeping all facts, figures, and entities strictly accurate.`,
+
+      4: `TRANSFORMATION INTENSITY: Level 4 (Max / Deep Independent Recast)
+- Purpose: A thorough, independent rewrite that expresses the exact same core meaning through entirely reconstructed syntax.
+- Architecture: Re-envision the text from the ground up. You have full freedom to recast clause hierarchies, alter sentence order within paragraphs, split or unite ideas, and change grammatical voice throughout.
+- Phrasing: Do NOT perform mechanical thesaurus swaps. Instead, state the author's ideas in your own natural, authoritative words using fluent, idiomatic English.
+- Result: A deeply transformed, authentic piece of writing that shares zero structural monotony with the original, while strictly preserving every single fact, number, date, entity, and citation.`,
     };
 
     return instructions[level as 1 | 2 | 3 | 4] || instructions[2];
