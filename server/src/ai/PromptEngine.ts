@@ -188,6 +188,11 @@ export class PromptEngine {
       return `Expand the following text (${inputWordCount} words) with nuanced depth while applying natural burstiness and breaking 3+ word source sequences:\n\n${request.text}`;
     }
 
+    if (mode === 'humanize') {
+      const tonePart = request.customInstruction ? ` (${request.customInstruction})` : '';
+      return `Humanize the following text (${inputWordCount} words) to sound 100% authentically human-authored${tonePart}. Enforce natural burstiness (mix punchy short sentences with complex flowing clauses), eliminate robotic predictability and formulaic AI connectors, and break all 3+ word source sequences to defeat Pangram, GPTZero, and Turnitin:\n\n${request.text}`;
+    }
+
     const minWords = Math.max(1, Math.round(inputWordCount * 0.95));
     const maxWords = Math.max(inputWordCount, Math.round(inputWordCount * 1.08));
     return `Rewrite and structurally restructure the following text (${inputWordCount} words) maintaining strict 1:1 word count parity (${minWords}-${maxWords} words). Apply authentic human burstiness (varied sentence lengths), avoid AI clichés ('Moreover', 'Additionally', etc.), zero fluff, zero bloated synonyms, and break all 3+ word source sequences to ensure 0% plagiarism and 0% AI detection:\n\n${request.text}`;
@@ -210,6 +215,10 @@ export class PromptEngine {
 
     if (mode === 'custom' && customInstruction) {
       return template.replace('{customInstruction}', customInstruction);
+    }
+
+    if (mode === 'humanize' && customInstruction) {
+      return `${template}\n\nSPECIFIC TONE DIRECTIVE:\n${customInstruction}`;
     }
 
     return template;

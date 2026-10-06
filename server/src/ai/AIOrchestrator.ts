@@ -230,15 +230,36 @@ export class AIOrchestrator {
     providerId: string;
     modelId: string;
   }): Promise<AIResponse> {
+    const toneInstructions: Record<string, string> = {
+      conversational:
+        'Write in an engaging, natural human cadence. Use conversational transitions, occasional rhetorical flow, varied sentence lengths, and zero predictable AI sentence structures.',
+      academic:
+        'Maintain scholarly rigour, objective tone, and domain accuracy while radically transforming clause structures, decoupling fixed terms, and varying passive/active voice to dissolve AI detection fingerprints.',
+      casual:
+        'Write in a relaxed, effortless human style. Use short, punchy statements alongside fluid compound sentences, colloquial transitions, and authentic voice.',
+      professional:
+        'Deliver crisp, authoritative executive prose with authentic human sentence pacing, active voice transformations, and zero formulaic filler.',
+      natural:
+        'Maximize authentic human burstiness and irregular cadence. Alternate punchy clauses with compound structures, eliminate formulaic connectors, and preserve strict factual fidelity.',
+    };
+
+    const toneInstruction = toneInstructions[params.mode] || toneInstructions.natural;
+
     const request: AIRequest = {
       text: params.text,
       mode: 'humanize',
       language: params.language,
-      synonymLevel: 2,
+      synonymLevel: 3,
+      customInstruction: toneInstruction,
       frozenTerms: [],
       providerId: params.providerId,
       modelId: params.modelId,
       plagiarismGuard: true,
+      options: {
+        temperature: 0.92,
+        frequencyPenalty: 0.40,
+        presencePenalty: 0.25,
+      },
     };
 
     return this.generate(request);
