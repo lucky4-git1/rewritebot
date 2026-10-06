@@ -301,11 +301,11 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
   style.textContent = `
     .rb-card {
       width: 380px;
-      background: #ffffff;
-      color: #171314;
+      background: #faf7f2;
+      color: #1f1b1d;
       border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e8e2d9;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.20), 0 2px 8px rgba(103, 6, 38, 0.08);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
       display: flex;
@@ -318,31 +318,35 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
     }
     .rb-header {
       padding: 10px 14px;
-      background: #fdfaf6;
-      border-bottom: 1px solid #f1f3f5;
+      background: #ffffff;
+      border-bottom: 1px solid #e8e2d9;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .rb-title {
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 800;
       color: #670626;
       display: flex;
       align-items: center;
       gap: 6px;
+      letter-spacing: -0.2px;
     }
     .rb-close {
       cursor: pointer;
-      color: #9ca3af;
-      font-size: 16px;
+      color: #9c9396;
+      font-size: 14px;
       background: none;
       border: none;
-      padding: 0;
+      padding: 2px 6px;
+      border-radius: 4px;
       line-height: 1;
+      transition: all 0.15s ease;
     }
     .rb-close:hover {
-      color: #374151;
+      color: #dc2626;
+      background: #fff1f2;
     }
     .rb-body {
       padding: 12px 14px;
@@ -352,16 +356,20 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
     }
     .rb-modes {
       display: flex;
-      gap: 4px;
+      gap: 5px;
       overflow-x: auto;
       padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .rb-modes::-webkit-scrollbar {
+      display: none;
     }
     .rb-mode-btn {
-      padding: 4px 10px;
-      border-radius: 14px;
-      border: 1px solid #e5e7eb;
-      background: #f9fafb;
-      color: #4b5563;
+      padding: 4px 11px;
+      border-radius: 20px;
+      border: 1px solid #e8e2d9;
+      background: #ffffff;
+      color: #6b6366;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
@@ -369,37 +377,47 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       transition: all 0.15s ease;
     }
     .rb-mode-btn:hover {
-      background: #f3f4f6;
+      border-color: #670626;
+      color: #670626;
     }
     .rb-mode-btn.active {
       background: #670626;
       color: #ffffff;
       border-color: #670626;
+      box-shadow: 0 2px 6px rgba(103, 6, 38, 0.25);
     }
     .rb-input-area {
       width: 100%;
       box-sizing: border-box;
-      min-height: 55px;
-      max-height: 90px;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
+      min-height: 60px;
+      max-height: 100px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #e8e2d9;
+      background: #ffffff;
+      color: #1f1b1d;
       font-family: inherit;
       font-size: 12px;
+      line-height: 1.4;
       resize: vertical;
+      outline: none;
+    }
+    .rb-input-area:focus {
+      border-color: #670626;
     }
     .rb-output-box {
-      min-height: 75px;
+      min-height: 80px;
       max-height: 160px;
       overflow-y: auto;
-      padding: 10px;
-      background: #fcfcfc;
-      border: 1px solid #e5e7eb;
+      padding: 10px 12px;
+      background: #ffffff;
+      border: 1px solid #e8e2d9;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.5;
-      color: #1f2937;
+      color: #1f1b1d;
       word-break: break-word;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
     }
     .rb-footer {
       display: flex;
@@ -408,31 +426,34 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
       padding-top: 4px;
     }
     .rb-btn-primary {
-      padding: 6px 14px;
+      padding: 7px 14px;
       background: #670626;
       color: #ffffff;
       border-radius: 6px;
       border: none;
       font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(103, 6, 38, 0.25);
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .rb-btn-primary:hover {
+      background: #52041e;
+      transform: translateY(-1px);
+    }
+    .rb-btn-secondary {
+      padding: 6px 12px;
+      background: #ffffff;
+      color: #1f1b1d;
+      border-radius: 6px;
+      border: 1px solid #e8e2d9;
+      font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       transition: background 0.15s ease;
     }
-    .rb-btn-primary:hover {
-      background: #4a031a;
-    }
-    .rb-btn-secondary {
-      padding: 6px 12px;
-      background: #f3f4f6;
-      color: #374151;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-    }
     .rb-btn-secondary:hover {
-      background: #e5e7eb;
+      background: #f5f2eb;
     }
     .rb-spinner {
       color: #670626;
@@ -442,6 +463,7 @@ function showFloatingRewriteCard(coords: { x: number; y: number }) {
     .rb-error {
       color: #dc2626;
       font-size: 12px;
+      font-weight: 600;
     }
   `;
 

@@ -5,42 +5,160 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RewriteBot Studio Mini</title>
     <style>
+      :root {
+        --rb-primary: #670626;
+        --rb-primary-hover: #52041e;
+        --rb-primary-light: #fbebf0;
+        --rb-accent: #bad797;
+        --rb-bg-cream: #faf7f2;
+        --rb-card-bg: #ffffff;
+        --rb-border: #e8e2d9;
+        --rb-border-subtle: #f0ebe1;
+        --rb-text-main: #1f1b1d;
+        --rb-text-muted: #6b6366;
+        --rb-text-subtle: #9c9396;
+        --rb-radius-lg: 12px;
+        --rb-radius-md: 8px;
+        --rb-radius-pill: 20px;
+        --rb-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+        --rb-shadow-md: 0 4px 12px rgba(103, 6, 38, 0.08);
+      }
+
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, -apple-system, sans-serif;
       }
+
       body {
-        width: 380px;
-        background: #ffffff;
-        color: #171314;
-        padding: 14px 16px;
+        width: 390px;
+        background: var(--rb-bg-cream);
+        color: var(--rb-text-main);
+        padding: 14px;
+        font-size: 13px;
+        line-height: 1.4;
       }
+
+      /* Top Header */
       .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding-bottom: 10px;
-        border-bottom: 1px solid #f1f3f5;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--rb-border);
       }
       .logo {
         font-size: 15px;
-        font-weight: 700;
-        color: #670626;
+        font-weight: 800;
+        color: var(--rb-primary);
         display: flex;
         align-items: center;
         gap: 6px;
+        letter-spacing: -0.3px;
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .btn-web-link {
+        font-size: 11px;
+        color: var(--rb-primary);
+        text-decoration: none;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: var(--rb-radius-md);
+        background: var(--rb-primary-light);
+        transition: background 0.15s ease;
+      }
+      .btn-web-link:hover {
+        background: #f7d5e0;
+      }
+      .btn-icon-settings {
+        background: none;
+        border: 1px solid var(--rb-border);
+        background: #ffffff;
+        color: var(--rb-text-muted);
+        cursor: pointer;
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: all 0.15s ease;
+      }
+      .btn-icon-settings:hover {
+        color: var(--rb-primary);
+        border-color: var(--rb-primary);
+        background: #ffffff;
+      }
+      .btn-icon-settings.active {
+        background: var(--rb-primary);
+        color: #ffffff;
+        border-color: var(--rb-primary);
       }
 
-      /* Account Box */
-      .account-card {
-        background: #fdfaf6;
-        border: 1px solid #f2e8dc;
-        border-radius: 8px;
-        padding: 10px 12px;
+      /* Settings Modal / Overlay Panel */
+      .settings-overlay {
+        display: none;
+        background: #ffffff;
+        border: 1px solid var(--rb-border);
+        border-radius: var(--rb-radius-lg);
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: var(--rb-shadow-md);
+        animation: fadeIn 0.15s ease-out;
+      }
+      .settings-overlay.open {
+        display: block;
+      }
+      .settings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--rb-border-subtle);
+      }
+      .settings-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--rb-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .settings-close {
+        background: none;
+        border: none;
+        font-size: 14px;
+        color: var(--rb-text-subtle);
+        cursor: pointer;
+      }
+      .settings-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--rb-text-muted);
+        margin-bottom: 4px;
+        display: block;
+      }
+      .settings-desc {
+        font-size: 10px;
+        color: var(--rb-text-subtle);
+        margin-bottom: 8px;
+      }
+
+      /* Account Box (Logged In) */
+      .account-card {
+        background: var(--rb-card-bg);
+        border: 1px solid var(--rb-border);
+        border-radius: var(--rb-radius-lg);
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        box-shadow: var(--rb-shadow-sm);
       }
       .user-info-row {
         display: flex;
@@ -54,15 +172,15 @@
         gap: 8px;
       }
       .user-avatar {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
-        background: #670626;
+        background: var(--rb-primary);
         color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
       }
@@ -71,27 +189,28 @@
         flex-direction: column;
       }
       .user-name {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 700;
-        color: #171314;
+        color: var(--rb-text-main);
       }
       .user-email {
-        font-size: 11px;
-        color: #6b7280;
+        font-size: 10px;
+        color: var(--rb-text-muted);
       }
       .btn-signout {
         padding: 4px 8px;
-        border: 1px solid #d1d5db;
+        border: 1px solid var(--rb-border);
         background: #ffffff;
-        color: #4b5563;
-        border-radius: 6px;
+        color: var(--rb-text-muted);
+        border-radius: var(--rb-radius-md);
         font-size: 10px;
         font-weight: 600;
         cursor: pointer;
-        transition: background 0.15s ease;
+        transition: all 0.15s ease;
       }
       .btn-signout:hover {
-        background: #f3f4f6;
+        background: #fff1f2;
+        border-color: #fca5a5;
         color: #dc2626;
       }
 
@@ -100,8 +219,8 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
-        padding-top: 6px;
-        border-top: 1px solid #eee4d6;
+        padding-top: 8px;
+        border-top: 1px solid var(--rb-border-subtle);
       }
       .provider-header {
         display: flex;
@@ -111,41 +230,43 @@
       .provider-label {
         font-size: 10px;
         font-weight: 700;
-        color: #8c6e5a;
+        color: var(--rb-text-muted);
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
       .btn-toggle-keyform {
         font-size: 10px;
-        color: #670626;
+        color: var(--rb-primary);
         font-weight: 700;
         cursor: pointer;
         background: none;
         border: none;
+      }
+      .btn-toggle-keyform:hover {
         text-decoration: underline;
       }
       .provider-select {
         width: 100%;
-        padding: 5px 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+        padding: 6px 10px;
+        border: 1px solid var(--rb-border);
+        border-radius: var(--rb-radius-md);
         background: #ffffff;
         font-size: 11px;
         font-weight: 600;
-        color: #1f2937;
+        color: var(--rb-text-main);
         outline: none;
       }
       .provider-select:focus {
-        border-color: #670626;
+        border-color: var(--rb-primary);
       }
 
       /* Add Provider Drawer */
       .add-key-drawer {
         display: none;
-        background: #ffffff;
-        border: 1px dashed #d1d5db;
-        border-radius: 6px;
-        padding: 8px 10px;
+        background: #faf8f5;
+        border: 1px dashed var(--rb-border);
+        border-radius: var(--rb-radius-md);
+        padding: 10px;
         margin-top: 8px;
       }
       .add-key-drawer.open {
@@ -154,44 +275,49 @@
 
       /* Auth Tabs for Logged-Out Users */
       .auth-container {
-        background: #fafafa;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 10px 12px;
-        margin-bottom: 10px;
+        background: var(--rb-card-bg);
+        border: 1px solid var(--rb-border);
+        border-radius: var(--rb-radius-lg);
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: var(--rb-shadow-sm);
       }
       .auth-tabs {
         display: flex;
-        border-bottom: 1px solid #e5e7eb;
-        margin-bottom: 8px;
+        border-bottom: 1px solid var(--rb-border);
+        margin-bottom: 10px;
       }
       .auth-tab {
         flex: 1;
         text-align: center;
-        padding: 5px;
+        padding: 6px;
         font-size: 11px;
         font-weight: 600;
-        color: #6b7280;
+        color: var(--rb-text-muted);
         cursor: pointer;
         border-bottom: 2px solid transparent;
       }
       .auth-tab.active {
-        color: #670626;
-        border-bottom-color: #670626;
+        color: var(--rb-primary);
+        border-bottom-color: var(--rb-primary);
+        font-weight: 700;
       }
       .form-group {
-        margin-bottom: 6px;
+        margin-bottom: 8px;
       }
       .form-input {
         width: 100%;
-        padding: 5px 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+        padding: 6px 10px;
+        border: 1px solid var(--rb-border);
+        border-radius: var(--rb-radius-md);
         font-size: 11px;
+        background: #ffffff;
+        color: var(--rb-text-main);
         outline: none;
+        transition: border 0.15s ease;
       }
       .form-input:focus {
-        border-color: #670626;
+        border-color: var(--rb-primary);
       }
       .btn-row {
         display: flex;
@@ -200,29 +326,37 @@
       }
       .btn-primary-sm {
         flex: 1;
-        padding: 6px 10px;
-        background: #670626;
+        padding: 7px 12px;
+        background: var(--rb-primary);
         color: #ffffff;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--rb-radius-md);
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .btn-primary-sm:hover {
+        background: var(--rb-primary-hover);
       }
       .btn-secondary-sm {
-        padding: 6px 8px;
+        padding: 7px 10px;
         background: #ffffff;
-        border: 1px solid #d1d5db;
-        color: #374151;
-        border-radius: 6px;
-        font-size: 10px;
+        border: 1px solid var(--rb-border);
+        color: var(--rb-text-main);
+        border-radius: var(--rb-radius-md);
+        font-size: 11px;
         font-weight: 600;
         cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .btn-secondary-sm:hover {
+        background: #f5f2eb;
       }
       .auth-msg {
         font-size: 10px;
-        margin-top: 5px;
-        font-weight: 500;
+        margin-top: 6px;
+        font-weight: 600;
       }
       .auth-msg.error {
         color: #dc2626;
@@ -231,58 +365,76 @@
         color: #16a34a;
       }
 
-      /* Modes */
+      /* Paraphrase Modes Pills */
       .modes {
         display: flex;
-        gap: 4px;
-        margin-bottom: 8px;
+        gap: 5px;
+        margin-bottom: 10px;
         overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+      }
+      .modes::-webkit-scrollbar {
+        display: none;
       }
       .mode-btn {
-        padding: 4px 9px;
-        border-radius: 14px;
-        border: 1px solid #e5e7eb;
-        background: #f9fafb;
-        color: #4b5563;
+        padding: 5px 11px;
+        border-radius: var(--rb-radius-pill);
+        border: 1px solid var(--rb-border);
+        background: #ffffff;
+        color: var(--rb-text-muted);
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
         white-space: nowrap;
+        transition: all 0.15s ease;
+      }
+      .mode-btn:hover {
+        border-color: var(--rb-primary);
+        color: var(--rb-primary);
       }
       .mode-btn.active {
-        background: #670626;
+        background: var(--rb-primary);
         color: #ffffff;
-        border-color: #670626;
+        border-color: var(--rb-primary);
+        box-shadow: 0 2px 6px rgba(103, 6, 38, 0.25);
       }
 
-      /* Textarea & Output */
+      /* Studio Editor Box */
+      .editor-container {
+        background: #ffffff;
+        border: 1px solid var(--rb-border);
+        border-radius: var(--rb-radius-lg);
+        overflow: hidden;
+        box-shadow: var(--rb-shadow-sm);
+        margin-bottom: 10px;
+      }
       textarea {
         width: 100%;
-        height: 70px;
-        padding: 8px 10px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
+        height: 78px;
+        padding: 10px 12px;
+        border: none;
+        border-bottom: 1px solid var(--rb-border-subtle);
         font-size: 12px;
+        line-height: 1.5;
         resize: none;
         outline: none;
-        margin-bottom: 8px;
+        color: var(--rb-text-main);
+        background: #ffffff;
       }
-      textarea:focus {
-        border-color: #670626;
+      textarea::placeholder {
+        color: var(--rb-text-subtle);
       }
       .output-area {
         width: 100%;
-        min-height: 70px;
-        max-height: 120px;
+        min-height: 78px;
+        max-height: 140px;
         overflow-y: auto;
-        padding: 8px 10px;
-        background: #fdfaf6;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
+        padding: 10px 12px;
+        background: #faf8f5;
         font-size: 12px;
         line-height: 1.5;
-        color: #1f2937;
-        margin-bottom: 8px;
+        color: var(--rb-text-main);
         user-select: text;
         word-break: break-word;
       }
@@ -292,87 +444,94 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 10px;
       }
       .btn-rewrite {
-        padding: 6px 14px;
-        background: #670626;
+        padding: 7px 16px;
+        background: var(--rb-primary);
         color: #ffffff;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--rb-radius-md);
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
+        box-shadow: 0 2px 8px rgba(103, 6, 38, 0.25);
+        transition: all 0.15s ease;
+      }
+      .btn-rewrite:hover {
+        background: var(--rb-primary-hover);
+        transform: translateY(-1px);
       }
       .btn-copy {
-        padding: 6px 10px;
-        background: #f3f4f6;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+        padding: 7px 12px;
+        background: #ffffff;
+        border: 1px solid var(--rb-border);
+        border-radius: var(--rb-radius-md);
         font-size: 11px;
         font-weight: 600;
+        color: var(--rb-text-main);
         cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .btn-copy:hover {
+        background: #f7f3eb;
       }
 
       /* Footer */
       .footer-bar {
-        margin-top: 8px;
-        padding-top: 6px;
-        border-top: 1px solid #f1f3f5;
+        padding-top: 8px;
+        border-top: 1px solid var(--rb-border);
         display: flex;
         justify-content: space-between;
         align-items: center;
         font-size: 10px;
-        color: #9ca3af;
-      /* Settings Drawer (Advanced / Self-Hosted) */
-      .settings-toggle-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 13px;
-        color: #9ca3af;
-        padding: 2px 4px;
-        border-radius: 4px;
-        line-height: 1;
-        transition: color 0.15s ease, background 0.15s ease;
+        color: var(--rb-text-subtle);
       }
-      .settings-toggle-btn:hover {
-        color: #670626;
-        background: #f3f4f6;
-      }
-      .settings-drawer {
-        display: none;
-        margin-top: 8px;
-        padding: 8px 10px;
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        font-size: 11px;
-      }
-      .settings-drawer.open {
-        display: block;
-      }
-      .settings-drawer-title {
-        font-weight: 700;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #4b5563;
-        margin-bottom: 6px;
-      }
-      .settings-drawer-row {
-        display: flex;
-        gap: 6px;
+      .status-badge {
+        display: inline-flex;
         align-items: center;
+        gap: 4px;
+        font-weight: 600;
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #16a34a;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
       }
     </style>
   </head>
   <body>
+    <!-- Top Header -->
     <div class="header">
       <div class="logo">✍️ RewriteBot</div>
-      <a href="https://rewritebot-client.vercel.app" target="_blank" style="font-size: 11px; color: #670626; text-decoration: none; font-weight: 600;">Open Web App ↗</a>
+      <div class="header-actions">
+        <a href="https://rewritebot-client.vercel.app" target="_blank" class="btn-web-link">Open Web App ↗</a>
+        <button class="btn-icon-settings" id="btn-toggle-settings" title="Server & Connection Settings">⚙️</button>
+      </div>
     </div>
 
-    <!-- LOGGED-IN VIEW (User profile, provider selector, and add key drawer) -->
+    <!-- Clean Settings Overlay Panel (Toggled via the ⚙️ Icon) -->
+    <div class="settings-overlay" id="settings-drawer">
+      <div class="settings-header">
+        <span class="settings-title">⚙️ Server & Connection Settings</span>
+        <button class="settings-close" id="btn-close-settings">✕</button>
+      </div>
+      <label class="settings-label" for="custom-server-input">Backend API Server Endpoint</label>
+      <div class="settings-desc">Default connects to official RewriteBot Cloud. Customize if hosting locally (e.g. http://localhost:3000/api/v1).</div>
+      <div class="btn-row">
+        <input type="text" class="form-input" id="custom-server-input" placeholder="https://..." />
+        <button class="btn-secondary-sm" id="btn-save-server" style="white-space: nowrap;">Save</button>
+      </div>
+      <div class="auth-msg" id="server-msg"></div>
+    </div>
+
+    <!-- LOGGED-IN VIEW -->
     <div class="account-card" id="logged-in-card" style="display: none;">
       <div class="user-info-row">
         <div class="user-profile">
@@ -397,7 +556,7 @@
 
       <!-- Add AI Key Drawer -->
       <div class="add-key-drawer" id="add-key-drawer">
-        <div style="font-size: 11px; font-weight: 700; margin-bottom: 6px; color: #374151;">Connect Your AI Key (BYO-AI)</div>
+        <div style="font-size: 11px; font-weight: 700; margin-bottom: 6px; color: var(--rb-primary);">Connect Your AI Key (BYO-AI)</div>
         <div class="form-group">
           <select class="form-input" id="new-provider-type">
             <option value="groq">Groq (Recommended - 100% Free & Fast)</option>
@@ -410,8 +569,8 @@
         <div class="form-group">
           <input type="password" class="form-input" id="new-provider-key" placeholder="Paste your API key (e.g. gsk_...)" />
         </div>
-        <div style="font-size: 10px; color: #6b7280; margin-bottom: 6px;">
-          💡 Tip: Free Groq keys take 10 seconds at <a href="https://console.groq.com/keys" target="_blank" style="color: #670626;">console.groq.com</a>
+        <div style="font-size: 10px; color: var(--rb-text-muted); margin-bottom: 6px;">
+          💡 Free Groq keys take 10 seconds at <a href="https://console.groq.com/keys" target="_blank" style="color: var(--rb-primary); font-weight: 600;">console.groq.com</a>
         </div>
         <div class="btn-row">
           <button class="btn-primary-sm" id="btn-save-key">Save & Activate</button>
@@ -421,7 +580,7 @@
       </div>
     </div>
 
-    <!-- LOGGED-OUT VIEW (Login & Register Tabs) -->
+    <!-- LOGGED-OUT VIEW -->
     <div class="auth-container" id="logged-out-card">
       <div class="auth-tabs">
         <div class="auth-tab active" id="tab-login">Log In</div>
@@ -445,7 +604,7 @@
       <!-- Register Form -->
       <div id="form-register" style="display: none;">
         <div class="form-group">
-          <input type="text" class="form-input" id="reg-name" placeholder="Full Name (e.g. John Doe)" />
+          <input type="text" class="form-input" id="reg-name" placeholder="Full Name" />
         </div>
         <div class="form-group">
           <input type="email" class="form-input" id="reg-email" placeholder="Email" />
@@ -461,7 +620,7 @@
       <div class="auth-msg" id="auth-msg"></div>
     </div>
 
-    <!-- Paraphrase Modes -->
+    <!-- Paraphrase Modes Pills -->
     <div class="modes">
       <button class="mode-btn active" data-mode="standard">Standard</button>
       <button class="mode-btn" data-mode="fluency">Fluency</button>
@@ -470,9 +629,11 @@
       <button class="mode-btn" data-mode="shorten">Shorten</button>
     </div>
 
-    <!-- Text Input & Output -->
-    <textarea id="input-text" placeholder="Paste or type text to rephrase…"></textarea>
-    <div class="output-area" id="output-text">Rewritten output will appear here…</div>
+    <!-- Studio Editor Box -->
+    <div class="editor-container">
+      <textarea id="input-text" placeholder="Paste or type text to rephrase…"></textarea>
+      <div class="output-area" id="output-text">Rewritten output will appear here…</div>
+    </div>
 
     <!-- Actions -->
     <div class="actions">
@@ -480,21 +641,10 @@
       <button class="btn-rewrite" id="btn-rewrite">⚡ Paraphrase</button>
     </div>
 
-    <!-- Hidden / Advanced Settings Drawer -->
-    <div class="settings-drawer" id="settings-drawer">
-      <div class="settings-drawer-title">Advanced Backend Settings</div>
-      <div style="font-size: 10px; color: #6b7280; margin-bottom: 6px;">For self-hosted instances only. Default is cloud.</div>
-      <div class="settings-drawer-row">
-        <input type="text" class="form-input" id="custom-server-input" placeholder="https://..." style="font-size: 10px; padding: 4px 6px;" />
-        <button class="btn-secondary-sm" id="btn-save-server" style="white-space: nowrap; padding: 4px 8px;">Save</button>
-      </div>
-      <div class="auth-msg" id="server-msg" style="margin-top: 4px;"></div>
-    </div>
-
-    <!-- Clean, User-Friendly Footer -->
+    <!-- Clean Footer -->
     <div class="footer-bar">
-      <span>RewriteBot v1.0.1 • <span id="server-status" style="color: #16a34a;">Cloud Connected</span></span>
-      <button class="settings-toggle-btn" id="btn-toggle-settings" title="Advanced Settings">⚙️</button>
+      <span class="status-badge"><span class="status-dot"></span> <span id="server-status">Cloud Connected</span></span>
+      <span>RewriteBot Studio v1.0.1</span>
     </div>
 
     <script type="module" src="./src/popup/popup.ts"></script>

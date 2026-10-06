@@ -273,8 +273,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  const btnCloseSettings = document.getElementById('btn-close-settings');
+
   btnToggleSettings?.addEventListener('click', () => {
-    settingsDrawer?.classList.toggle('open');
+    const isOpen = settingsDrawer?.classList.toggle('open');
+    btnToggleSettings.classList.toggle('active', Boolean(isOpen));
+  });
+
+  btnCloseSettings?.addEventListener('click', () => {
+    settingsDrawer?.classList.remove('open');
+    btnToggleSettings?.classList.remove('active');
   });
 
   btnSaveServer?.addEventListener('click', () => {
