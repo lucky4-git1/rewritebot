@@ -68,7 +68,9 @@ export class AIOrchestrator {
     }
 
     // Build authoritative system prompt and clean user prompt
+    // If request.systemPrompt is already provided, use it directly; otherwise construct via PromptEngine
     const systemPrompt = request.systemPrompt || this.promptEngine.buildSystemPrompt(request);
+    // If the request already has systemPrompt specified, request.text contains the clean user input
     const userPrompt = request.systemPrompt ? request.text : this.promptEngine.buildUserPrompt(request);
     
     diag?.log('PROMPT_BUILT', {
@@ -110,10 +112,14 @@ export class AIOrchestrator {
       }
 
       // Tier 1.5: Algorithmic Quality Gate Verification (<5ms)
+      // Only execute quality gate for general paraphrasing and humanizing workflows (not for summarizer or translation or grammar)
       let finalResponse = response;
       let sanitizedText = response.text;
 
-      if (request.text) {
+      const isParaphraseOrHumanize = request.mode !== 'shorten' && request.mode !== 'expand' && request.mode !== ('grammar' as any);
+      const isToolOperation = !!request.systemPrompt;
+
+      if (isParaphraseOrHumanize && !isToolOperation && request.text) {
         const qualityEval = qualityGate.evaluateQuality(request.text, sanitizedText, request.mode);
         diag?.log('QUALITY_GATE_EVALUATION', {
           passed: qualityEval.passed,
@@ -151,8 +157,8 @@ export class AIOrchestrator {
         }
       }
 
-      // Tier 2: Deterministic N-Gram Sanitizer & Patchwriting Decoupler
-      if (request.plagiarismGuard !== false && request.text) {
+      // Tier 2: Deterministic N-Gram Sanitizer & Patchwriting Decoupler (for paraphrase/humanize only)
+      if (request.plagiarismGuard !== false && request.text && !isToolOperation && isParaphraseOrHumanize) {
         const sanitization = sanitizeNGrams(request.text, sanitizedText);
         if (sanitization.modified) {
           logger.info(`[NGramSanitizer] Decoupled ${sanitization.sanitizedCount} matching phrase sequence(s) to guarantee 0% patchwriting`);
@@ -247,16 +253,28 @@ export class AIOrchestrator {
     providerId: string;
     modelId: string;
   }): Promise<AIResponse> {
-    const prompt = this.promptEngine.buildGrammarPrompt(params.text, params.language);
+    const langName = this.promptEngine['getLanguageName'] ? this.promptEngine['getLanguageName'](params.language) : params.language;
+    const systemPrompt = `You are an elite, highly accurate copyeditor and proofreader.
+Your task is to correct all grammar, spelling, punctuation, capitalization, and syntax errors in the provided text while preserving the author's original meaning and tone.
+CRITICAL FORMATTING INSTRUCTIONS:
+- Return ONLY the final corrected text.
+- Do NOT output explanations, introductory comments, bullet points, headers, or conversational notes.
+- Do NOT repeat the prompt, instructions, or markdown separators like "---".
+- Output language: ${langName || 'English'}.`;
 
     const request: AIRequest = {
-      text: prompt,
+      text: params.text,
+      systemPrompt,
       mode: 'standard',
       language: params.language,
       synonymLevel: 1,
       frozenTerms: [],
       providerId: params.providerId,
       modelId: params.modelId,
+      plagiarismGuard: false,
+      options: {
+        temperature: 0.1, // low temperature for precise proofreading
+      },
     };
 
     return this.generate(request);
@@ -298,9 +316,9 @@ export class AIOrchestrator {
       modelId: params.modelId,
       plagiarismGuard: true,
       options: {
-        temperature: 0.92,
-        frequencyPenalty: 0.40,
-        presencePenalty: 0.25,
+        temperature: 0.88,
+        frequencyPenalty: 0.35,
+        presencePenalty: 0.20,
       },
     };
 
@@ -318,21 +336,44 @@ export class AIOrchestrator {
     providerId: string;
     modelId: string;
   }): Promise<AIResponse> {
-    const prompt = this.promptEngine.buildSummarizePrompt(
-      params.text,
-      params.length,
-      params.format,
-      params.language
-    );
+    const lengthInstructions: Record<string, string> = {
+      short: 'Create a brief summary (1-2 sentences).',
+      medium: 'Create a moderate summary (3-5 sentences).',
+      detailed: 'Create a detailed summary covering all key aspects and arguments.',
+    };
+
+    const formatInstructions: Record<string, string> = {
+      paragraph: 'Format the output as a coherent, well-structured paragraph.',
+      bullets: 'Format the output as clear, concise bullet points (use - prefix).',
+      'key-points': 'Format the output as numbered key takeaways (1., 2., etc.).',
+      executive: 'Format the output as an executive summary with an overview and core findings.',
+    };
+
+    const langName = this.promptEngine['getLanguageName'] ? this.promptEngine['getLanguageName'](params.language) : params.language;
+    const lengthGuide = lengthInstructions[params.length] || lengthInstructions.medium;
+    const formatGuide = formatInstructions[params.format] || formatInstructions.paragraph;
+
+    const systemPrompt = `You are an expert summarizer.
+Your task is to summarize the provided text accurately and concisely.
+SPECIFICATIONS:
+- Length: ${lengthGuide}
+- Format: ${formatGuide}
+- Language: ${langName || 'English'}
+CRITICAL FORMATTING INSTRUCTIONS:
+- Return ONLY the summary itself.
+- Do NOT output conversational preambles, meta-commentary, or markdown dividers like "---".
+- Do NOT repeat the instructions.`;
 
     const request: AIRequest = {
-      text: prompt,
-      mode: 'standard',
+      text: params.text,
+      systemPrompt,
+      mode: 'shorten',
       language: params.language,
       synonymLevel: 1,
       frozenTerms: [],
       providerId: params.providerId,
       modelId: params.modelId,
+      plagiarismGuard: false,
     };
 
     return this.generate(request);
@@ -348,20 +389,27 @@ export class AIOrchestrator {
     providerId: string;
     modelId: string;
   }): Promise<AIResponse> {
-    const prompt = this.promptEngine.buildTranslatePrompt(
-      params.text,
-      params.sourceLanguage,
-      params.targetLanguage
-    );
+    const getLang = (code: string) => (this.promptEngine['getLanguageName'] ? this.promptEngine['getLanguageName'](code) : code);
+    const sourceName = params.sourceLanguage === 'auto' ? 'the source language' : getLang(params.sourceLanguage);
+    const targetName = getLang(params.targetLanguage);
+
+    const systemPrompt = `You are an expert translator.
+Translate the text faithfully and idiomatically from ${sourceName} into ${targetName}.
+CRITICAL FORMATTING INSTRUCTIONS:
+- Return ONLY the translated text.
+- Do NOT output notes, explanations, pronunciation guides, or commentary.
+- Do NOT include dividers like "---" or repeat the instructions.`;
 
     const request: AIRequest = {
-      text: prompt,
+      text: params.text,
+      systemPrompt,
       mode: 'standard',
       language: params.targetLanguage,
       synonymLevel: 1,
       frozenTerms: [],
       providerId: params.providerId,
       modelId: params.modelId,
+      plagiarismGuard: false,
     };
 
     return this.generate(request);
@@ -380,12 +428,14 @@ export class AIOrchestrator {
 
     const request: AIRequest = {
       text: prompt,
+      systemPrompt: 'You are an academic bibliography and citation specialist. Return ONLY the requested formatted citation without explanations or surrounding conversational text.',
       mode: 'standard',
       language: 'auto',
       synonymLevel: 1,
       frozenTerms: [],
       providerId: params.providerId,
       modelId: params.modelId,
+      plagiarismGuard: false,
     };
 
     const response = await this.generate(request);
