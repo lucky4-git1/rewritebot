@@ -217,10 +217,10 @@ export class PromptEngine {
    */
   private getSynonymLevelInstruction(level: number): string {
     const instructions = {
-      1: 'SYNONYM & STRUCTURAL INTENSITY: Level 1 (Mild). Substitute ~15-20% of words with natural equivalents and keep sentence structure tightly aligned to the author\'s original.',
-      2: 'SYNONYM & STRUCTURAL INTENSITY: Level 2 (Balanced — QuillBot Standard). Substitute ~25-35% of words with clean human equivalents and perform natural clause inversions (e.g. front/rear clause switching) while preserving authorial flow and exact word count parity.',
-      3: 'SYNONYM & STRUCTURAL INTENSITY: Level 3 (High). Substitute ~40-50% of words with natural synonyms, shift sentence voice (active/passive), and invert clause sequences while keeping facts and meaning completely intact.',
-      4: 'SYNONYM & STRUCTURAL INTENSITY: Level 4 (Max). Rephrase up to 60% of phrasing through deep clause re-sequencing and varied sentence structures while preserving exact factual fidelity and word count parity.',
+      1: 'TRANSFORMATION INTENSITY: Level 1 (Light). Make subtle phrasing adjustments and gentle clause smoothing while strictly preserving the author\'s original vocabulary and sentence pattern.',
+      2: 'TRANSFORMATION INTENSITY: Level 2 (Balanced — QuillBot Standard). Naturally invert front/back clauses and substitute key verbs, adjectives, and nouns with clean human synonyms while maintaining fluent sentence rhythm and exact facts.',
+      3: 'TRANSFORMATION INTENSITY: Level 3 (Dynamic). Actively restructure sentence architecture: invert dependent/independent clauses, vary active/passive voice, and use expressive synonyms while maintaining 100% natural collocations.',
+      4: 'TRANSFORMATION INTENSITY: Level 4 (Comprehensive). Thoroughly re-articulate sentence phrasing from the ground up with rich syntactic variety while preserving all underlying facts, numbers, and logical relationships.',
     };
 
     return instructions[level as 1 | 2 | 3 | 4] || instructions[2];

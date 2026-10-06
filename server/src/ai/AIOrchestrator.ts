@@ -17,6 +17,7 @@ import { IAIProvider } from './types';
 import { DiagnosticLogger } from '../utils/diagnostics';
 import { sanitizeNGrams } from './NGramSanitizer';
 import { MultiSourceSearchEngine } from './MultiSourceSearchEngine';
+import { qualityGate } from './QualityGate';
 
 /**
  * Main orchestrator for AI operations
@@ -108,10 +109,51 @@ export class AIOrchestrator {
         throw new ValidationError('Provider returned empty response');
       }
 
-      // Tier 2: Deterministic N-Gram Sanitizer & Patchwriting Decoupler
+      // Tier 1.5: Algorithmic Quality Gate Verification (<5ms)
+      let finalResponse = response;
       let sanitizedText = response.text;
+
+      if (request.text) {
+        const qualityEval = qualityGate.evaluateQuality(request.text, sanitizedText, request.mode);
+        diag?.log('QUALITY_GATE_EVALUATION', {
+          passed: qualityEval.passed,
+          score: qualityEval.score,
+          issues: qualityEval.issues,
+        });
+
+        if (!qualityEval.passed) {
+          logger.warn(`[QualityGate] Candidate failed quality evaluation (Score: ${qualityEval.score}). Issues: ${qualityEval.issues.join('; ')}. Triggering adaptive refinement retry...`);
+          
+          try {
+            // Adaptive retry: provide focused refinement instruction targeting the specific failure issues
+            const retryInstruction = `Please refine the rewrite. Ensure: 1) Every factual number, date, and statistic is preserved exactly without omission; 2) Stop immediately when the text concludes without adding summary commentary; 3) Maintain natural human phrasing without awkward bureaucratic prepositions.`;
+            const retryRequest: AIRequest = {
+              ...providerRequest,
+              text: `${userPrompt}\n\n[REFINEMENT MANDATE: ${retryInstruction}]`,
+              options: {
+                ...request.options,
+                temperature: 0.50, // tighter, focused temperature for precision retry
+              },
+            };
+
+            const retryResponse = await provider.generate(retryRequest);
+            if (retryResponse.text && retryResponse.text.trim().length > 0) {
+              const retryEval = qualityGate.evaluateQuality(request.text, retryResponse.text, request.mode);
+              if (retryEval.score >= qualityEval.score) {
+                logger.info(`[QualityGate] Adaptive retry succeeded with higher quality score (${retryEval.score} vs ${qualityEval.score})`);
+                sanitizedText = retryResponse.text;
+                finalResponse = retryResponse;
+              }
+            }
+          } catch (retryErr) {
+            logger.warn(`[QualityGate] Adaptive retry failed or timed out, keeping initial candidate: ${retryErr}`);
+          }
+        }
+      }
+
+      // Tier 2: Deterministic N-Gram Sanitizer & Patchwriting Decoupler
       if (request.plagiarismGuard !== false && request.text) {
-        const sanitization = sanitizeNGrams(request.text, response.text);
+        const sanitization = sanitizeNGrams(request.text, sanitizedText);
         if (sanitization.modified) {
           logger.info(`[NGramSanitizer] Decoupled ${sanitization.sanitizedCount} matching phrase sequence(s) to guarantee 0% patchwriting`);
           sanitizedText = sanitization.text;
@@ -122,12 +164,12 @@ export class AIOrchestrator {
         outputLength: sanitizedText.length,
       });
 
-      logger.info(`Generation completed in ${latency}ms, output length: ${sanitizedText.length}`);
+      logger.info(`Generation completed in ${Date.now() - startTime}ms, output length: ${sanitizedText.length}`);
 
       return {
-        ...response,
+        ...finalResponse,
         text: sanitizedText,
-        latency,
+        latency: Date.now() - startTime,
       };
     } catch (error) {
       diag?.error('GENERATION_FAILED', error, {
