@@ -218,10 +218,10 @@ export class PromptEngine {
 - Result: High original text retention with clean, natural flow.`,
 
       2: `TRANSFORMATION INTENSITY: Level 2 (Balanced / Moderate Rewrite)
-- Purpose: A balanced, natural rewrite with moderate structural and vocabulary change.
-- Architecture: Reorder dependent and independent clauses where it improves rhythm; shift prepositional or adverbial openers naturally.
-- Phrasing: Rephrase key verbs, nouns, and modifying phrases with natural synonyms, keeping technical terms intact.
-- Result: A well-balanced blend of original phrasing, fresh vocabulary, and reorganized sentence elements.`,
+- Purpose: A balanced, natural rewrite with noticeable structural variety and fresh vocabulary.
+- Architecture: Actively invert introductory and trailing clauses (e.g. front prepositional, temporal, or adverbial modifiers; adjust voice where natural). Reorganize sentence rhythm so it does not mirror the original word-for-word pattern.
+- Phrasing: Confidently rephrase verbs, nouns, and modifying descriptions with natural, idiomatic synonyms, while keeping domain terms, figures, and facts strictly intact.
+- Result: A distinct shift away from original phrasing, creating a healthy, balanced mix of structural movement (Red) and vocabulary variety (Yellow).`,
 
       3: `TRANSFORMATION INTENSITY: Level 3 (High / Deep Structural Reconstruction)
 - Purpose: Deep structural transformation without turning into a thesaurus swap.

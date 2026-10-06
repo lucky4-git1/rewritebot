@@ -133,12 +133,12 @@ export class AIOrchestrator {
           issues: [...eval1.issues, ...factGate1.issues],
         });
 
-        const isHighConfidence = eval1.passed && factGate1.passed && eval1.totalScore >= 85;
+        const isHighConfidence = eval1.passed && factGate1.passed && eval1.totalScore >= 75 && eval1.breakdown.semanticScore >= 75;
 
         // Step 2: Adaptive Best-of-N Candidate Generation
-        // If Candidate 1 is below high confidence threshold (semantic drift, low score, or factual gate failure)
+        // If Candidate 1 is below threshold (semantic drift, low score, or factual gate failure)
         if (!isHighConfidence) {
-          logger.info(`[AdaptivePipeline] Candidate 1 scored ${eval1.totalScore}/100 (Factual: ${factGate1.score}). Launching concurrent multi-temperature candidate exploration...`);
+          logger.info(`[AdaptivePipeline] Candidate 1 scored ${eval1.totalScore}/100 (Factual: ${factGate1.score}). Launching fast targeted candidate exploration...`);
           
           try {
             // Generate Candidate 2 (higher diversity T=0.75) and Candidate 3 (precision T=0.45) in parallel

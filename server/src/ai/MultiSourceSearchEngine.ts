@@ -15,7 +15,7 @@ import { logger } from '../config/logger';
  * to ensure rapid response times without stalling the user.
  */
 export class MultiSourceSearchEngine {
-  private static readonly TIMEOUT_MS = 1800;
+  private static readonly DEFAULT_TIMEOUT_MS = 1000;
   private static readonly USER_AGENT = 'RewriteBot-OriginalityEngine/2.0 (mailto:support@rewritebot.com)';
 
   /**
@@ -23,7 +23,8 @@ export class MultiSourceSearchEngine {
    */
   public static async searchMultiSources(
     text: string,
-    candidateSentences: string[]
+    candidateSentences: string[],
+    timeoutMs: number = MultiSourceSearchEngine.DEFAULT_TIMEOUT_MS
   ): Promise<PlagiarismSource[]> {
     if (!text || text.trim().length < 15) {
       return [];
@@ -40,9 +41,9 @@ export class MultiSourceSearchEngine {
     // Run parallel multi-source queries for each search phrase
     const tasks = queries.map(async (query) => {
       const [wikiResults, crossrefResults, openAlexResults] = await Promise.allSettled([
-        this.queryWikipedia(query),
-        this.queryCrossref(query),
-        this.queryOpenAlex(query),
+        this.queryWikipedia(query, timeoutMs),
+        this.queryCrossref(query, timeoutMs),
+        this.queryOpenAlex(query, timeoutMs),
       ]);
 
       if (wikiResults.status === 'fulfilled') {
@@ -84,14 +85,14 @@ export class MultiSourceSearchEngine {
   /**
    * Query Wikipedia API for title and snippet matches
    */
-  private static async queryWikipedia(query: string): Promise<PlagiarismSource[]> {
+  private static async queryWikipedia(query: string, timeoutMs: number = 1000): Promise<PlagiarismSource[]> {
     try {
       const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
         query
       )}&format=json&utf8=1&srlimit=2`;
 
       const res = await axios.get(url, {
-        timeout: this.TIMEOUT_MS,
+        timeout: timeoutMs,
         headers: { 'User-Agent': this.USER_AGENT },
       });
 
@@ -127,12 +128,12 @@ export class MultiSourceSearchEngine {
   /**
    * Query Crossref Academic API for journal / book / paper citations
    */
-  private static async queryCrossref(query: string): Promise<PlagiarismSource[]> {
+  private static async queryCrossref(query: string, timeoutMs: number = 1000): Promise<PlagiarismSource[]> {
     try {
       const url = `https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=2`;
 
       const res = await axios.get(url, {
-        timeout: this.TIMEOUT_MS,
+        timeout: timeoutMs,
         headers: { 'User-Agent': this.USER_AGENT },
       });
 
@@ -178,12 +179,12 @@ export class MultiSourceSearchEngine {
   /**
    * Query OpenAlex global scholarly graph (250M+ open scientific works)
    */
-  private static async queryOpenAlex(query: string): Promise<PlagiarismSource[]> {
+  private static async queryOpenAlex(query: string, timeoutMs: number = 1000): Promise<PlagiarismSource[]> {
     try {
       const url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&per-page=2`;
 
       const res = await axios.get(url, {
-        timeout: this.TIMEOUT_MS,
+        timeout: timeoutMs,
         headers: { 'User-Agent': this.USER_AGENT },
       });
 
