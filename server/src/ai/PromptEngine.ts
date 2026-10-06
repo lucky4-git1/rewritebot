@@ -5,12 +5,11 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Paraphrase the following text using QuillBot's sentence-anchored paraphrasing approach:
-- Maintain 1:1 sentence correspondence: rewrite each sentence of the original text individually without merging or omitting sentences.
-- Perform local clause inversions: rearrange front and rear clauses (e.g., place dependent adverbial, temporal, or prepositional phrases at the end, or move the main clause to the front).
-- Natural lexical substitution: swap 25% to 35% of verbs, adjectives, and nouns with clean, everyday human synonyms while keeping the natural human sentence skeleton and prepositions intact.
-- Preserve 65% to 75% of original natural phrasing, factual terms, numbers, dates, and locations so the resulting text preserves genuine human perplexity and flow.
-- Maintain strict 1:1 word count parity without padding or artificial AI connector words.`,
+  standard: `Paraphrase the text sentence-by-sentence using QuillBot's proven 100% human paraphrasing model:
+1. 1:1 SENTENCE ANCHORING: Rewrite each sentence individually in place. Do not merge, invent, or drop sentences.
+2. LOCAL CLAUSE REORDERING: Move introductory prepositional, temporal, or spatial phrases to the end of the sentence (e.g., "[At the start of X], [860 students took part in Y]" -> "[860 students took part in Y] [at the beginning of X]").
+3. NATURAL HUMAN VOCABULARY (~25-30%): Swap only key words with standard, natural human synonyms (e.g. "two public schools" -> "two state schools", "research site" -> "research location", "capital" -> "seat", "created" -> "developed", "regularity" -> "pattern", "participated" -> "took part"). Keep all standard prepositions ("of", "in", "to", "from") and preserve 70-75% of the author's original words.
+4. ABSOLUTE PROHIBITION ON BUREAUCRATIC PHRASING: NEVER use "drawn from a pair of", "commencement within", "capital within", "together with the heads within", or "substantially". Write like a natural native English speaker.`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
 - Reorganizing clause order and sentence structure for natural, effortless human cadence
@@ -61,7 +60,7 @@ export class PromptEngine {
   buildSystemPrompt(request: AIRequest): string {
     const parts: string[] = [];
 
-    parts.push('You are RewriteBot, an elite editorial paraphrasing and syntactic restructuring engine modeled after QuillBot.');
+    parts.push('You are RewriteBot, an editorial paraphrasing engine engineered to produce authentic, human-authored text that achieves a 100% Human rating on AI detectors like Pangram Labs and GPTZero.');
     parts.push('');
 
     // Rule 1: Output Constraints & Paragraph Integrity
@@ -75,31 +74,21 @@ export class PromptEngine {
 
     // Rule 2: Anti-AI Detection & Burstiness Directive (Defeat GPTZero, Turnitin AI, CopyLeaks)
     parts.push('BURSTINESS & ANTI-AI DETECTION PROTOCOL (DEFEAT GPTZERO, TURNITIN AI, COPYLEAKS, PANGRAM):');
-    parts.push('1. DYNAMIC BURSTINESS (VARY SENTENCE LENGTH): Never produce sentences of uniform length. AI detectors flag text when every sentence has 18-24 words. You must alternate cadence: pair short, crisp sentences (6-12 words) with flowing compound-complex clauses (22-34 words) to replicate authentic human cognitive rhythm.');
+    parts.push('1. DYNAMIC BURSTINESS (VARY SENTENCE LENGTH): Never produce sentences of uniform length. AI detectors flag text when every sentence has 18-24 words. Alternate cadence naturally between concise sentences and flowing compound clauses.');
     parts.push('2. ZERO AI DISCOURSE CLICHÉS (UNIVERSAL BAN ACROSS ALL MODES): Strictly NEVER use robotic AI transitional formulas: "Furthermore", "Moreover", "Additionally", "In conclusion", "It is crucial to note", "It is worth noting", "plays a pivotal role", "serves as a testament to", "delve into", "beacon", "realm", "tapestry", "crucial", "notably". Let clauses connect naturally through semantic flow rather than forced connectors.');
-    parts.push('3. NATURAL SYNTACTIC FLOW: Vary sentence openings. Do not start multiple consecutive sentences with the subject or an adverbial participial clause.');
+    parts.push('3. NATURAL HUMAN IDIOMS: Keep natural prepositions ("capital of the governorate", "south of Cairo", "professor of public health"). Never use bizarre bureaucratic substitutions like "commencement within", "capital within", or "drawn from a pair of".');
     parts.push('');
 
     // Rule 3: QuillBot-grade Structural Transformation Directive
-    parts.push('QUILLBOT-GRADE SENTENCE-ANCHORED REWRITING DIRECTIVE:');
-    parts.push('Mirror QuillBot\'s proven, award-winning human paraphrasing approach:');
-    parts.push('- Sentence-by-Sentence Anchoring: Preserve 1:1 sentence correspondence for each sentence in the original text.');
-    parts.push('- Clause Inversion: Shift the front clause to the back or the rear clause to the front (e.g. invert time/location clauses with subject actions).');
-    parts.push('- Natural Human Synonym Selection: Swap ~25-35% of verbs and nouns with standard human synonyms while preserving the natural authorial backbone.');
-    parts.push('- Voice Alternation: Shift active to passive or passive to active where it flows gracefully.');
-    parts.push('- DO NOT regenerate entire synthetic sentences from blank slates. AI detectors like Pangram flag 100% newly generated transformer tokens as AI. Anchoring in the author\'s original clause structure while flipping clauses and substituting key words guarantees a 100% Human rating.');
-    parts.push('');
-
-    // Rule 4: Zero Unnecessary Synonyms, Natural Collocations & Anti-Bloat Directive
-    parts.push('NATURAL HUMAN COLLOCATIONS & ANTI-BLOAT DIRECTIVE:');
-    parts.push('1. PRESERVE NATURAL PREPOSITIONS & COLLOCATIONS: NEVER replace standard English prepositions or idiomatic pairings with awkward bureaucratic phrases. For example:');
-    parts.push('   - Keep "110 kilometers south of Cairo" (NEVER write "south pertaining to Cairo").');
-    parts.push('   - Keep "professor of public health" (NEVER write "professor pertaining to public health").');
-    parts.push('   - Keep natural connectors. Awkward prepositional substitutions instantly trigger AI flags on detector models like Pangram and GPTZero.');
-    parts.push('2. EQUAL-WEIGHT SYNONYM REPLACEMENTS: When replacing words, use natural, fluent human equivalents of identical or nearly identical semantic weight (e.g. replace "participated in" with "took part in", "created" with "developed", "evaluated" with "assessed", "conducted" with "carried out").');
-    parts.push('3. ZERO CIRCUMLOCUTIONS: Never expand a single word into a wordy multi-word phrase (e.g. never change "because" to "due to the incontrovertible fact that", or "helps" to "plays an instrumental role in facilitating").');
-    parts.push('4. ZERO ADJECTIVE/ADVERB PADDING: Do not insert decorative, pretentious adverbs or intensifiers ("substantially", "critically", "dramatically", "crucially", "remarkably") unless they exist in the input.');
-    parts.push('5. RESTRUCTURE VIA NATURAL SYNTAX: Polish the sentence like a world-class human editor. Preserve the authentic human reasoning and flow.');
+    parts.push('QUILLBOT 100% HUMAN TRANSFORMATION BLUEPRINT (STUDY THIS PATTERN):');
+    parts.push('To score 100% Human on Pangram Labs, apply QuillBot\'s exact 3-step paradigm:');
+    parts.push('1. Local Clause Reordering: Invert the opening clause and the main clause.');
+    parts.push('   * Source: "At the start of the second term of the academic year 2016/2017, 860 female preparatory school students attending two public schools in the rural area of Beni-Suef city participated in this cross-sectional study."');
+    parts.push('   * Paraphrase: "860 female preparatory school students from two public schools in Beni-Suef City\'s rural area took part in this cross-sectional study at the beginning of the second term of the 2016–2017 academic year."');
+    parts.push('2. Voice & Subject Shift:');
+    parts.push('   * Source: "Institutional clearances came after ethical approval from the Beni-Suef University Faculty of Medicine\'s Research Ethics Committee."');
+    parts.push('   * Paraphrase: "The Research Ethics Committee of the Beni-Suef University Faculty of Medicine granted ethical approval prior to institutional clearances."');
+    parts.push('3. Preserve 70-75% Authorial Backbone: Changing ~25-30% of words with crisp, natural synonyms while retaining the author\'s original vocabulary anchors guarantees that AI detectors measure natural human perplexity.');
     parts.push('');
 
     // Calculate dynamic word count metrics
