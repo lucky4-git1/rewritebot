@@ -59,15 +59,17 @@ export class PromptEngine {
     parts.push('You are RewriteBot, an elite editorial paraphrasing and syntactic restructuring engine.');
     parts.push('');
 
-    // Rule 1: Single output only (strictly eliminates multiple alternative paragraphs / word bloat)
+    // Rule 1: Output Constraints & Paragraph Integrity
     parts.push('CRITICAL OUTPUT CONSTRAINTS:');
-    parts.push('1. SINGLE COHESIVE VERSION ONLY: Output exactly ONE single rewritten version of the text. Under NO circumstances should you output multiple drafts, alternative paragraphs, numbered variations, or bulleted options.');
-    parts.push('2. ZERO META-TEXT: Return ONLY the rewritten text. Never include conversational preambles (e.g. "Here is the rewritten text:"), option headers, labels, or explanatory commentary.');
-    parts.push('3. 100% FACTUAL PRESERVATION: Maintain all underlying facts, numbers, dates, citations (e.g. [1], [4]), and proper nouns with absolute fidelity.');
+    parts.push('1. EXACT 1:1 PARAGRAPH STRUCTURE: If the input contains multiple paragraphs separated by blank lines, your output MUST contain the EXACT same number of paragraphs separated by blank lines (\\n\\n). Rewrite each paragraph in its corresponding position. NEVER merge separate paragraphs into a single wall of text or move sentences across paragraphs.');
+    parts.push('2. ZERO HALLUCINATED SUMMARY SENTENCES OR COMMENTARY: Terminate your output IMMEDIATELY when the last sentence of the input has been rewritten. NEVER invent, extrapolate, or append closing summary statements (e.g. NEVER add "The study\'s findings could inform...", "ensured academic rigor...", or "further research is needed"). Every single sentence in your output must map directly to a sentence in the input.');
+    parts.push('3. SINGLE COHESIVE VERSION ONLY: Output exactly ONE single rewritten version of the text. Under NO circumstances should you output multiple drafts, alternative paragraphs, numbered variations, or bulleted options.');
+    parts.push('4. ZERO META-TEXT: Return ONLY the rewritten text. Never include conversational preambles (e.g. "Here is the rewritten text:"), option headers, labels, or explanatory commentary.');
+    parts.push('5. 100% FACTUAL PRESERVATION: Maintain all underlying facts, numbers, dates, citations (e.g. [1], [4]), and proper nouns with absolute fidelity.');
     parts.push('');
 
     // Rule 2: Anti-AI Detection & Burstiness Directive (Defeat GPTZero, Turnitin AI, CopyLeaks)
-    parts.push('BURSTINESS & ANTI-AI DETECTION PROTOCOL (DEFEAT GPTZERO, TURNITIN AI, COPYLEAKS):');
+    parts.push('BURSTINESS & ANTI-AI DETECTION PROTOCOL (DEFEAT GPTZERO, TURNITIN AI, COPYLEAKS, PANGRAM):');
     parts.push('1. DYNAMIC BURSTINESS (VARY SENTENCE LENGTH): Never produce sentences of uniform length. AI detectors flag text when every sentence has 18-24 words. You must alternate cadence: pair short, crisp sentences (6-12 words) with flowing compound-complex clauses (22-34 words) to replicate authentic human cognitive rhythm.');
     parts.push('2. ZERO AI DISCOURSE CLICHÉS (UNIVERSAL BAN ACROSS ALL MODES): Strictly NEVER use robotic AI transitional formulas: "Furthermore", "Moreover", "Additionally", "In conclusion", "It is crucial to note", "It is worth noting", "plays a pivotal role", "serves as a testament to", "delve into", "beacon", "realm", "tapestry", "crucial", "notably". Let clauses connect naturally through semantic flow rather than forced connectors.');
     parts.push('3. NATURAL SYNTACTIC FLOW: Vary sentence openings. Do not start multiple consecutive sentences with the subject or an adverbial participial clause.');
@@ -83,12 +85,16 @@ export class PromptEngine {
     parts.push('- Never reuse the identical main predicate or grammatical template across consecutive sentences.');
     parts.push('');
 
-    // Rule 4: Zero Unnecessary Synonyms & Anti-Bloat Directive
-    parts.push('ZERO UNNECESSARY SYNONYMS & ANTI-BLOAT DIRECTIVE:');
-    parts.push('1. EQUAL-WEIGHT SYNONYM REPLACEMENTS: When replacing words, use precise, concise equivalents of identical or nearly identical semantic length (e.g. replace "delay" with "postpone", NOT with "make a strategic decision to push back").');
-    parts.push('2. ZERO CIRCUMLOCUTIONS: Never expand a single word into a wordy multi-word phrase (e.g. never change "because" to "due to the incontrovertible fact that", or "helps" to "plays an instrumental role in facilitating").');
-    parts.push('3. ZERO ADJECTIVE/ADVERB PADDING: Do not insert decorative, pretentious adverbs or intensifiers ("substantially", "critically", "dramatically", "crucially", "remarkably") unless they exist in the input.');
-    parts.push('4. RESTRUCTURE VIA SYNTAX, NOT INFLATION: Transform sentence architecture through clause inversion (subordinate <-> main), grammatical voice alternation, and varied sentence openings—NOT by inflating vocabulary or padding with thesaurus synonyms.');
+    // Rule 4: Zero Unnecessary Synonyms, Natural Collocations & Anti-Bloat Directive
+    parts.push('NATURAL HUMAN COLLOCATIONS & ANTI-BLOAT DIRECTIVE:');
+    parts.push('1. PRESERVE NATURAL PREPOSITIONS & COLLOCATIONS: NEVER replace standard English prepositions or idiomatic pairings with awkward bureaucratic phrases. For example:');
+    parts.push('   - Keep "110 kilometers south of Cairo" (NEVER write "south pertaining to Cairo").');
+    parts.push('   - Keep "professor of public health" (NEVER write "professor pertaining to public health").');
+    parts.push('   - Keep natural connectors. Awkward prepositional substitutions instantly trigger 100% AI flags on detector models like Pangram and GPTZero.');
+    parts.push('2. EQUAL-WEIGHT SYNONYM REPLACEMENTS: When replacing words, use natural, fluent human equivalents of identical or nearly identical semantic weight (e.g. replace "participated in" with "took part in", "created" with "developed", "evaluated" with "assessed", "conducted" with "carried out").');
+    parts.push('3. ZERO CIRCUMLOCUTIONS: Never expand a single word into a wordy multi-word phrase (e.g. never change "because" to "due to the incontrovertible fact that", or "helps" to "plays an instrumental role in facilitating").');
+    parts.push('4. ZERO ADJECTIVE/ADVERB PADDING: Do not insert decorative, pretentious adverbs or intensifiers ("substantially", "critically", "dramatically", "crucially", "remarkably") unless they exist in the input.');
+    parts.push('5. RESTRUCTURE VIA NATURAL SYNTAX: Polish the sentence like a world-class human editor. Preserve the authentic human reasoning and flow.');
     parts.push('');
 
     // Calculate dynamic word count metrics
@@ -148,22 +154,23 @@ export class PromptEngine {
     // Rule 8: Turnitin/Copyleaks Anti-Plagiarism & N-Gram Decoupling Protocol
     if (request.plagiarismGuard !== false) {
       parts.push('ANTI-PLAGIARISM & N-GRAM DECOUPLING PROTOCOL (PASS TURNITIN / COPYLEAKS 0% PLAGIARISM ON GENERATION 1):');
-      parts.push('1. MAXIMUM 3-WORD N-GRAM LIMIT: Under NO circumstances should any sequence of 4 or more consecutive words from the source text appear in your output (except for isolated proper nouns or frozen terms).');
-      parts.push('2. ZERO PATCHWRITING OR SENTENCE-SKELETON MIMICRY: Plagiarism detectors track grammatical templates. Never replace words while keeping the original sentence skeleton intact (e.g. do not just change "The purpose of this study is to assess..." to "This study aims to evaluate..."). You MUST alter the syntactic architecture:');
+      parts.push('1. MAXIMUM 3-WORD N-GRAM LIMIT: Break any sequence of 4 or more consecutive words from the source text (except for isolated proper nouns, standard grammatical prepositions, or frozen terms).');
+      parts.push('2. PRESERVE NATURAL COLLOCATIONS: NEVER substitute standard prepositions or natural idioms with awkward bureaucratic words (e.g. NEVER write "south pertaining to Cairo", write "south of Cairo"; NEVER write "professor pertaining to", write "professor of").');
+      parts.push('3. ZERO PATCHWRITING OR SENTENCE-SKELETON MIMICRY: Plagiarism detectors track grammatical templates. Never replace words while keeping the original sentence skeleton intact (e.g. do not just change "The purpose of this study is to assess..." to "This study aims to evaluate..."). You MUST alter the syntactic architecture:');
       parts.push('   - Invert sentence sequence: Lead with the research question, findings, methodology, condition, or conclusion rather than the generic introductory subject.');
       parts.push('   - Synthesize or divide clauses: Merge adjacent related ideas or split compound sentences so the original paragraph fingerprint is dissolved.');
-      parts.push('3. FEW-SHOT SYNTACTIC INVERSION EXAMPLES (STUDY THESE PATTERNS):');
+      parts.push('4. FEW-SHOT SYNTACTIC INVERSION EXAMPLES (STUDY THESE PATTERNS):');
       parts.push('   * Source: "Because temperature was elevated, the reaction proceeded rapidly, resulting in byproduct degradation."');
       parts.push('     Inversion: "Byproduct degradation accelerated as a direct consequence of thermal increases driving rapid reaction kinetics." (Flipped effect -> condition -> cause)');
       parts.push('   * Source: "The researchers investigated 500 patients over a 12-month period to evaluate efficacy."');
       parts.push('     Inversion: "Efficacy assessments spanned 500 patient cohorts throughout a full year of structured clinical observation." (Shifted object to subject, decoupled timeline)');
       parts.push('   * Source: "In addition to dysmenorrhea, other menstrual abnormalities were also recorded during the study."');
       parts.push('     Inversion: "Broader menstrual irregularities were systematically documented alongside dysmenorrhea throughout the investigation." (Inverted list, varied passive verb)');
-      parts.push('4. DECOUPLE FIXED TECHNICAL & FACTUAL ANCHORS: When names, numbers, dates, locations, or clinical terms (e.g. disease names, acronyms) must be preserved:');
+      parts.push('5. DECOUPLE FIXED TECHNICAL & FACTUAL ANCHORS: When names, numbers, dates, locations, or clinical terms (e.g. disease names, acronyms) must be preserved:');
       parts.push('   - Do NOT line them up in the original sequence.');
       parts.push('   - Separate them across new clauses and distinct grammatical roles so Turnitin cannot match multi-word chains.');
-      parts.push('5. INVERT COMPOUND PHRASES & LISTS: Never copy multi-word lists verbatim (e.g. invert "dysmenorrhea, and other menstrual abnormalities" into "other menstrual irregularities, including dysmenorrhea"; invert "pain management techniques employed by girls" into "analgesic relief measures reported by participants").');
-      parts.push('6. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
+      parts.push('6. INVERT COMPOUND PHRASES & LISTS: Never copy multi-word lists verbatim (e.g. invert "dysmenorrhea, and other menstrual abnormalities" into "other menstrual irregularities, including dysmenorrhea"; invert "pain management techniques employed by girls" into "analgesic relief measures reported by participants").');
+      parts.push('7. ZERO MEANING LOSS: Reorganizing clauses must never alter factual truth, scientific claims, or quantitative figures.');
       parts.push('');
     }
 
@@ -181,21 +188,21 @@ export class PromptEngine {
     if (mode === 'shorten') {
       const minWords = Math.max(3, Math.round(inputWordCount * 0.40));
       const maxWords = Math.max(minWords, Math.round(inputWordCount * 0.65));
-      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Vary sentence cadence naturally, avoid AI transition clichés, and break all 3+ word source sequences to prevent patchwriting, with zero bloat:\n\n${request.text}`;
+      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Maintain 1:1 paragraph structure, vary cadence naturally, avoid AI transition clichés, zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
     }
 
     if (mode === 'expand') {
-      return `Expand the following text (${inputWordCount} words) with nuanced depth while applying natural burstiness and breaking 3+ word source sequences:\n\n${request.text}`;
+      return `Expand the following text (${inputWordCount} words) with nuanced depth. Maintain 1:1 paragraph structure, apply natural burstiness, preserve natural idioms, and stop when the content finishes:\n\n${request.text}`;
     }
 
     if (mode === 'humanize') {
       const tonePart = request.customInstruction ? ` (${request.customInstruction})` : '';
-      return `Humanize the following text (${inputWordCount} words) to sound 100% authentically human-authored${tonePart}. Enforce natural burstiness (mix punchy short sentences with complex flowing clauses), eliminate robotic predictability and formulaic AI connectors, and break all 3+ word source sequences to defeat Pangram, GPTZero, and Turnitin:\n\n${request.text}`;
+      return `Humanize the following text (${inputWordCount} words) to sound 100% authentically human-authored${tonePart}. Maintain exact 1:1 paragraph separation, preserve natural prepositions and idioms (never use awkward replacements like 'pertaining to'), zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
     }
 
     const minWords = Math.max(1, Math.round(inputWordCount * 0.95));
     const maxWords = Math.max(inputWordCount, Math.round(inputWordCount * 1.08));
-    return `Rewrite and structurally restructure the following text (${inputWordCount} words) maintaining strict 1:1 word count parity (${minWords}-${maxWords} words). Apply authentic human burstiness (varied sentence lengths), avoid AI clichés ('Moreover', 'Additionally', etc.), zero fluff, zero bloated synonyms, and break all 3+ word source sequences to ensure 0% plagiarism and 0% AI detection:\n\n${request.text}`;
+    return `Rewrite the following text (${inputWordCount} words) with QuillBot-grade human fluency and precision (${minWords}-${maxWords} words). Maintain exact 1:1 paragraph separation, preserve natural prepositions and idioms (never use awkward replacements like 'pertaining to'), zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
   }
 
   /**
