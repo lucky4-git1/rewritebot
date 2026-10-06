@@ -289,12 +289,15 @@ export class LinguisticEvaluator {
     if (transformationRatio < 0.15) {
       issues.push(`Insufficient transformation: rewrite is ${Math.round((1 - transformationRatio) * 100)}% identical to source`);
       score = 30;
-    } else if (transformationRatio >= 0.25 && transformationRatio <= 0.85) {
-      // Golden QuillBot sweet spot: 25% to 75% structural transformation
-      score = 98;
-    } else if (transformationRatio > 0.90) {
-      // Too high: complete over-mutation might indicate hallucination
-      score = 80;
+    } else if (transformationRatio < 0.25) {
+      // Light / borderline transformation
+      score = Math.round(55 + ((transformationRatio - 0.15) / 0.10) * 30); // 55 to 85
+    } else if (transformationRatio <= 0.85) {
+      // Golden sweet spot: 25% to 85% structural transformation
+      score = Math.round(88 + ((transformationRatio - 0.25) / 0.60) * 10); // 88 to 98
+    } else {
+      // Over 85%: high mutation
+      score = 82;
     }
 
     return {

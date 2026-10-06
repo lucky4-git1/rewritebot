@@ -213,7 +213,7 @@ export class PromptEngine {
     const instructions = {
       1: `TRANSFORMATION INTENSITY: Level 1 (Light / Subtle Polish)
 - Purpose: Light editorial polish with minimal disruption.
-- Architecture: Keep original sentence structures and clause orders largely intact.
+- Architecture: Keep original sentence skeleton mostly intact, but smooth flow by relocating at least one introductory modifier or refining clause connections. Never produce a lazy 1-word substitution.
 - Phrasing: Make subtle, selective word choices and gentle phrasing improvements where needed.
 - Result: High original text retention with clean, natural flow.`,
 
@@ -225,7 +225,7 @@ export class PromptEngine {
 
       3: `TRANSFORMATION INTENSITY: Level 3 (High / Deep Structural Reconstruction)
 - Purpose: Deep structural transformation without turning into a thesaurus swap.
-- Architecture: Substantially reconstruct sentence blueprints. Reorder clauses, shift between active and passive constructions, front trailing modifiers, and split long sentences or merge related short ones.
+- Architecture: Substantially reconstruct sentence blueprints. Reorder clauses, shift between active and passive constructions, front trailing modifiers, and actively split complex compound sentences or merge related short ones into cohesive multi-clause statements.
 - Phrasing: Frame concepts using fresh, natural phrasing rather than mechanical word-for-word substitution.
 - Result: Significant structural and syntactic movement with substantially altered sentence architecture, while keeping all facts, figures, and entities strictly accurate.`,
 

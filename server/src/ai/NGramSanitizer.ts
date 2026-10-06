@@ -297,9 +297,48 @@ function escapeRegExp(string: string): string {
  * Sanitizes candidate text by systematically decoupling lazy n-gram chains
  */
 export function sanitizeNGrams(originalText: string, candidateText: string): SanitizationResult {
-  // Let the LLM's natural QuillBot paraphrasing flow through with zero artificial preposition corruption.
-  // We perform only passive inspection for verbatim matches of length >= 6 words without altering natural phrasing.
-  const finalMatches = detectNGramMatches(originalText, candidateText, 6).filter(m => !m.isProperNounOrAcronym);
+  // Ultra-fast path: If text is identical or empty, return immediately without running O(N^2) n-gram scanning
+  if (!originalText || !candidateText || originalText.trim() === candidateText.trim()) {
+    return {
+      text: candidateText,
+      modified: false,
+      sanitizedCount: 0,
+      detectedMatches: [],
+    };
+  }
+
+  // Fast check: If word tokens differ significantly (over 25% word difference), passive matches of >= 6 words are rare
+  const oWords = toWordTokens(originalText);
+  const cWords = toWordTokens(candidateText);
+  if (oWords.length < 6 || cWords.length < 6) {
+    return {
+      text: candidateText,
+      modified: false,
+      sanitizedCount: 0,
+      detectedMatches: [],
+    };
+  }
+
+  // Linear-time Set check for 6-gram matches
+  const o6Grams = new Set<string>();
+  for (let j = 0; j <= oWords.length - 6; j++) {
+    o6Grams.add(oWords.slice(j, j + 6).join(' '));
+  }
+
+  const finalMatches: NGramMatch[] = [];
+  for (let i = 0; i <= cWords.length - 6; i++) {
+    const chunk = cWords.slice(i, i + 6).join(' ');
+    if (o6Grams.has(chunk) && !isExemptProperNounOrAcronym(chunk)) {
+      finalMatches.push({
+        length: 6,
+        phrase: chunk,
+        isProperNounOrAcronym: false,
+        outputStartIndex: i,
+        outputEndIndex: i + 6,
+      });
+      i += 5; // Skip ahead to avoid duplicate overlapping chunks
+    }
+  }
 
   return {
     text: candidateText,

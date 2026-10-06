@@ -111,9 +111,12 @@ export class QualityGate {
       }
     } else {
       // Standard / Fluency / Humanize / Academic modes require ~1:1 word count parity
-      if (lengthRatio < 0.75 || lengthRatio > 1.25) {
+      if (lengthRatio < 0.70 || lengthRatio > 1.35) {
+        issues.push(`Severe length drift out of bounds (${Math.round(lengthRatio * 100)}% of input, expected 75-125%)`);
+        score -= 30;
+      } else if (lengthRatio < 0.75 || lengthRatio > 1.25) {
         issues.push(`Length drift out of bounds (${Math.round(lengthRatio * 100)}% of input, expected 85-115%)`);
-        score -= 20;
+        score -= 15;
       }
     }
 
