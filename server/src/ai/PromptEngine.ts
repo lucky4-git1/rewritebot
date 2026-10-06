@@ -5,7 +5,7 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings, shift between active and passive constructions where natural, break 4+ word consecutive source sequences to eliminate patchwriting, and maintain strict 1:1 length parity without adding unnecessary padding, inflated synonyms, or bloated paragraphs.`,
+  standard: `Rewrite the following text with balanced clause rearrangement, voice alternation, and deep syntactic restructuring while preserving all original facts and information. Invert cause-and-effect clauses, vary sentence openings and lengths for authentic human cadence, shift between active and passive constructions where natural, break 3+ word consecutive source sequences to eliminate patchwriting, and maintain strict 1:1 length parity without adding unnecessary padding, inflated synonyms, or formulaic AI connectors.`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
 - Reorganizing clause order and sentence structure for natural, effortless human cadence
@@ -17,7 +17,7 @@ const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
   humanize: `Rewrite the following text with deep sentence-level variety to sound naturally authored and defeat AI detectors. Focus on:
 - Dynamic burstiness: mix punchy short sentences with natural, flowing compound-complex clauses
 - Inverted conversational clause structures and authentic human cadence
-- Organic discourse transitions rather than formulaic AI connectors (strictly avoid "Furthermore", "Moreover", "In conclusion", "It is crucial to note", "delve into", "testament", "pivotal role", "beacon")
+- Organic discourse transitions rather than formulaic AI connectors (strictly avoid "Furthermore", "Moreover", "Additionally", "In conclusion", "It is crucial to note", "delve into", "testament", "pivotal role", "beacon")
 - ANTI-PLAGIARISM PRESERVATION MANDATE: The text may have been previously paraphrased or fixed for originality. Preserve non-plagiarized sentence variety. Never re-introduce common web clichés, verbatim sequences, or generic internet idioms that could trip plagiarism scanners.
 - Maintain 100% unique phrasing while sounding effortlessly human (target 96-99% human authenticity score).
 CRITICAL LENGTH RULE: Keep all facts, names, numbers, and technical terms intact. Maintain strict 1:1 length parity. Do NOT expand, explain, elaborate, or add conversational padding, filler stories, or introductory fluff.`,
@@ -50,6 +50,8 @@ export class PromptEngine {
    * 3. Mode-specific calibration (especially Shorten compression ratio and Expand depth)
    * 4. Scaled syntactic intensity according to synonymLevel
    * 5. Strict prohibition of meta-chatter, options, or preambles
+   * 6. Human cadence burstiness & anti-AI detection (0% AI score)
+   * 7. Turnitin/Copyleaks zero-plagiarism n-gram decoupling
    */
   buildSystemPrompt(request: AIRequest): string {
     const parts: string[] = [];
@@ -64,7 +66,14 @@ export class PromptEngine {
     parts.push('3. 100% FACTUAL PRESERVATION: Maintain all underlying facts, numbers, dates, citations (e.g. [1], [4]), and proper nouns with absolute fidelity.');
     parts.push('');
 
-    // Rule 2: QuillBot-grade Structural Transformation Directive
+    // Rule 2: Anti-AI Detection & Burstiness Directive (Defeat GPTZero, Turnitin AI, CopyLeaks)
+    parts.push('BURSTINESS & ANTI-AI DETECTION PROTOCOL (DEFEAT GPTZERO, TURNITIN AI, COPYLEAKS):');
+    parts.push('1. DYNAMIC BURSTINESS (VARY SENTENCE LENGTH): Never produce sentences of uniform length. AI detectors flag text when every sentence has 18-24 words. You must alternate cadence: pair short, crisp sentences (6-12 words) with flowing compound-complex clauses (22-34 words) to replicate authentic human cognitive rhythm.');
+    parts.push('2. ZERO AI DISCOURSE CLICHÉS (UNIVERSAL BAN ACROSS ALL MODES): Strictly NEVER use robotic AI transitional formulas: "Furthermore", "Moreover", "Additionally", "In conclusion", "It is crucial to note", "It is worth noting", "plays a pivotal role", "serves as a testament to", "delve into", "beacon", "realm", "tapestry", "crucial", "notably". Let clauses connect naturally through semantic flow rather than forced connectors.');
+    parts.push('3. NATURAL SYNTACTIC FLOW: Vary sentence openings. Do not start multiple consecutive sentences with the subject or an adverbial participial clause.');
+    parts.push('');
+
+    // Rule 3: QuillBot-grade Structural Transformation Directive
     parts.push('QUILLBOT-GRADE STRUCTURAL RESTRUCTURING DIRECTIVE:');
     parts.push('You must actively transform the grammatical architecture and clause order of every sentence. Do NOT perform lazy 1:1 word-for-word synonym swapping into the original sentence template.');
     parts.push('- Invert clause sequence: flip cause-and-effect, conditional, and main clauses.');
@@ -74,7 +83,7 @@ export class PromptEngine {
     parts.push('- Never reuse the identical main predicate or grammatical template across consecutive sentences.');
     parts.push('');
 
-    // Rule 3: Zero Unnecessary Synonyms & Anti-Bloat Directive
+    // Rule 4: Zero Unnecessary Synonyms & Anti-Bloat Directive
     parts.push('ZERO UNNECESSARY SYNONYMS & ANTI-BLOAT DIRECTIVE:');
     parts.push('1. EQUAL-WEIGHT SYNONYM REPLACEMENTS: When replacing words, use precise, concise equivalents of identical or nearly identical semantic length (e.g. replace "delay" with "postpone", NOT with "make a strategic decision to push back").');
     parts.push('2. ZERO CIRCUMLOCUTIONS: Never expand a single word into a wordy multi-word phrase (e.g. never change "because" to "due to the incontrovertible fact that", or "helps" to "plays an instrumental role in facilitating").');
@@ -172,16 +181,16 @@ export class PromptEngine {
     if (mode === 'shorten') {
       const minWords = Math.max(3, Math.round(inputWordCount * 0.40));
       const maxWords = Math.max(minWords, Math.round(inputWordCount * 0.65));
-      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Break all 4+ word source sequences to prevent patchwriting, with zero bloat:\n\n${request.text}`;
+      return `Shorten and condense the following text (${inputWordCount} words) into ${minWords}-${maxWords} words. Vary sentence cadence naturally, avoid AI transition clichés, and break all 3+ word source sequences to prevent patchwriting, with zero bloat:\n\n${request.text}`;
     }
 
     if (mode === 'expand') {
-      return `Expand the following text (${inputWordCount} words) with nuanced depth while breaking 4+ word source sequences:\n\n${request.text}`;
+      return `Expand the following text (${inputWordCount} words) with nuanced depth while applying natural burstiness and breaking 3+ word source sequences:\n\n${request.text}`;
     }
 
     const minWords = Math.max(1, Math.round(inputWordCount * 0.95));
     const maxWords = Math.max(inputWordCount, Math.round(inputWordCount * 1.08));
-    return `Rewrite and structurally restructure the following text (${inputWordCount} words) maintaining strict 1:1 word count parity (${minWords}-${maxWords} words), zero fluff, zero bloated synonyms, and zero patchwriting (break all 4+ word source sequences):\n\n${request.text}`;
+    return `Rewrite and structurally restructure the following text (${inputWordCount} words) maintaining strict 1:1 word count parity (${minWords}-${maxWords} words). Apply authentic human burstiness (varied sentence lengths), avoid AI clichés ('Moreover', 'Additionally', etc.), zero fluff, zero bloated synonyms, and break all 3+ word source sequences to ensure 0% plagiarism and 0% AI detection:\n\n${request.text}`;
   }
 
   /**

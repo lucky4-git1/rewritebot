@@ -55,6 +55,8 @@ export interface AIRequestOptions {
   temperature?: number;
   maxTokens?: number;
   topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
   stream?: boolean;
   timeout?: number;
   signal?: any;

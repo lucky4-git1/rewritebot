@@ -112,9 +112,13 @@ export class GenericOpenAIProvider extends BaseProvider {
     if (this.options.temperature !== undefined) {
       return this.options.temperature;
     }
-    // Dynamic QuillBot-calibrated temperature scaling by synonym/structural intensity:
+    // Stealth human cadence & perplexity calibration:
+    if (request.mode === 'humanize') {
+      return 0.90;
+    }
     const level = request.synonymLevel ?? 2;
-    const baseTemp = level === 1 ? 0.45 : level === 2 ? 0.65 : level === 3 ? 0.80 : 0.90;
+    // Calibrated to elevate perplexity beyond robotic top-1 certainty:
+    const baseTemp = level === 1 ? 0.65 : level === 2 ? 0.78 : level === 3 ? 0.88 : 0.94;
 
     // In shorten mode, keep temperature slightly tighter to maintain high compression
     if (request.mode === 'shorten') {
@@ -156,7 +160,9 @@ export class GenericOpenAIProvider extends BaseProvider {
         messages,
         temperature,
         max_tokens: request.options?.maxTokens ?? this.options.maxTokens,
-        top_p: request.options?.topP ?? this.options.topP,
+        top_p: request.options?.topP ?? (this.options.topP !== undefined ? this.options.topP : 0.95),
+        frequency_penalty: request.options?.frequencyPenalty ?? 0.35,
+        presence_penalty: request.options?.presencePenalty ?? 0.20,
         stream: false,
       });
 
@@ -195,7 +201,9 @@ export class GenericOpenAIProvider extends BaseProvider {
         messages,
         temperature,
         max_tokens: request.options?.maxTokens ?? this.options.maxTokens,
-        top_p: request.options?.topP ?? this.options.topP,
+        top_p: request.options?.topP ?? (this.options.topP !== undefined ? this.options.topP : 0.95),
+        frequency_penalty: request.options?.frequencyPenalty ?? 0.35,
+        presence_penalty: request.options?.presencePenalty ?? 0.20,
         stream: true,
       });
 
