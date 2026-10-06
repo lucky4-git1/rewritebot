@@ -597,7 +597,7 @@ export const InteractiveProductDemo: React.FC<InteractiveProductDemoProps> = ({ 
             {/* 3-Color Legend */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', fontSize: '11.5px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#f59e0b' }} />
+                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#ef4444' }} />
                 <span>Changed Words</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -605,7 +605,7 @@ export const InteractiveProductDemo: React.FC<InteractiveProductDemoProps> = ({ 
                 <span>Preserved Verbatim</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#ef4444' }} />
+                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#f59e0b' }} />
                 <span>Clause Structure</span>
               </div>
             </div>

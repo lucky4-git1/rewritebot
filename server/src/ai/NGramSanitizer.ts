@@ -338,16 +338,14 @@ export function sanitizeNGrams(originalText: string, candidateText: string): San
 
         // Fallback: If no pivot matched, break the center connector or swap a word
         if (decoupled === matchedString) {
-          // Swap common single words
+          // Swap common single words with clean, natural human alternatives
           decoupled = decoupled
-            .replace(/\bthe\b/i, 'this')
             .replace(/\band\b/i, 'as well as')
             .replace(/\bwere\b/i, 'proved')
             .replace(/\bwas\b/i, 'served as')
             .replace(/\bduring\b/i, 'throughout')
             .replace(/\bto\b/i, 'in order to')
-            .replace(/\bin\b/i, 'within')
-            .replace(/\bof\b/i, 'pertaining to');
+            .replace(/\bin\b/i, 'across');
         }
 
         if (decoupled !== matchedString) {

@@ -2969,35 +2969,35 @@ export function Home() {
                 <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
                   {diffTokens.map((token, idx) => {
                     const isWord = /[\w]/.test(token.text);
-                    const isYellow = token.type === 'changed';
-                    const isBlue = token.type === 'longest-unchanged';
-                    const isRed = token.type === 'structural';
+                    const isChangedWord = token.type === 'changed';
+                    const isLongestUnchanged = token.type === 'longest-unchanged';
+                    const isStructural = token.type === 'structural';
 
-                    // 3-Color Highlight Palette
+                    // QuillBot 3-Color Highlight Palette
                     let color = 'var(--rb-text)';
                     let bg = 'transparent';
                     let borderBottom = 'none';
                     let fontWeight = 400;
                     let title = isWord ? `Click to view synonyms for "${token.text.trim()}"` : undefined;
 
-                    if (isYellow) {
+                    if (isChangedWord) {
                       color = 'var(--rb-diff-changed-text)';
                       bg = 'var(--rb-diff-changed-bg)';
                       borderBottom = '1.5px dashed var(--rb-diff-changed-border)';
                       fontWeight = 600;
-                      title = 'Changed Word (Synonym) - Click to choose alternatives';
-                    } else if (isBlue) {
+                      title = 'Changed Word (Red) - Click to choose alternative synonyms';
+                    } else if (isLongestUnchanged) {
                       color = 'var(--rb-diff-unchanged-text)';
                       bg = 'var(--rb-diff-unchanged-bg)';
                       borderBottom = '1.5px solid var(--rb-diff-unchanged-border)';
                       fontWeight = 500;
-                      title = 'Longest Unchanged - Preserved verbatim from original text';
-                    } else if (isRed) {
+                      title = 'Longest Unchanged (Blue) - Preserved from source text';
+                    } else if (isStructural) {
                       color = 'var(--rb-diff-structural-text)';
                       bg = 'var(--rb-diff-structural-bg)';
                       borderBottom = '1.5px dashed var(--rb-diff-structural-border)';
                       fontWeight = 600;
-                      title = 'Structural Change (Syntax / Grammar alteration) - Click to replace';
+                      title = 'Structural Change (Yellow) - Clause or syntax rearranged';
                     }
 
                     return (
@@ -3007,21 +3007,21 @@ export function Home() {
                         style={{
                           color,
                           background: bg,
-                          borderRadius: isYellow || isBlue || isRed ? '4px' : '2px',
-                          padding: isYellow || isBlue || isRed ? '1px 3px' : '0px',
+                          borderRadius: isChangedWord || isLongestUnchanged || isStructural ? '4px' : '2px',
+                          padding: isChangedWord || isLongestUnchanged || isStructural ? '1px 3px' : '0px',
                           fontWeight,
                           cursor: isWord ? 'pointer' : 'default',
                           transition: 'all 0.15s ease',
                           borderBottom,
                         }}
                         onMouseEnter={(e) => {
-                          if (isWord && !isYellow && !isBlue && !isRed) {
+                          if (isWord && !isChangedWord && !isLongestUnchanged && !isStructural) {
                             e.currentTarget.style.background = isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9';
                             e.currentTarget.style.borderBottom = isDark ? '1px dotted var(--rb-border)' : '1px dotted #94a3b8';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (isWord && !isYellow && !isBlue && !isRed) {
+                          if (isWord && !isChangedWord && !isLongestUnchanged && !isStructural) {
                             e.currentTarget.style.background = 'transparent';
                             e.currentTarget.style.borderBottom = 'none';
                           }

@@ -57,18 +57,21 @@ body {
   --rb-warning: #b45309;
   --rb-info: #1d4ed8;
 
-  /* 3-Color Highlight Tokens (Light) */
-  --rb-diff-changed-bg: #fef3c7;
-  --rb-diff-changed-text: #92400e;
-  --rb-diff-changed-border: #f59e0b;
+  /* QuillBot Exact 3-Color Highlight Tokens (Light) */
+  /* Red: Changed Words (Synonym/vocabulary replacements) */
+  --rb-diff-changed-bg: #fee2e2;
+  --rb-diff-changed-text: #b91c1c;
+  --rb-diff-changed-border: #ef4444;
 
+  /* Blue: Longest Unchanged Words (preserved sequences) */
   --rb-diff-unchanged-bg: #eff6ff;
   --rb-diff-unchanged-text: #1e40af;
   --rb-diff-unchanged-border: #60a5fa;
 
-  --rb-diff-structural-bg: #fee2e2;
-  --rb-diff-structural-text: #991b1b;
-  --rb-diff-structural-border: #ef4444;
+  /* Yellow: Structural Changes (Sentence structure / clause rearrangement) */
+  --rb-diff-structural-bg: #fef3c7;
+  --rb-diff-structural-text: #92400e;
+  --rb-diff-structural-border: #f59e0b;
   
   /* Spacing */
   --rb-radius: 6px;
@@ -132,18 +135,21 @@ body {
   --rb-warning: #f59e0b;
   --rb-info: #3b82f6;
 
-  /* 3-Color Highlight Tokens (Dark Mode) */
-  --rb-diff-changed-bg: rgba(245, 158, 11, 0.22);
-  --rb-diff-changed-text: #fde68a;
-  --rb-diff-changed-border: #f59e0b;
+  /* QuillBot Exact 3-Color Highlight Tokens (Dark Mode) */
+  /* Red: Changed Words */
+  --rb-diff-changed-bg: rgba(239, 68, 68, 0.22);
+  --rb-diff-changed-text: #fca5a5;
+  --rb-diff-changed-border: #f87171;
 
+  /* Blue: Longest Unchanged */
   --rb-diff-unchanged-bg: rgba(59, 130, 246, 0.20);
   --rb-diff-unchanged-text: #bfdbfe;
   --rb-diff-unchanged-border: #60a5fa;
 
-  --rb-diff-structural-bg: rgba(239, 68, 68, 0.22);
-  --rb-diff-structural-text: #fca5a5;
-  --rb-diff-structural-border: #f87171;
+  /* Yellow: Structural Changes */
+  --rb-diff-structural-bg: rgba(245, 158, 11, 0.22);
+  --rb-diff-structural-text: #fde68a;
+  --rb-diff-structural-border: #f59e0b;
   
   --rb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --rb-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
