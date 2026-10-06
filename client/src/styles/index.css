@@ -447,6 +447,10 @@ select option {
     width: 100% !important;
   }
 
+  .input-footer-responsive {
+    padding: 0 12px !important;
+  }
+
   .output-footer-responsive {
     padding: 0 10px !important;
     gap: 6px !important;
@@ -1015,10 +1019,16 @@ html {
   padding: 4px 16px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.suite-bar::-webkit-scrollbar {
+  display: none;
+}
+
 .suite-tab {
   display: flex;
   align-items: center;
@@ -1032,6 +1042,7 @@ html {
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
   user-select: none;
 }
@@ -1043,6 +1054,35 @@ html {
   background: var(--rb-primary-light);
   color: var(--rb-primary);
   border-color: var(--rb-primary-border);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.suite-subbar-responsive {
+  padding: 8px 16px;
+}
+
+@media (max-width: 767.98px) {
+  .suite-bar {
+    padding: 6px 10px !important;
+    gap: 4px !important;
+  }
+  .suite-tab {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    gap: 5px !important;
+    border-radius: 6px !important;
+  }
+  .suite-subbar-responsive {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
 }
 
 

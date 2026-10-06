@@ -756,6 +756,7 @@ export function Home() {
         if (res.correctedText) {
           setOutputText(res.correctedText);
           setActiveTab('diff');
+          setMobileTab('output');
         }
         const count = res.corrections?.length || 0;
         showToast(
@@ -817,6 +818,7 @@ export function Home() {
 
       setOutputText(res.text);
       setPlagiarismReport(null);
+      setMobileTab('output');
       showToast(`Text successfully humanized (${humanizeMode} tone)!`, 'success');
 
       // Re-scan with new humanized text
@@ -867,6 +869,7 @@ export function Home() {
       });
       setOutputText(res.text);
       setActiveTab('plain');
+      setMobileTab('output');
       showToast('Summary generated successfully!', 'success');
     } catch (err: any) {
       console.error('Summarize failed:', err);
@@ -900,6 +903,7 @@ export function Home() {
       });
       setOutputText(res.text);
       setActiveTab('plain');
+      setMobileTab('output');
       showToast(`Translated text to ${targetLang.toUpperCase()} successfully!`, 'success');
     } catch (err: any) {
       console.error('Translate failed:', err);
@@ -1609,10 +1613,10 @@ export function Home() {
       {/* Modes & Settings Control Bar */}
       {activeSuiteTool === 'paraphrase' && (
         <div
+          className="suite-subbar-responsive"
           style={{
             background: 'var(--rb-surface)',
             borderBottom: '1px solid var(--rb-border)',
-            padding: '8px 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -1673,7 +1677,16 @@ export function Home() {
           </div>
 
           {/* Synonyms Slider & Language Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div
+            className="no-scrollbar"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              flexWrap: 'wrap',
+              maxWidth: '100%',
+            }}
+          >
             {/* ❄️ Freeze Words Button */}
             <button
               onClick={() => setShowFreezeModal(true)}
@@ -1798,19 +1811,32 @@ export function Home() {
       {/* 🧠 AI Humanizer Control Bar */}
       {activeSuiteTool === 'humanizer' && (
         <div
+          className="suite-subbar-responsive"
           style={{
             background: 'var(--rb-surface)',
             borderBottom: '1px solid var(--rb-border)',
-            padding: '8px 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '12px',
+            gap: '10px',
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Humanizer Tone:</span>
+          <div
+            className="no-scrollbar"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              maxWidth: '100%',
+              paddingBottom: '2px',
+            }}
+          >
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginRight: '4px', flexShrink: 0 }}>
+              Tone:
+            </span>
             {(['natural', 'conversational', 'academic', 'casual', 'professional'] as const).map((m) => {
               const active = humanizeMode === m;
               return (
@@ -1827,6 +1853,8 @@ export function Home() {
                     fontWeight: active ? 600 : 500,
                     cursor: 'pointer',
                     textTransform: 'capitalize',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
                   }}
                 >
                   {m}
@@ -1834,8 +1862,20 @@ export function Home() {
               );
             })}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#16a34a', fontWeight: 600 }}>
-            <ShieldCheck size={16} /> Stealth Mode: 98%+ AI Bypass Guaranteed
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '11.5px',
+              color: '#16a34a',
+              fontWeight: 600,
+              flexShrink: 0,
+            }}
+          >
+            <ShieldCheck size={15} />
+            <span className="hide-on-mobile">Stealth Mode: 98%+ AI Bypass Guaranteed</span>
+            <span className="show-on-mobile hide-on-desktop">98%+ AI Bypass</span>
           </div>
         </div>
       )}
@@ -1843,20 +1883,32 @@ export function Home() {
       {/* 📋 Summarizer Control Bar */}
       {activeSuiteTool === 'summarizer' && (
         <div
+          className="suite-subbar-responsive"
           style={{
             background: 'var(--rb-surface)',
             borderBottom: '1px solid var(--rb-border)',
-            padding: '8px 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '12px',
+            gap: '10px',
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Length:</span>
+          <div
+            className="no-scrollbar"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              maxWidth: '100%',
+              paddingBottom: '2px',
+            }}
+          >
+            {/* Length Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginRight: '2px', flexShrink: 0 }}>Length:</span>
               {(['short', 'medium', 'detailed'] as const).map((len) => {
                 const active = summaryLength === len;
                 return (
@@ -1873,6 +1925,8 @@ export function Home() {
                       fontWeight: active ? 600 : 500,
                       cursor: 'pointer',
                       textTransform: 'capitalize',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
                     }}
                   >
                     {len}
@@ -1881,15 +1935,16 @@ export function Home() {
               })}
             </div>
 
-            <div style={{ width: '1px', height: '18px', background: 'var(--rb-border)' }} />
+            <div style={{ width: '1px', height: '16px', background: 'var(--rb-border)', flexShrink: 0 }} />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Format:</span>
+            {/* Format Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b', marginRight: '2px', flexShrink: 0 }}>Format:</span>
               {(
                 [
                   { id: 'paragraph', label: 'Paragraph' },
-                  { id: 'bullets', label: 'Bullet Points' },
-                  { id: 'key-points', label: 'Key Takeaways' },
+                  { id: 'bullets', label: 'Bullets' },
+                  { id: 'key-points', label: 'Key Points' },
                   { id: 'executive', label: 'Executive' },
                 ] as const
               ).map((fmt) => {
@@ -1907,6 +1962,8 @@ export function Home() {
                       fontSize: '12px',
                       fontWeight: active ? 600 : 500,
                       cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
                     }}
                   >
                     {fmt.label}
@@ -1921,97 +1978,111 @@ export function Home() {
       {/* 🌐 Translator Control Bar */}
       {activeSuiteTool === 'translator' && (
         <div
+          className="suite-subbar-responsive"
           style={{
             background: 'var(--rb-surface)',
             borderBottom: '1px solid var(--rb-border)',
-            padding: '8px 20px',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: '8px',
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>From:</span>
-            <select
-              value={sourceLang}
-              onChange={(e) => setSourceLang(e.target.value)}
-              style={{
-                padding: '5px 10px',
-                borderRadius: '6px',
-                border: '1px solid var(--rb-border)',
-                background: 'var(--rb-surface)',
-                color: 'var(--rb-text)',
-                fontSize: '13px',
-                fontWeight: 500,
-              }}
-            >
-              <option value="auto">Detect Language</option>
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="it">Italian</option>
-              <option value="pt">Portuguese</option>
-              <option value="ru">Russian</option>
-              <option value="zh">Chinese</option>
-              <option value="ja">Japanese</option>
-              <option value="hi">Hindi</option>
-              <option value="ar">Arabic</option>
-            </select>
-          </div>
-
-          <button
-            onClick={() => {
-              if (sourceLang !== 'auto') {
-                const prevSource = sourceLang;
-                setSourceLang(targetLang);
-                setTargetLang(prevSource);
-              }
-            }}
-            title="Swap Languages"
+          <div
+            className="no-scrollbar"
             style={{
-              padding: '6px',
-              borderRadius: '50%',
-              border: '1px solid var(--rb-border)',
-              background: 'var(--rb-surface)',
-              color: 'var(--rb-text)',
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: '8px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              maxWidth: '100%',
+              paddingBottom: '2px',
             }}
           >
-            <RotateCw size={14} />
-          </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>From:</span>
+              <select
+                value={sourceLang}
+                onChange={(e) => setSourceLang(e.target.value)}
+                style={{
+                  padding: '5px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--rb-border)',
+                  background: 'var(--rb-surface)',
+                  color: 'var(--rb-text)',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                }}
+              >
+                <option value="auto">Detect Language</option>
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="it">Italian</option>
+                <option value="pt">Portuguese</option>
+                <option value="ru">Russian</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+                <option value="hi">Hindi</option>
+                <option value="ar">Arabic</option>
+              </select>
+            </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>To:</span>
-            <select
-              value={targetLang}
-              onChange={(e) => setTargetLang(e.target.value)}
+            <button
+              onClick={() => {
+                if (sourceLang !== 'auto') {
+                  const prevSource = sourceLang;
+                  setSourceLang(targetLang);
+                  setTargetLang(prevSource);
+                }
+              }}
+              title="Swap Languages"
               style={{
-                padding: '5px 10px',
-                borderRadius: '6px',
+                padding: '6px',
+                borderRadius: '50%',
                 border: '1px solid var(--rb-border)',
                 background: 'var(--rb-surface)',
                 color: 'var(--rb-text)',
-                fontSize: '13px',
-                fontWeight: 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
-              <option value="es">Spanish</option>
-              <option value="en">English</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="it">Italian</option>
-              <option value="pt">Portuguese</option>
-              <option value="ru">Russian</option>
-              <option value="zh">Chinese</option>
-              <option value="ja">Japanese</option>
-              <option value="hi">Hindi</option>
-              <option value="ar">Arabic</option>
-            </select>
+              <RotateCw size={13} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>To:</span>
+              <select
+                value={targetLang}
+                onChange={(e) => setTargetLang(e.target.value)}
+                style={{
+                  padding: '5px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--rb-border)',
+                  background: 'var(--rb-surface)',
+                  color: 'var(--rb-text)',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                }}
+              >
+                <option value="es">Spanish</option>
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="it">Italian</option>
+                <option value="pt">Portuguese</option>
+                <option value="ru">Russian</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+                <option value="hi">Hindi</option>
+                <option value="ar">Arabic</option>
+              </select>
+            </div>
           </div>
         </div>
       )}
@@ -2019,19 +2090,20 @@ export function Home() {
       {/* 🔍 Grammar Checker Quick Toolbar */}
       {activeSuiteTool === 'grammar' && (
         <div
+          className="suite-subbar-responsive"
           style={{
             background: 'var(--rb-surface)',
             borderBottom: '1px solid var(--rb-border)',
-            padding: '8px 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '12px',
+            gap: '8px',
+            flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '13px', fontWeight: 600, color: '#c2410c' }}>
-              🔍 Live Proofreading Mode
+              🔍 Proofreading Mode
             </span>
             {grammarReport && (
               <span style={{ fontSize: '12px', color: 'var(--rb-text-secondary)' }}>
@@ -2043,7 +2115,7 @@ export function Home() {
             <button
               onClick={() => setShowGrammarDrawer(true)}
               style={{
-                padding: '4px 12px',
+                padding: '5px 12px',
                 borderRadius: '6px',
                 border: '1px solid #ea580c',
                 background: '#ea580c',
@@ -2062,19 +2134,20 @@ export function Home() {
       {/* 🛡️ Plagiarism Quick Bar */}
       {activeSuiteTool === 'plagiarism' && (
         <div
+          className="suite-subbar-responsive"
           style={{
             background: 'var(--rb-surface)',
             borderBottom: '1px solid var(--rb-border)',
-            padding: '8px 20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '12px',
+            gap: '8px',
+            flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '13px', fontWeight: 600, color: '#15803d' }}>
-              🛡️ Originality & Turnitin-Grade Plagiarism Auditor
+              🛡️ Originality & Plagiarism Auditor
             </span>
             {plagiarismReport && (
               <span style={{ fontSize: '12px', fontWeight: 700, color: '#16a34a' }}>
@@ -2085,7 +2158,7 @@ export function Home() {
           <button
             onClick={() => setShowPlagiarism(true)}
             style={{
-              padding: '4px 12px',
+              padding: '5px 12px',
               borderRadius: '6px',
               border: '1px solid #16a34a',
               background: '#16a34a',
@@ -2095,7 +2168,7 @@ export function Home() {
               cursor: 'pointer',
             }}
           >
-            Open Plagiarism Audit Panel
+            Audit Panel
           </button>
         </div>
       )}
@@ -2281,6 +2354,7 @@ export function Home() {
 
           {/* Input Footer */}
           <div
+            className="input-footer-responsive"
             style={{
               height: '60px',
               minHeight: '60px',
