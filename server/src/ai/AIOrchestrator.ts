@@ -18,6 +18,7 @@ import { DiagnosticLogger } from '../utils/diagnostics';
 import { sanitizeNGrams } from './NGramSanitizer';
 import { MultiSourceSearchEngine } from './MultiSourceSearchEngine';
 import { qualityGate } from './QualityGate';
+import { linguisticEvaluator, LinguisticEvaluationResult } from './LinguisticEvaluator';
 
 /**
  * Main orchestrator for AI operations
@@ -111,70 +112,143 @@ export class AIOrchestrator {
         throw new ValidationError('Provider returned empty response');
       }
 
-      // Tier 1.5: Algorithmic Quality Gate Verification (<5ms)
-      // Only execute quality gate for general paraphrasing and humanizing workflows (not for summarizer or translation or grammar)
+      // Paraphrasing and Humanizing Quality & Selection Pipeline
       let finalResponse = response;
-      let sanitizedText = response.text;
+      let selectedText = response.text;
 
       const isParaphraseOrHumanize = request.mode !== 'shorten' && request.mode !== 'expand' && request.mode !== ('grammar' as any);
       const isToolOperation = !!request.systemPrompt;
 
       if (isParaphraseOrHumanize && !isToolOperation && request.text) {
-        const qualityEval = qualityGate.evaluateQuality(request.text, sanitizedText, request.mode);
-        diag?.log('QUALITY_GATE_EVALUATION', {
-          passed: qualityEval.passed,
-          score: qualityEval.score,
-          issues: qualityEval.issues,
+        // Step 1: Linguistic & Semantic Evaluation of Candidate 1
+        const eval1 = linguisticEvaluator.evaluate(request.text, selectedText);
+        const factGate1 = qualityGate.evaluateQuality(request.text, selectedText, request.mode);
+
+        diag?.log('CANDIDATE_1_EVALUATED', {
+          totalScore: eval1.totalScore,
+          passed: eval1.passed,
+          factualPassed: factGate1.passed,
+          factualScore: factGate1.score,
+          breakdown: eval1.breakdown,
+          issues: [...eval1.issues, ...factGate1.issues],
         });
 
-        if (!qualityEval.passed) {
-          logger.warn(`[QualityGate] Candidate failed quality evaluation (Score: ${qualityEval.score}). Issues: ${qualityEval.issues.join('; ')}. Triggering adaptive refinement retry...`);
+        const isHighConfidence = eval1.passed && factGate1.passed && eval1.totalScore >= 85;
+
+        // Step 2: Adaptive Best-of-N Candidate Generation
+        // If Candidate 1 is below high confidence threshold (semantic drift, low score, or factual gate failure)
+        if (!isHighConfidence) {
+          logger.info(`[AdaptivePipeline] Candidate 1 scored ${eval1.totalScore}/100 (Factual: ${factGate1.score}). Launching concurrent multi-temperature candidate exploration...`);
           
           try {
-            // Adaptive retry: provide focused refinement instruction targeting the specific failure issues
-            const retryInstruction = `Please refine the rewrite. Ensure: 1) Every factual number, date, and statistic is preserved exactly without omission; 2) Stop immediately when the text concludes without adding summary commentary; 3) Maintain natural human phrasing without awkward bureaucratic prepositions.`;
-            const retryRequest: AIRequest = {
+            // Generate Candidate 2 (higher diversity T=0.75) and Candidate 3 (precision T=0.45) in parallel
+            const reqCand2: AIRequest = {
               ...providerRequest,
-              text: `${userPrompt}\n\n[REFINEMENT MANDATE: ${retryInstruction}]`,
-              options: {
-                ...request.options,
-                temperature: 0.50, // tighter, focused temperature for precision retry
-              },
+              options: { ...request.options, temperature: 0.75 },
+            };
+            const reqCand3: AIRequest = {
+              ...providerRequest,
+              options: { ...request.options, temperature: 0.45 },
             };
 
-            const retryResponse = await provider.generate(retryRequest);
-            if (retryResponse.text && retryResponse.text.trim().length > 0) {
-              const retryEval = qualityGate.evaluateQuality(request.text, retryResponse.text, request.mode);
-              if (retryEval.score >= qualityEval.score) {
-                logger.info(`[QualityGate] Adaptive retry succeeded with higher quality score (${retryEval.score} vs ${qualityEval.score})`);
-                sanitizedText = retryResponse.text;
-                finalResponse = retryResponse;
-              }
+            const [resp2, resp3] = await Promise.all([
+              provider.generate(reqCand2).catch((err) => {
+                logger.warn(`Candidate 2 generation failed: ${err}`);
+                return null;
+              }),
+              provider.generate(reqCand3).catch((err) => {
+                logger.warn(`Candidate 3 generation failed: ${err}`);
+                return null;
+              }),
+            ]);
+
+            // Pool all valid candidates
+            const candidatePool: Array<{ response: AIResponse; text: string; lingEval: LinguisticEvaluationResult; factPassed: boolean; factScore: number; combinedScore: number }> = [
+              {
+                response,
+                text: response.text,
+                lingEval: eval1,
+                factPassed: factGate1.passed,
+                factScore: factGate1.score,
+                combinedScore: factGate1.passed ? eval1.totalScore : Math.max(0, eval1.totalScore - 30),
+              },
+            ];
+
+            if (resp2 && resp2.text && resp2.text.trim().length > 0) {
+              const ling2 = linguisticEvaluator.evaluate(request.text, resp2.text);
+              const fact2 = qualityGate.evaluateQuality(request.text, resp2.text, request.mode);
+              candidatePool.push({
+                response: resp2,
+                text: resp2.text,
+                lingEval: ling2,
+                factPassed: fact2.passed,
+                factScore: fact2.score,
+                combinedScore: fact2.passed ? ling2.totalScore : Math.max(0, ling2.totalScore - 30),
+              });
             }
-          } catch (retryErr) {
-            logger.warn(`[QualityGate] Adaptive retry failed or timed out, keeping initial candidate: ${retryErr}`);
+
+            if (resp3 && resp3.text && resp3.text.trim().length > 0) {
+              const ling3 = linguisticEvaluator.evaluate(request.text, resp3.text);
+              const fact3 = qualityGate.evaluateQuality(request.text, resp3.text, request.mode);
+              candidatePool.push({
+                response: resp3,
+                text: resp3.text,
+                lingEval: ling3,
+                factPassed: fact3.passed,
+                factScore: fact3.score,
+                combinedScore: fact3.passed ? ling3.totalScore : Math.max(0, ling3.totalScore - 30),
+              });
+            }
+
+            // Select highest scoring candidate that satisfies factual safety
+            candidatePool.sort((a, b) => b.combinedScore - a.combinedScore);
+            const winner = candidatePool[0];
+
+            logger.info(`[AdaptivePipeline] Selected winning candidate (Score: ${winner.combinedScore}/100, Factual: ${winner.factPassed ? 'PASSED' : 'RETRY'}) out of ${candidatePool.length} candidates`);
+            selectedText = winner.text;
+            finalResponse = winner.response;
+
+            diag?.log('WINNING_CANDIDATE_SELECTED', {
+              poolSize: candidatePool.length,
+              winningScore: winner.combinedScore,
+              breakdown: winner.lingEval.breakdown,
+            });
+          } catch (adaptiveErr) {
+            logger.warn(`[AdaptivePipeline] Multi-candidate generation encountered error, falling back to Candidate 1: ${adaptiveErr}`);
           }
         }
       }
 
-      // Tier 2: Deterministic N-Gram Sanitizer & Patchwriting Decoupler (for paraphrase/humanize only)
+      // Step 3: Deterministic N-Gram Sanitizer & Patchwriting Decoupler (for paraphrase/humanize only)
+      let postSanitizedText = selectedText;
       if (request.plagiarismGuard !== false && request.text && !isToolOperation && isParaphraseOrHumanize) {
-        const sanitization = sanitizeNGrams(request.text, sanitizedText);
+        const sanitization = sanitizeNGrams(request.text, selectedText);
         if (sanitization.modified) {
-          logger.info(`[NGramSanitizer] Decoupled ${sanitization.sanitizedCount} matching phrase sequence(s) to guarantee 0% patchwriting`);
-          sanitizedText = sanitization.text;
+          logger.info(`[NGramSanitizer] Decoupled ${sanitization.sanitizedCount} matching phrase sequence(s). Performing post-sanitization re-validation...`);
+          
+          // Strict Invariant: Always re-validate post-sanitized text against QualityGate & Semantic Evaluator
+          const revalFact = qualityGate.evaluateQuality(request.text, sanitization.text, request.mode);
+          const revalLing = linguisticEvaluator.evaluate(request.text, sanitization.text);
+
+          if (revalFact.passed && revalLing.breakdown.semanticScore >= 70) {
+            logger.info(`[NGramSanitizer] Post-sanitization re-validation PASSED (Factual: ${revalFact.score}, Semantic: ${revalLing.breakdown.semanticScore}). Accepting sanitization.`);
+            postSanitizedText = sanitization.text;
+          } else {
+            logger.warn(`[NGramSanitizer] Post-sanitization re-validation REJECTED (Factual passed: ${revalFact.passed}, Semantic score: ${revalLing.breakdown.semanticScore}). Reverting to clean candidate to protect text integrity.`);
+            postSanitizedText = selectedText;
+          }
         }
       }
 
       diag?.log('RESPONSE_VALIDATED', {
-        outputLength: sanitizedText.length,
+        outputLength: postSanitizedText.length,
       });
 
-      logger.info(`Generation completed in ${Date.now() - startTime}ms, output length: ${sanitizedText.length}`);
+      logger.info(`Generation completed in ${Date.now() - startTime}ms, output length: ${postSanitizedText.length}`);
 
       return {
         ...finalResponse,
-        text: sanitizedText,
+        text: postSanitizedText,
         latency: Date.now() - startTime,
       };
     } catch (error) {

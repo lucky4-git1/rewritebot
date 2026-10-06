@@ -80,15 +80,11 @@ export class PromptEngine {
     parts.push('');
 
     // Rule 3: QuillBot-grade Structural Transformation Directive
-    parts.push('QUILLBOT 100% HUMAN TRANSFORMATION BLUEPRINT (STUDY THIS PATTERN):');
-    parts.push('To score 100% Human on Pangram Labs, apply QuillBot\'s exact 3-step paradigm:');
-    parts.push('1. Local Clause Reordering: Invert the opening clause and the main clause.');
-    parts.push('   * Source: "At the start of the second term of the academic year 2016/2017, 860 female preparatory school students attending two public schools in the rural area of Beni-Suef city participated in this cross-sectional study."');
-    parts.push('   * Paraphrase: "860 female preparatory school students from two public schools in Beni-Suef City\'s rural area took part in this cross-sectional study at the beginning of the second term of the 2016–2017 academic year."');
-    parts.push('2. Voice & Subject Shift:');
-    parts.push('   * Source: "Institutional clearances came after ethical approval from the Beni-Suef University Faculty of Medicine\'s Research Ethics Committee."');
-    parts.push('   * Paraphrase: "The Research Ethics Committee of the Beni-Suef University Faculty of Medicine granted ethical approval prior to institutional clearances."');
-    parts.push('3. Preserve 70-75% Authorial Backbone: Changing ~25-30% of words with crisp, natural synonyms while retaining the author\'s original vocabulary anchors guarantees that AI detectors measure natural human perplexity.');
+    parts.push('QUILLBOT 100% HUMAN TRANSFORMATION BLUEPRINT:');
+    parts.push('Apply QuillBot\'s proven 3-pillar human paraphrasing approach:');
+    parts.push('1. Local Clause Reordering: Rearrange introductory clauses, adverbials, and main clauses naturally (e.g. swap temporal or prepositional openers to the end of the sentence or vice versa).');
+    parts.push('2. Active/Passive Syntactic Shifts: Invert sentence subjects and adjust voice where it enhances natural readability and eliminates formulaic AI phrasing.');
+    parts.push('3. Preserve Authentic Authorial Meaning (~70-75% vocabulary anchor): Retain the underlying semantic terms while substituting key verbs, adjectives, and connecting phrases with crisp, natural human alternatives.');
     parts.push('');
 
     // Calculate dynamic word count metrics
@@ -102,7 +98,7 @@ export class PromptEngine {
       const maxWords = Math.max(minWords, Math.round(inputWordCount * 0.65));
       parts.push('MODE: SHORTEN (HIGH COMPRESSION MANDATE):');
       parts.push(`- Input length: ${inputWordCount} words.`);
-      parts.push(`- TARGET COMPRESSION LENGTH: ${minWords} to ${maxWords} words (40% to 65% of input).`);
+      parts.push(`- TARGET COMPRESSION LENGTH: Approximately ${minWords} to ${maxWords} words (40% to 65% of input).`);
       parts.push('- Strip non-essential modifiers, eliminate wordy transitions, and synthesize the core assertion into a single, punchy, high-impact sentence or tight paragraph.');
       parts.push('- Under NO circumstances should you expand or output multiple alternative versions.');
       parts.push('');
@@ -111,21 +107,19 @@ export class PromptEngine {
       const maxWords = Math.round(inputWordCount * 1.45);
       parts.push('MODE: EXPAND (NUANCED ELABORATION MANDATE):');
       parts.push(`- Input length: ${inputWordCount} words.`);
-      parts.push(`- TARGET EXPANDED LENGTH: ${minWords} to ${maxWords} words (+20% to +45% longer).`);
+      parts.push(`- TARGET EXPANDED LENGTH: Approximately ${minWords} to ${maxWords} words (+20% to +45% longer).`);
       parts.push('- Elaborate ideas with analytical depth, rich subordinate clauses, and contextual precision without inventing ungrounded facts.');
       parts.push('');
     } else {
       // Standard, Fluency, Humanize, Formal, Academic, Simple, Creative, Custom
-      const minWords = Math.max(1, Math.round(inputWordCount * 0.95));
-      const maxWords = Math.max(inputWordCount, Math.round(inputWordCount * 1.08));
       const modePrompt = this.getModePrompt(mode, request.customInstruction);
       parts.push(`MODE: ${mode.toUpperCase()}`);
       parts.push(modePrompt);
       parts.push('');
-      parts.push('QUILLBOT 1:1 WORD-COUNT PARITY & LENGTH CONSERVATION:');
-      parts.push(`- Input length: Exactly ${inputWordCount} words.`);
-      parts.push(`- STRICT TARGET LENGTH: ${minWords} to ${maxWords} words (strict 1:1 length parity).`);
-      parts.push(`- STRICT MAXIMUM: Never exceed ${maxWords} words. Do NOT bloat into extra sentences, add padding, or introduce conversational filler.`);
+      parts.push('NATURAL LENGTH & CONCISE CADENCE:');
+      parts.push(`- Input length: Approximately ${inputWordCount} words.`);
+      parts.push('- SOFT LENGTH PREFERENCE: Maintain natural, balanced length proportional to the input. Prioritize genuine meaning preservation, effortless readability, and concise phrasing over artificial word-count inflation or padding.');
+      parts.push('- STRICT RESTRAINT: Do NOT bloat into extra sentences, add conversational filler, or append closing remarks.');
       parts.push('');
     }
 
@@ -181,9 +175,7 @@ export class PromptEngine {
       return `Humanize the following text (${inputWordCount} words) to sound 100% authentically human-authored${tonePart}. Maintain exact 1:1 paragraph separation, preserve natural prepositions and idioms (never use awkward replacements like 'pertaining to'), zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
     }
 
-    const minWords = Math.max(1, Math.round(inputWordCount * 0.95));
-    const maxWords = Math.max(inputWordCount, Math.round(inputWordCount * 1.08));
-    return `Rewrite the following text (${inputWordCount} words) with QuillBot-grade human fluency and precision (${minWords}-${maxWords} words). Maintain exact 1:1 paragraph separation, preserve natural prepositions and idioms (never use awkward replacements like 'pertaining to'), zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
+    return `Rewrite the following text (${inputWordCount} words) with QuillBot-grade human fluency and precision. Maintain exact 1:1 paragraph separation, preserve natural prepositions and idioms (never use awkward replacements like 'pertaining to'), zero hallucinated conclusion sentences, and stop immediately when the input ends:\n\n${request.text}`;
   }
 
   /**
