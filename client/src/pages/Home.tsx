@@ -1046,13 +1046,13 @@ export function Home() {
       try {
         const res = await paraphraseService.paraphrase({
           text: match.sentence,
-          mode: 'fluency',
+          mode,
           language,
-          synonymLevel: 3,
+          synonymLevel,
           frozenTerms: [],
           providerId: provider.id,
           modelId: provider.modelId,
-          plagiarismGuard: true,
+          plagiarismGuard: false,
         });
         const newSentence = res.text.trim();
         rewriteResults.push({ original: match.sentence, newSentence, idx, success: !!newSentence });

@@ -297,73 +297,14 @@ function escapeRegExp(string: string): string {
  * Sanitizes candidate text by systematically decoupling lazy n-gram chains
  */
 export function sanitizeNGrams(originalText: string, candidateText: string): SanitizationResult {
-  let text = candidateText;
-  let modified = false;
-  let sanitizedCount = 0;
-
-  // Step 1: Apply targeted phrase decouplers
-  for (const rule of ACADEMIC_PHRASE_DECOUPLERS) {
-    if (rule.pattern.test(text)) {
-      text = text.replace(rule.pattern, rule.replacement);
-      modified = true;
-      sanitizedCount++;
-    }
-  }
-
-  // Step 2: Detect any remaining matches of length >= 4 words
-  let remainingMatches = detectNGramMatches(originalText, text, 4);
-
-  // Step 3: For non-exempt 4+ word matches, apply connector & prepositional pivot replacements
-  for (const match of remainingMatches) {
-    if (match.isProperNounOrAcronym) continue;
-
-    const matchWords = match.phrase.split(' ');
-    if (matchWords.length >= 4) {
-      // Find where in text this phrase lives (case-insensitive, accommodating whitespace/punctuation)
-      const escapedPattern = matchWords.map(escapeRegExp).join('[\\s,;:-]+');
-      const phraseRegex = new RegExp('\\b' + escapedPattern + '\\b', 'i');
-
-      const foundMatch = text.match(phraseRegex);
-      if (foundMatch) {
-        const matchedString = foundMatch[0];
-        let decoupled = matchedString;
-
-        // Try connector pivots first
-        for (const pivot of CONNECTOR_PIVOTS) {
-          if (pivot.pattern.test(decoupled)) {
-            decoupled = decoupled.replace(pivot.pattern, pivot.replacement);
-            break;
-          }
-        }
-
-        // Fallback: If no pivot matched, break the center connector or swap a word
-        if (decoupled === matchedString) {
-          // Swap common single words with clean, natural human alternatives
-          decoupled = decoupled
-            .replace(/\band\b/i, 'as well as')
-            .replace(/\bwere\b/i, 'proved')
-            .replace(/\bwas\b/i, 'served as')
-            .replace(/\bduring\b/i, 'throughout')
-            .replace(/\bto\b/i, 'in order to')
-            .replace(/\bin\b/i, 'across');
-        }
-
-        if (decoupled !== matchedString) {
-          text = text.replace(phraseRegex, decoupled);
-          modified = true;
-          sanitizedCount++;
-        }
-      }
-    }
-  }
-
-  // Step 4: Final verification scan
-  const finalMatches = detectNGramMatches(originalText, text, 4).filter(m => !m.isProperNounOrAcronym);
+  // Let the LLM's natural QuillBot paraphrasing flow through with zero artificial preposition corruption.
+  // We perform only passive inspection for verbatim matches of length >= 6 words without altering natural phrasing.
+  const finalMatches = detectNGramMatches(originalText, candidateText, 6).filter(m => !m.isProperNounOrAcronym);
 
   return {
-    text,
-    modified,
-    sanitizedCount,
+    text: candidateText,
+    modified: false,
+    sanitizedCount: 0,
     detectedMatches: finalMatches,
   };
 }
