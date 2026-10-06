@@ -5,11 +5,11 @@ import { PARAPHRASE_MODES } from '@rewritebot/shared';
  * Prompt templates for different modes with deep structural & syntactic variety
  */
 const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
-  standard: `Paraphrase the text sentence-by-sentence using QuillBot's proven 100% human paraphrasing model:
-1. 1:1 SENTENCE ANCHORING: Rewrite each sentence individually in place. Do not merge, invent, or drop sentences.
-2. LOCAL CLAUSE REORDERING: Move introductory prepositional, temporal, or spatial phrases to the end of the sentence (e.g., "[At the start of X], [860 students took part in Y]" -> "[860 students took part in Y] [at the beginning of X]").
-3. NATURAL HUMAN VOCABULARY (~25-30%): Swap only key words with standard, natural human synonyms (e.g. "two public schools" -> "two state schools", "research site" -> "research location", "capital" -> "seat", "created" -> "developed", "regularity" -> "pattern", "participated" -> "took part"). Keep all standard prepositions ("of", "in", "to", "from") and preserve 70-75% of the author's original words.
-4. ABSOLUTE PROHIBITION ON BUREAUCRATIC PHRASING: NEVER use "drawn from a pair of", "commencement within", "capital within", "together with the heads within", or "substantially". Write like a natural native English speaker.`,
+  standard: `Paraphrase the text with QuillBot-level human fluency, natural clause restructuring, and authentic vocabulary:
+1. ACTIVE SYNTACTIC RESTRUCTURING (RED DIFF): Invert sentence architecture naturally. Move introductory prepositional, spatial, or temporal clauses to the sentence predicate, or bring trailing modifying clauses to the front (e.g. "[At time X], [Subject did Y in place Z]" -> "[Subject did Y in place Z] [at time X]"). Shift between active and passive constructions where it enhances human flow.
+2. RICH VOCABULARY SUBSTITUTION (YELLOW DIFF): Rephrase key verbs, nouns, and modifying adjectives with crisp, idiomatic human synonyms while keeping factual numbers, dates, citations, and proper nouns intact.
+3. AUTHENTIC HUMAN CADENCE (DEFEAT AI DETECTORS): Vary sentence length and complexity naturally. Eliminate predictable AI connectors. Never use bizarre bureaucratic substitutions ("commencement within", "capital within", "drawn from a pair of").
+4. 1:1 SENTENCE AND PARAGRAPH INTEGRITY: Rewrite each sentence in its corresponding position. Preserve all factual claims and stop immediately when the input ends.`,
 
   fluency: `Improve the grammatical flow, cadence, and sentence architecture of the following text to QuillBot-grade fluency. Focus on:
 - Reorganizing clause order and sentence structure for natural, effortless human cadence
@@ -209,10 +209,10 @@ export class PromptEngine {
    */
   private getSynonymLevelInstruction(level: number): string {
     const instructions = {
-      1: 'TRANSFORMATION INTENSITY: Level 1 (Light). Make subtle phrasing adjustments and gentle clause smoothing while strictly preserving the author\'s original vocabulary and sentence pattern.',
-      2: 'TRANSFORMATION INTENSITY: Level 2 (Balanced — QuillBot Standard). Naturally invert front/back clauses and substitute key verbs, adjectives, and nouns with clean human synonyms while maintaining fluent sentence rhythm and exact facts.',
-      3: 'TRANSFORMATION INTENSITY: Level 3 (Dynamic). Actively restructure sentence architecture: invert dependent/independent clauses, vary active/passive voice, and use expressive synonyms while maintaining 100% natural collocations.',
-      4: 'TRANSFORMATION INTENSITY: Level 4 (Comprehensive). Thoroughly re-articulate sentence phrasing from the ground up with rich syntactic variety while preserving all underlying facts, numbers, and logical relationships.',
+      1: 'TRANSFORMATION INTENSITY: Level 1 (Light). Make natural phrasing adjustments and gentle clause smoothing while strictly preserving key vocabulary and facts.',
+      2: 'TRANSFORMATION INTENSITY: Level 2 (Balanced — QuillBot Standard). Actively invert opening/closing clauses, alternate active/passive structures, and substitute ~30-45% of key verbs, nouns, and adjectives with natural human synonyms.',
+      3: 'TRANSFORMATION INTENSITY: Level 3 (Dynamic). Dynamically restructure sentence architecture: invert dependent and independent clauses, vary sentence pacing and burstiness, and introduce expressive vocabulary (~50-65% transformation) while keeping all facts 100% accurate.',
+      4: 'TRANSFORMATION INTENSITY: Level 4 (Comprehensive). Thoroughly re-articulate the prose from the ground up: completely recast syntactic clause order and employ rich human vocabulary (~70-80% transformation) to achieve zero AI predictability and maximum original flow.',
     };
 
     return instructions[level as 1 | 2 | 3 | 4] || instructions[2];
