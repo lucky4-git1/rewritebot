@@ -1091,5 +1091,30 @@ html {
   }
 }
 
+/* Kinetic Word Flip & Slate Glow */
+@keyframes wordFlipIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) rotateX(-20deg);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+    filter: blur(0px);
+  }
+}
 
+.animate-word-flip {
+  display: inline-block;
+  animation: wordFlipIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+.pulse-badge {
+  animation: pulseSubtle 3s ease-in-out infinite;
+}

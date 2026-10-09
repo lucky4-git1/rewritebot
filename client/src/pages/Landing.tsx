@@ -1,18 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowRight,
   ChevronDown,
-  CheckCircle2,
-  Lock,
-  Cpu,
-  Layers,
+  ArrowRight,
 } from 'lucide-react';
 import { useThemeStore } from '../stores/themeStore';
 import { LandingNavbar } from '../components/landing/LandingNavbar';
 import { LandingFooter } from '../components/landing/LandingFooter';
 import { AmbientWordsBackground } from '../components/landing/AmbientWordsBackground';
-import { HeroWritingInstrument } from '../components/landing/HeroWritingInstrument';
+import { CinematicHero } from '../components/landing/CinematicHero';
 import { InteractiveProductDemo } from '../components/landing/InteractiveProductDemo';
 import { StickyScrollStory } from '../components/landing/StickyScrollStory';
 import { ComparisonMatrix } from '../components/landing/ComparisonMatrix';
@@ -42,161 +38,8 @@ export function Landing() {
       {/* 1. STICKY FROSTED NAVIGATION */}
       <LandingNavbar isDark={isDark} />
 
-      {/* 2. ASYMMETRICAL EDITORIAL HERO SPREAD */}
-      <section
-        style={{
-          position: 'relative',
-          padding: 'clamp(32px, 5vw, 40px) 16px 40px',
-          maxWidth: '1240px',
-          margin: '0 auto',
-          zIndex: 1,
-        }}
-      >
-        <div className="editorial-hero-grid">
-          {/* Left Column: Asymmetrical Editorial Opening */}
-          <div>
-            {/* Eyebrow: Tracked Uppercase Typography (No generic pill) */}
-            <div
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: '#BAD797',
-                textTransform: 'uppercase',
-                letterSpacing: '0.14em',
-                marginBottom: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <span
-                style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: '#BAD797',
-                  display: 'inline-block',
-                }}
-              />
-              <span>AI-POWERED REWRITING</span>
-            </div>
-
-            {/* Restrained Serif Headline */}
-            <h1
-              className="editorial-headline"
-              style={{
-                fontSize: 'clamp(32px, 4.4vw, 54px)',
-                fontWeight: 700,
-                lineHeight: 1.08,
-                color: 'var(--rb-text)',
-                margin: '0 0 16px',
-                letterSpacing: '-0.025em',
-              }}
-            >
-              Say it better.{' '}
-              <span
-                style={{
-                  color: isDark ? '#e27293' : '#670626',
-                  fontStyle: 'italic',
-                }}
-              >
-                Instantly.
-              </span>
-            </h1>
-
-            {/* Short Editorial Copy */}
-            <p
-              style={{
-                fontSize: 'clamp(15px, 1.6vw, 17px)',
-                lineHeight: 1.6,
-                color: 'var(--rb-text-secondary)',
-                margin: '0 0 24px',
-                maxWidth: '520px',
-              }}
-            >
-              A sophisticated writing instrument engineered for clarity, nuance, and structural precision.
-              RewriteBot transforms drafts through deep syntactic clause inversion, glossary locks, and certified originality audits.
-            </p>
-
-            {/* Restrained Action Buttons */}
-            <div className="hero-cta-group">
-              <button
-                onClick={() => navigate('/app')}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  padding: '11px 22px',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(247, 243, 235, 0.15)',
-                  background: '#670626',
-                  color: '#F7F3EB',
-                  fontSize: '13.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(103, 6, 38, 0.35)',
-                  transition: 'all 0.15s ease',
-                  whiteSpace: 'nowrap',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#52041e')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#670626')}
-              >
-                <span>Launch Free Studio</span>
-                <ArrowRight size={14} color="#BAD797" />
-              </button>
-
-              <a
-                href="#demo"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  padding: '10px 12px',
-                  color: 'var(--rb-text)',
-                  fontSize: '13.5px',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  borderBottom: '1px solid var(--rb-border)',
-                  transition: 'all 0.15s ease',
-                  whiteSpace: 'nowrap',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#BAD797')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--rb-border)')}
-              >
-                <span>See Live Transformation</span>
-                <span style={{ fontSize: '13px', color: '#BAD797' }}>↓</span>
-              </a>
-            </div>
-
-            {/* Proof Points Strip in clean responsive flex wrap */}
-            <div className="editorial-proof-points">
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                <CheckCircle2 size={14} color="#059669" style={{ flexShrink: 0 }} />
-                <span style={{ whiteSpace: 'nowrap' }}>Zero Subscription Fees</span>
-              </div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                <Cpu size={14} color="#BAD797" style={{ flexShrink: 0 }} />
-                <span style={{ whiteSpace: 'nowrap' }}>BYOK or Local Ollama</span>
-              </div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                <Lock size={14} color="#059669" style={{ flexShrink: 0 }} />
-                <span style={{ whiteSpace: 'nowrap' }}>100% Private & Air-Gapped</span>
-              </div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                <Layers size={14} color={isDark ? '#e27293' : '#670626'} style={{ flexShrink: 0 }} />
-                <span style={{ whiteSpace: 'nowrap' }}>3-Color Clause Diffs</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: RewriteBot Writing Instrument (Product Hero) */}
-          <div style={{ display: 'flex', justifyContent: 'center', width: '100%', minWidth: 0 }}>
-            <HeroWritingInstrument isDark={isDark} />
-          </div>
-        </div>
-      </section>
+      {/* 2. CINEMATIC 100VH EDITORIAL HERO WITH LIVING REWRITE SLATE */}
+      <CinematicHero isDark={isDark} />
 
       {/* 3. PRODUCT DEMO — FULL INTERACTIVE STUDIO */}
       <section
