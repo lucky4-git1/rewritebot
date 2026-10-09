@@ -771,7 +771,7 @@ export function Providers() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>⚡ Groq (Recommended)</span>
-                        <span style={{ fontSize: '11px', background: 'rgba(186, 215, 151, 0.3)', color: '#2d5a1e', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>100% Free & Fastest</span>
+                        <span className="provider-tag-green">100% Free & Fastest</span>
                       </div>
                       <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 12px' }}>
                         Sub-second paraphrasing on LPUs. Generous free tier with no credit card required.
@@ -836,7 +836,7 @@ export function Providers() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>🟢 NVIDIA NIM</span>
-                        <span style={{ fontSize: '11px', background: 'rgba(34, 197, 94, 0.15)', color: '#15803d', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>1,000 Free Credits</span>
+                        <span className="provider-tag-emerald">1,000 Free Credits</span>
                       </div>
                       <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 12px' }}>
                         High-quality Llama-3.2 NIM microservices hosted on NVIDIA DGX cloud.
@@ -901,7 +901,7 @@ export function Providers() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>🌐 OpenRouter / OpenAI</span>
-                        <span style={{ fontSize: '11px', background: 'rgba(59, 130, 246, 0.15)', color: '#1d4ed8', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>Multi-Model</span>
+                        <span className="provider-tag-blue">Multi-Model</span>
                       </div>
                       <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 12px' }}>
                         Access OpenAI, Claude, DeepSeek, or 200+ models with one unified API key.
@@ -966,7 +966,7 @@ export function Providers() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>💻 Ollama (Local AI)</span>
-                        <span style={{ fontSize: '11px', background: 'rgba(168, 85, 247, 0.15)', color: '#7e22ce', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>100% Private Offline</span>
+                        <span className="provider-tag-purple">100% Private Offline</span>
                       </div>
                       <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 12px' }}>
                         Run Llama 3 or Mistral directly on your local machine with zero external API calls.
