@@ -821,25 +821,26 @@ export function Home() {
       setMobileTab('output');
       showToast(`Text successfully humanized (${humanizeMode} tone)!`, 'success');
 
-      // Re-scan with new humanized text
-      try {
-        const freshScan = await toolsService.checkPlagiarism({
-          text: res.text,
-          providerId: provider.id,
-          modelId: provider.modelId,
-          language,
-        });
+      // Release button immediately so the user can interact right away
+      setIsHumanizing(false);
+
+      // Re-scan with new humanized text in background without locking the button
+      toolsService.checkPlagiarism({
+        text: res.text,
+        providerId: provider.id,
+        modelId: provider.modelId,
+        language,
+      }).then((freshScan) => {
         setPlagiarismReport({
           ...freshScan,
           humanScore: 98,
         });
-      } catch (scanErr) {
+      }).catch((scanErr) => {
         console.warn('Post-humanize plagiarism re-scan skipped:', scanErr);
-      }
+      });
     } catch (err: any) {
       console.error('Humanize failed:', err);
       showToast(err.message || 'Humanize failed', 'error');
-    } finally {
       setIsHumanizing(false);
     }
   };
@@ -2322,7 +2323,19 @@ export function Home() {
             onKeyDown={(e) => {
               if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
-                handleParaphrase();
+                if (activeSuiteTool === 'summarizer') {
+                  handleSummarize();
+                } else if (activeSuiteTool === 'translator') {
+                  handleTranslate();
+                } else if (activeSuiteTool === 'humanizer') {
+                  handleHumanize();
+                } else if (activeSuiteTool === 'grammar') {
+                  handleCheckGrammar();
+                } else if (activeSuiteTool === 'plagiarism') {
+                  handleCheckPlagiarism();
+                } else {
+                  handleParaphrase();
+                }
               }
             }}
             placeholder={

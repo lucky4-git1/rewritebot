@@ -191,50 +191,8 @@ export const CinematicHero: React.FC<CinematicHeroProps> = ({ isDark = false }) 
           marginBottom: '20px',
         }}
       >
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '6px 16px',
-            borderRadius: '9999px',
-            background: isDark ? 'rgba(37, 31, 32, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-            border: '1px solid var(--rb-border)',
-            boxShadow: '0 2px 8px rgba(37, 31, 32, 0.04)',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <span
-            style={{
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              background: '#BAD797',
-              boxShadow: '0 0 8px #BAD797',
-              display: 'inline-block',
-            }}
-          />
-          <span
-            style={{
-              fontSize: '11.5px',
-              fontWeight: 700,
-              color: 'var(--rb-text)',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            SYNTACTIC INVERSION ENGINE • V2.4
-          </span>
-          <span style={{ fontSize: '11px', color: 'var(--rb-text-muted)' }}>•</span>
-          <span
-            style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              color: isDark ? '#e27293' : '#670626',
-            }}
-          >
-            Zero Turnitin Flags
-          </span>
+        <div className="editorial-eyebrow-badge" style={{ marginBottom: '22px' }}>
+          <span>SYNTACTIC INVERSION ENGINE • V2.4 • ZERO TURNITIN FLAGS</span>
         </div>
       </div>
 

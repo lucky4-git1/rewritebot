@@ -106,7 +106,26 @@ export const LandingFooter: React.FC<LandingFooterProps> = () => {
             © {new Date().getFullYear()} RewriteBot. All rights reserved. Open-source, private & provider-agnostic.
           </div>
 
-          <div style={{ display: 'flex', gap: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <a
+              href="https://instagram.com/rewritebot"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: 'var(--rb-text-secondary)',
+                textDecoration: 'none',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--rb-primary)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--rb-text-secondary)')}
+            >
+              <span>@rewritebot</span>
+            </a>
+            <span>•</span>
             <span>Privacy Preserved</span>
             <span>Zero Data Logging</span>
             <span>Self-Hostable</span>

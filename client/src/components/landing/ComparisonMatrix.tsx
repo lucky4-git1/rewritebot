@@ -104,48 +104,35 @@ export const ComparisonMatrix: React.FC<ComparisonMatrixProps> = ({ isDark = fal
         margin: '0 auto',
       }}
     >
-      {/* Editorial Section Header: Asymmetric Layout */}
-      <div className="editorial-asymmetric-header">
-        <div>
-          <div
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              color: '#BAD797',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '14px',
-            }}
-          >
-            FACTUAL ARCHITECTURAL AUDIT
-          </div>
-          <h2
-            className="editorial-headline"
-            style={{
-              fontSize: 'clamp(34px, 4.5vw, 52px)',
-              fontWeight: 700,
-              lineHeight: 1.1,
-              color: 'var(--rb-text)',
-              margin: 0,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Why writers are switching to RewriteBot.
-          </h2>
+      {/* Editorial Section Header: Centered Layout */}
+      <div style={{ maxWidth: '820px', margin: '0 auto 40px', textAlign: 'center' }}>
+        <div className="editorial-eyebrow-badge" style={{ marginBottom: '16px' }}>
+          <span>FACTUAL ARCHITECTURAL AUDIT</span>
         </div>
-
-        <div>
-          <p
-            style={{
-              fontSize: '16.5px',
-              color: 'var(--rb-text-secondary)',
-              lineHeight: 1.65,
-              margin: 0,
-            }}
-          >
-            An honest, factual breakdown of architectural capabilities. No artificial lock-in, no synthetic paywalls, and no proprietary hostage taking.
-          </p>
-        </div>
+        <h2
+          className="editorial-headline"
+          style={{
+            fontSize: 'clamp(32px, 4.5vw, 50px)',
+            fontWeight: 700,
+            lineHeight: 1.1,
+            color: 'var(--rb-text)',
+            margin: '0 auto 14px',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          Why writers are switching to RewriteBot.
+        </h2>
+        <p
+          style={{
+            fontSize: '16.5px',
+            color: 'var(--rb-text-secondary)',
+            lineHeight: 1.65,
+            margin: '0 auto',
+            maxWidth: '640px',
+          }}
+        >
+          An honest, factual breakdown of architectural capabilities. No artificial lock-in, no synthetic paywalls, and no proprietary hostage taking.
+        </p>
       </div>
 
       {/* Desktop Editorial Table directly on canvas (Hidden on mobile) */}

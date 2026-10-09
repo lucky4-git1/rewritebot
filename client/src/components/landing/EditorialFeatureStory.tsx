@@ -40,18 +40,9 @@ export const EditorialFeatureStory: React.FC<EditorialFeatureStoryProps> = ({ is
       }}
     >
       {/* Section Eyebrow & Headline */}
-      <div style={{ marginBottom: '32px', maxWidth: '800px' }}>
-        <div
-          style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            color: '#BAD797',
-            textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            marginBottom: '16px',
-          }}
-        >
-          CORE INSTRUMENTS
+      <div style={{ marginBottom: '40px', maxWidth: '820px', margin: '0 auto 40px', textAlign: 'center' }}>
+        <div className="editorial-eyebrow-badge" style={{ marginBottom: '16px' }}>
+          <span>CORE INSTRUMENTS</span>
         </div>
         <h2
           className="editorial-headline"
@@ -75,7 +66,8 @@ export const EditorialFeatureStory: React.FC<EditorialFeatureStoryProps> = ({ is
             fontSize: '16px',
             lineHeight: 1.65,
             color: 'var(--rb-text-secondary)',
-            margin: 0,
+            margin: '0 auto',
+            maxWidth: '640px',
           }}
         >
           Shallow rephrasers replace isolated words with dictionary synonyms. RewriteBot parses grammatical hierarchy, relocates clauses, and locks proprietary formulas.

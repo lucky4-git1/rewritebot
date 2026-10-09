@@ -13,10 +13,11 @@ import {
   Play,
   RotateCw,
   Star,
-  Cpu,
   Edit2,
   X,
   List,
+  ExternalLink,
+  Key,
 } from 'lucide-react';
 
 interface Provider {
@@ -694,31 +695,328 @@ export function Providers() {
             <div
               style={{
                 background: 'var(--rb-surface)',
-                border: '1px dashed #cbd5e1',
-                borderRadius: '12px',
-                padding: '48px',
-                textAlign: 'center',
+                border: '1px solid var(--rb-border)',
+                borderRadius: '16px',
+                padding: '36px 28px',
+                boxShadow: 'var(--rb-shadow)',
               }}
             >
-              <Cpu size={48} color="#94a3b8" style={{ marginBottom: '16px' }} />
-              <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--rb-text)' }}>No Providers Configured</h3>
-              <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '14px' }}>
-                Add your first AI provider key to begin paraphrasing.
-              </p>
-              <button
-                onClick={() => setShowAddForm(true)}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: '#10b981',
-                  color: '#fff',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                + Add Groq or OpenAI
-              </button>
+              <div style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto 32px' }}>
+                <div
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    background: 'var(--rb-primary-light)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                  }}
+                >
+                  <Key size={26} color="var(--rb-primary)" />
+                </div>
+                <h3 style={{ margin: '0 0 10px 0', fontSize: '20px', fontWeight: 700, color: 'var(--rb-text)' }}>
+                  Connect Your AI Provider
+                </h3>
+                <p style={{ margin: '0 0 20px 0', color: 'var(--rb-text-secondary)', fontSize: '14px', lineHeight: 1.6 }}>
+                  RewriteBot is 100% BYOK (Bring-Your-Own-Key). Plug in your own API key to get blazing fast, unrestricted paraphrasing with zero subscription markups.
+                </p>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  style={{
+                    padding: '11px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #670626 0%, #4e041c 100%)',
+                    color: '#fff',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 10px rgba(103, 6, 38, 0.25)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <Plus size={16} />
+                  <span>Add Your First Provider</span>
+                </button>
+              </div>
+
+              {/* Step-by-Step Provider Guide Cards */}
+              <div style={{ borderTop: '1px solid var(--rb-border)', paddingTop: '28px' }}>
+                <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 700, color: 'var(--rb-text)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Where to get free API keys & how to connect:
+                </h4>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '16px',
+                  }}
+                >
+                  {/* Groq Card */}
+                  <div
+                    style={{
+                      background: 'var(--rb-surface-cream)',
+                      border: '1px solid var(--rb-border)',
+                      borderRadius: '12px',
+                      padding: '18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>⚡ Groq (Recommended)</span>
+                        <span style={{ fontSize: '11px', background: 'rgba(186, 215, 151, 0.3)', color: '#2d5a1e', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>100% Free & Fastest</span>
+                      </div>
+                      <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 12px' }}>
+                        Sub-second paraphrasing on LPUs. Generous free tier with no credit card required.
+                      </p>
+                      <ol style={{ fontSize: '12px', color: 'var(--rb-text-muted)', paddingLeft: '18px', margin: '0 0 14px', lineHeight: 1.6 }}>
+                        <li>Create a free account at <strong>console.groq.com</strong></li>
+                        <li>Go to <strong>API Keys</strong> → Create API Key</li>
+                        <li>Recommended Model: <code>llama-3.3-70b-versatile</code></li>
+                      </ol>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <a
+                        href="https://console.groq.com/keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: 'var(--rb-primary)',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        Get Key <ExternalLink size={12} />
+                      </a>
+                      <button
+                        onClick={() => {
+                          handleTypeSelect('groq');
+                          setShowAddForm(true);
+                        }}
+                        style={{
+                          marginLeft: 'auto',
+                          padding: '5px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--rb-border)',
+                          background: 'var(--rb-surface)',
+                          color: 'var(--rb-text)',
+                          fontSize: '11.5px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Connect Groq
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* NVIDIA NIM Card */}
+                  <div
+                    style={{
+                      background: 'var(--rb-surface-cream)',
+                      border: '1px solid var(--rb-border)',
+                      borderRadius: '12px',
+                      padding: '18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>🟢 NVIDIA NIM</span>
+                        <span style={{ fontSize: '11px', background: 'rgba(34, 197, 94, 0.15)', color: '#15803d', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>1,000 Free Credits</span>
+                      </div>
+                      <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 12px' }}>
+                        High-quality Llama-3.2 NIM microservices hosted on NVIDIA DGX cloud.
+                      </p>
+                      <ol style={{ fontSize: '12px', color: 'var(--rb-text-muted)', paddingLeft: '18px', margin: '0 0 14px', lineHeight: 1.6 }}>
+                        <li>Sign up at <strong>build.nvidia.com</strong></li>
+                        <li>Click <strong>Get API Key</strong> in any model page</li>
+                        <li>Model: <code>meta/llama-3.2-11b-vision-instruct</code></li>
+                      </ol>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <a
+                        href="https://build.nvidia.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: 'var(--rb-primary)',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        Get Key <ExternalLink size={12} />
+                      </a>
+                      <button
+                        onClick={() => {
+                          handleTypeSelect('nvidia');
+                          setShowAddForm(true);
+                        }}
+                        style={{
+                          marginLeft: 'auto',
+                          padding: '5px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--rb-border)',
+                          background: 'var(--rb-surface)',
+                          color: 'var(--rb-text)',
+                          fontSize: '11.5px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Connect NVIDIA
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* OpenAI / OpenRouter Card */}
+                  <div
+                    style={{
+                      background: 'var(--rb-surface-cream)',
+                      border: '1px solid var(--rb-border)',
+                      borderRadius: '12px',
+                      padding: '18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>🌐 OpenRouter / OpenAI</span>
+                        <span style={{ fontSize: '11px', background: 'rgba(59, 130, 246, 0.15)', color: '#1d4ed8', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>Multi-Model</span>
+                      </div>
+                      <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 12px' }}>
+                        Access OpenAI, Claude, DeepSeek, or 200+ models with one unified API key.
+                      </p>
+                      <ol style={{ fontSize: '12px', color: 'var(--rb-text-muted)', paddingLeft: '18px', margin: '0 0 14px', lineHeight: 1.6 }}>
+                        <li>Sign up at <strong>openrouter.ai</strong> or <strong>platform.openai.com</strong></li>
+                        <li>Create an API key in Account Settings</li>
+                        <li>Paste your key into RewriteBot</li>
+                      </ol>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <a
+                        href="https://openrouter.ai/keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: 'var(--rb-primary)',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        OpenRouter <ExternalLink size={12} />
+                      </a>
+                      <button
+                        onClick={() => {
+                          handleTypeSelect('openrouter');
+                          setShowAddForm(true);
+                        }}
+                        style={{
+                          marginLeft: 'auto',
+                          padding: '5px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--rb-border)',
+                          background: 'var(--rb-surface)',
+                          color: 'var(--rb-text)',
+                          fontSize: '11.5px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Connect OpenRouter
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Local Ollama Card */}
+                  <div
+                    style={{
+                      background: 'var(--rb-surface-cream)',
+                      border: '1px solid var(--rb-border)',
+                      borderRadius: '12px',
+                      padding: '18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>💻 Ollama (Local AI)</span>
+                        <span style={{ fontSize: '11px', background: 'rgba(168, 85, 247, 0.15)', color: '#7e22ce', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>100% Private Offline</span>
+                      </div>
+                      <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 12px' }}>
+                        Run Llama 3 or Mistral directly on your local machine with zero external API calls.
+                      </p>
+                      <ol style={{ fontSize: '12px', color: 'var(--rb-text-muted)', paddingLeft: '18px', margin: '0 0 14px', lineHeight: 1.6 }}>
+                        <li>Download Ollama from <strong>ollama.ai</strong></li>
+                        <li>Run in terminal: <code>ollama run llama3</code></li>
+                        <li>Base URL: <code>http://localhost:11434/v1</code> (No API key needed)</li>
+                      </ol>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <a
+                        href="https://ollama.ai"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: 'var(--rb-primary)',
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        Download Ollama <ExternalLink size={12} />
+                      </a>
+                      <button
+                        onClick={() => {
+                          handleTypeSelect('ollama');
+                          setShowAddForm(true);
+                        }}
+                        style={{
+                          marginLeft: 'auto',
+                          padding: '5px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--rb-border)',
+                          background: 'var(--rb-surface)',
+                          color: 'var(--rb-text)',
+                          fontSize: '11.5px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Connect Ollama
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

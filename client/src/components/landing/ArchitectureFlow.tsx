@@ -77,33 +77,24 @@ export const ArchitectureFlow: React.FC<ArchitectureFlowProps> = ({ isDark = fal
       }}
     >
       {/* Header */}
-      <div style={{ maxWidth: '780px', marginBottom: '32px' }}>
-        <div
-          style={{
-            fontSize: '11px',
-            fontWeight: 700,
-            color: '#BAD797',
-            textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            marginBottom: '14px',
-          }}
-        >
-          SOVEREIGN INTELLIGENCE PIPELINE
+      <div style={{ maxWidth: '820px', margin: '0 auto 40px', textAlign: 'center' }}>
+        <div className="editorial-eyebrow-badge" style={{ marginBottom: '16px' }}>
+          <span>SOVEREIGN INTELLIGENCE PIPELINE</span>
         </div>
         <h2
           className="editorial-headline"
           style={{
-            fontSize: 'clamp(34px, 4.5vw, 52px)',
+            fontSize: 'clamp(32px, 4.5vw, 50px)',
             fontWeight: 700,
             lineHeight: 1.1,
             color: 'var(--rb-text)',
-            margin: '0 0 16px',
+            margin: '0 auto 14px',
             letterSpacing: '-0.02em',
           }}
         >
           Frontier models. Zero proprietary lock-in.
         </h2>
-        <p style={{ fontSize: '16px', lineHeight: 1.65, color: 'var(--rb-text-secondary)', margin: 0 }}>
+        <p style={{ fontSize: '16px', lineHeight: 1.65, color: 'var(--rb-text-secondary)', margin: '0 auto', maxWidth: '640px' }}>
           RewriteBot connects directly to frontier reasoning models or completely offline local instances. You bring your own keys or run air-gapped on Ollama.
         </p>
       </div>

@@ -46,34 +46,22 @@ export function Landing() {
         id="demo"
         style={{
           position: 'relative',
-          padding: 'clamp(32px, 5vw, 36px) 16px 44px',
+          padding: 'clamp(36px, 5vw, 48px) 16px 44px',
           maxWidth: '1240px',
           margin: '0 auto',
           zIndex: 1,
         }}
       >
-        <div style={{ maxWidth: '780px', marginBottom: '24px' }}>
-          <div
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              color: '#BAD797',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '10px',
-            }}
-          >
-            LIVE INTERACTIVE STUDIO SANDBOX
-          </div>
+        <div style={{ maxWidth: '820px', margin: '0 auto 36px', textAlign: 'center' }}>
 
           <h2
             className="editorial-headline"
             style={{
-              fontSize: 'clamp(28px, 3.8vw, 42px)',
+              fontSize: 'clamp(30px, 4.2vw, 48px)',
               fontWeight: 700,
-              margin: '0 0 10px',
+              margin: '0 0 12px',
               color: 'var(--rb-text)',
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.025em',
             }}
           >
             Experience authentic clause restructuring.
@@ -81,13 +69,14 @@ export function Landing() {
 
           <p
             style={{
-              fontSize: '15.5px',
+              fontSize: '16px',
               color: 'var(--rb-text-secondary)',
               lineHeight: 1.6,
-              margin: 0,
+              margin: '0 auto',
+              maxWidth: '640px',
             }}
           >
-            Click any yellow word to test live synonym swapping with Datamuse thesaurus, or toggle between Standard, Academic, and Creative modes.
+            Click any highlighted word to test instant synonym swapping, or toggle between Standard, Academic, Creative, and Humanize modes.
           </p>
         </div>
 
@@ -110,34 +99,25 @@ export function Landing() {
       <section
         style={{
           position: 'relative',
-          padding: 'clamp(36px, 5vw, 44px) 16px 44px',
+          padding: 'clamp(40px, 5vw, 56px) 16px 44px',
           maxWidth: '1240px',
           margin: '0 auto',
           zIndex: 1,
         }}
       >
-        <div style={{ maxWidth: '780px', marginBottom: '28px' }}>
-          <div
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              color: '#BAD797',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '10px',
-            }}
-          >
-            AUTHENTIC TESTIMONIALS
+        <div style={{ maxWidth: '820px', margin: '0 auto 36px', textAlign: 'center' }}>
+          <div className="editorial-eyebrow-badge" style={{ marginBottom: '16px' }}>
+            <span>AUTHENTIC TESTIMONIALS</span>
           </div>
           <h2
             className="editorial-headline"
             style={{
-              fontSize: 'clamp(28px, 3.8vw, 42px)',
+              fontSize: 'clamp(30px, 4.2vw, 48px)',
               fontWeight: 700,
               lineHeight: 1.1,
               color: 'var(--rb-text)',
-              margin: 0,
-              letterSpacing: '-0.02em',
+              margin: '0 auto',
+              letterSpacing: '-0.025em',
             }}
           >
             Built for researchers, editors, and professional writers.
@@ -208,37 +188,29 @@ export function Landing() {
         id="faq"
         style={{
           position: 'relative',
-          padding: 'clamp(36px, 5vw, 44px) 16px 44px',
+          padding: 'clamp(40px, 5vw, 56px) 16px 48px',
           maxWidth: '880px',
           margin: '0 auto',
           zIndex: 1,
         }}
       >
-        <div style={{ marginBottom: '24px' }}>
-          <div
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              color: '#BAD797',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '10px',
-            }}
-          >
-            ARCHITECTURE & PRIVACY
+        <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+          <div className="editorial-eyebrow-badge" style={{ marginBottom: '16px' }}>
+            <span>ARCHITECTURE & PRIVACY</span>
           </div>
           <h2
             className="editorial-headline"
             style={{
-              fontSize: 'clamp(28px, 3.5vw, 38px)',
+              fontSize: 'clamp(30px, 4vw, 44px)',
               fontWeight: 700,
-              margin: '0 0 8px',
+              margin: '0 auto 10px',
               color: 'var(--rb-text)',
+              letterSpacing: '-0.025em',
             }}
           >
             Frequently Asked Questions
           </h2>
-          <p style={{ fontSize: '15px', color: 'var(--rb-text-secondary)', margin: 0 }}>
+          <p style={{ fontSize: '15.5px', color: 'var(--rb-text-secondary)', margin: '0 auto', maxWidth: '580px' }}>
             Everything you need to know about RewriteBot’s architecture, privacy, and models.
           </p>
         </div>

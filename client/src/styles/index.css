@@ -781,6 +781,11 @@ html {
   letter-spacing: -0.025em;
   line-height: 1.1;
   text-wrap: balance;
+  text-shadow: 0 2px 10px rgba(37, 31, 32, 0.12);
+}
+
+[data-theme='dark'] .editorial-headline {
+  text-shadow: 0 2px 14px rgba(255, 255, 255, 0.15);
 }
 
 /* Micro-interaction: Subtle Card Hover Lift (2-4px max) */
@@ -797,6 +802,32 @@ html {
 [data-theme='dark'] .editorial-card-lift:hover {
   box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.5);
   border-color: rgba(186, 215, 151, 0.4);
+}
+
+/* Crisp Square Editorial Eyebrow with Depth and Contrasting Border */
+.editorial-eyebrow-badge {
+  display: inline-flex;
+  align-items: center;
+  justifyContent: center;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 5px 12px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #670626;
+  border: 1.5px solid #670626;
+  box-shadow: 2px 2px 0px #670626;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+[data-theme='dark'] .editorial-eyebrow-badge {
+  background: #251218;
+  color: #f48fb1;
+  border: 1.5px solid #e27293;
+  box-shadow: 2px 2px 0px #e27293;
 }
 
 /* Caret blinking */

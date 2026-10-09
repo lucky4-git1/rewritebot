@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronRight } from 'lucide-react';
 
 interface TransformationStage {
   step: number;
@@ -84,21 +84,7 @@ export const StickyScrollStory: React.FC<StickyScrollStoryProps> = ({ isDark = f
       <div className="editorial-sticky-grid">
         {/* Left Column: Editorial Philosophy & Interactive Steps */}
         <div>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 12px',
-              borderRadius: '16px',
-              background: isDark ? 'rgba(186, 215, 151, 0.15)' : 'var(--rb-accent-light)',
-              color: isDark ? 'var(--rb-accent)' : 'var(--rb-accent-dark)',
-              fontSize: '12px',
-              fontWeight: 700,
-              marginBottom: '16px',
-            }}
-          >
-            <Layers size={13} />
+          <div className="editorial-eyebrow-badge" style={{ marginBottom: '18px' }}>
             <span>HOW THE ENGINE THINKS</span>
           </div>
 

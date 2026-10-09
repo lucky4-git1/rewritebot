@@ -266,11 +266,11 @@ export const InteractiveProductDemo: React.FC<InteractiveProductDemoProps> = ({ 
         transition: 'all 0.25s ease',
       }}
     >
-      {/* Studio Window Chrome Header */}
+      {/* Window Title Bar with macOS dots and app brand mark */}
       <div
         style={{
-          padding: '12px 14px',
-          background: 'var(--rb-surface-cream)',
+          padding: '10px 16px',
+          background: isDark ? 'rgba(23, 19, 20, 0.7)' : 'var(--rb-surface-cream)',
           borderBottom: '1px solid var(--rb-border)',
           display: 'flex',
           alignItems: 'center',
@@ -279,11 +279,22 @@ export const InteractiveProductDemo: React.FC<InteractiveProductDemoProps> = ({ 
           gap: '10px',
         }}
       >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#EF4444', display: 'inline-block' }} />
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#F59E0B', display: 'inline-block' }} />
+            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--rb-text)' }}>
+            RewriteBot Studio Sandbox
+          </span>
+        </div>
+
         {/* Sample preset buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
           <span
             style={{
-              fontSize: '10.5px',
+              fontSize: '11px',
               fontWeight: 700,
               color: 'var(--rb-text-muted)',
               textTransform: 'uppercase',
@@ -316,20 +327,25 @@ export const InteractiveProductDemo: React.FC<InteractiveProductDemoProps> = ({ 
             );
           })}
         </div>
+      </div>
 
-        {/* Mode Switcher Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '3px',
-            background: 'var(--rb-surface)',
-            padding: '3px',
-            borderRadius: '8px',
-            border: '1px solid var(--rb-border)',
-            flexWrap: 'wrap',
-          }}
-        >
+      {/* Modes & Settings Control Bar (Exact match to real app suite subbar) */}
+      <div
+        style={{
+          padding: '8px 16px',
+          background: 'var(--rb-surface)',
+          borderBottom: '1px solid var(--rb-border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--rb-text-muted)', marginRight: '4px' }}>
+            Modes:
+          </span>
           {(['standard', 'academic', 'creative', 'humanize'] as const).map((mode) => {
             const isSelected = selectedMode === mode;
             return (
@@ -337,22 +353,59 @@ export const InteractiveProductDemo: React.FC<InteractiveProductDemoProps> = ({ 
                 key={mode}
                 onClick={() => setSelectedMode(mode)}
                 style={{
-                  padding: '4px 9px',
-                  borderRadius: '5px',
-                  fontSize: '11.5px',
-                  fontWeight: 600,
+                  padding: '5px 14px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: isSelected ? 700 : 500,
                   textTransform: 'capitalize',
-                  border: 'none',
-                  background: isSelected ? 'var(--rb-primary)' : 'transparent',
-                  color: isSelected ? '#ffffff' : 'var(--rb-text-secondary)',
+                  border: isSelected ? '1.5px solid var(--rb-primary)' : '1px solid var(--rb-border)',
+                  background: isSelected ? 'var(--rb-primary-light)' : 'transparent',
+                  color: isSelected ? 'var(--rb-primary)' : 'var(--rb-text-secondary)',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? '0 1px 4px rgba(103, 6, 38, 0.1)' : 'none',
                 }}
               >
                 {mode}
               </button>
             );
           })}
+        </div>
+
+        {/* Live Originality & Human Score Badge (matching real app telemetry) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '3px 9px',
+              borderRadius: '9999px',
+              background: '#ecfdf5',
+              color: '#059669',
+              border: '1px solid #a7f3d0',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <Check size={11} /> {activeModeData.originality}% Original
+          </span>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '3px 9px',
+              borderRadius: '9999px',
+              background: '#eff6ff',
+              color: '#1d4ed8',
+              border: '1px solid #bfdbfe',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            {activeModeData.human}% Human Cadence
+          </span>
         </div>
       </div>
 
