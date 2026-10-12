@@ -267,11 +267,11 @@ export const StickyScrollStory: React.FC<StickyScrollStoryProps> = ({ isDark = f
             <div
               className="font-serif"
               style={{
-                fontSize: '22px',
+                fontSize: 'clamp(17px, 2.5vw, 22px)',
                 lineHeight: 1.65,
                 color: 'var(--rb-text)',
-                margin: '24px 0',
-                minHeight: '96px',
+                margin: '20px 0',
+                minHeight: '80px',
               }}
             >
               "{currentStage.sentence}"

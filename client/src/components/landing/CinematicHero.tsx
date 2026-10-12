@@ -253,10 +253,12 @@ export const CinematicHero: React.FC<CinematicHeroProps> = ({ isDark = false }) 
             flexWrap: 'wrap',
             gap: '14px',
             marginBottom: '36px',
+            width: '100%',
           }}
         >
           <button
             onClick={() => navigate('/app')}
+            className="hero-cta-btn-primary"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -287,6 +289,7 @@ export const CinematicHero: React.FC<CinematicHeroProps> = ({ isDark = false }) 
 
           <a
             href="#demo"
+            className="hero-cta-btn-secondary"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -425,6 +428,7 @@ export const CinematicHero: React.FC<CinematicHeroProps> = ({ isDark = false }) 
         >
           {/* Top/Left: Original Draft */}
           <div
+            className="hero-slate-source-pane"
             style={{
               padding: '24px 22px',
               borderRight: '1px solid var(--rb-border)',

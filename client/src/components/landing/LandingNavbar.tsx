@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import { BrandLogo } from '../BrandLogo';
 import { ThemeToggle } from '../ThemeToggle';
 import { useAuthStore } from '../../stores/authStore';
@@ -13,6 +13,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ isDark = false }) 
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -187,8 +188,140 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ isDark = false }) 
               </button>
             </div>
           )}
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="show-on-mobile"
+            style={{
+              display: 'none',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              border: '1px solid var(--rb-border)',
+              background: 'var(--rb-surface)',
+              color: 'var(--rb-text)',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer Dropdown */}
+      {mobileMenuOpen && (
+        <div
+          style={{
+            marginTop: '12px',
+            padding: '16px',
+            background: isDark ? 'rgba(30, 24, 25, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderRadius: '12px',
+            border: '1px solid var(--rb-border)',
+            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.25)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            animation: 'fadeIn 0.2s ease-out',
+          }}
+        >
+          <a
+            href="#demo"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              color: 'var(--rb-text)',
+              fontSize: '14px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: '6px',
+            }}
+          >
+            Interactive Demo
+          </a>
+          <a
+            href="#compare"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              color: 'var(--rb-text)',
+              fontSize: '14px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: '6px',
+            }}
+          >
+            Why RewriteBot
+          </a>
+          <a
+            href="#features"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              color: 'var(--rb-text)',
+              fontSize: '14px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: '6px',
+            }}
+          >
+            Features & Capabilities
+          </a>
+          <a
+            href="#models"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              color: 'var(--rb-text)',
+              fontSize: '14px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: '6px',
+            }}
+          >
+            AI Models & Routing
+          </a>
+          <a
+            href="#faq"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              color: 'var(--rb-text)',
+              fontSize: '14px',
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: '6px',
+            }}
+          >
+            FAQ
+          </a>
+
+          {!isAuthenticated && (
+            <Link
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                color: 'var(--rb-primary)',
+                fontSize: '14px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                borderTop: '1px solid var(--rb-border-light)',
+                marginTop: '4px',
+              }}
+            >
+              Sign In to Account
+            </Link>
+          )}
+        </div>
+      )}
     </header>
   );
 };

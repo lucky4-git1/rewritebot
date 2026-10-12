@@ -413,10 +413,10 @@ export const InteractiveProductDemo: React.FC<InteractiveProductDemoProps> = ({ 
       <div className="editorial-split-workarea">
         {/* Left Pane: Original Draft */}
         <div
+          className="demo-left-pane"
           style={{
             padding: '20px 16px',
             borderRight: '1px solid var(--rb-border)',
-            borderBottom: '1px solid var(--rb-border)',
             background: isDark ? 'rgba(255, 255, 255, 0.015)' : 'var(--rb-surface)',
             display: 'flex',
             flexDirection: 'column',
@@ -711,75 +711,97 @@ export const InteractiveProductDemo: React.FC<InteractiveProductDemoProps> = ({ 
         </div>
       </div>
 
-      {/* Live Thesaurus Dropdown Overlay */}
+      {/* Live Thesaurus Dropdown Overlay / Bottom Sheet on mobile */}
       {thesaurusModal && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            position: 'fixed',
-            top: Math.max(64, Math.min(window.innerHeight - 280, thesaurusModal.y)),
-            left: Math.max(12, Math.min(window.innerWidth - 264, thesaurusModal.x)),
-            width: '240px',
-            maxWidth: 'calc(100vw - 24px)',
-            background: 'var(--rb-surface)',
-            border: '1.5px solid var(--rb-border)',
-            borderRadius: '10px',
-            boxShadow: 'var(--rb-shadow-lg)',
-            padding: '12px',
-            zIndex: 1000,
-            animation: 'fadeIn 0.15s ease-out',
-          }}
-        >
+        <>
           <div
+            className="show-on-mobile"
+            onClick={(e) => {
+              e.stopPropagation();
+              setThesaurusModal(null);
+            }}
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid var(--rb-border)',
-              paddingBottom: '6px',
-              marginBottom: '8px',
+              display: 'none',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(3px)',
+              zIndex: 999,
+            }}
+          />
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="thesaurus-widget-card"
+            style={{
+              position: 'fixed',
+              top: Math.max(64, Math.min(window.innerHeight - 280, thesaurusModal.y)),
+              left: Math.max(12, Math.min(window.innerWidth - 264, thesaurusModal.x)),
+              width: '240px',
+              maxWidth: 'calc(100vw - 24px)',
+              background: 'var(--rb-surface)',
+              border: '1.5px solid var(--rb-border)',
+              borderRadius: '10px',
+              boxShadow: 'var(--rb-shadow-lg)',
+              padding: '12px',
+              zIndex: 1000,
+              animation: 'fadeIn 0.15s ease-out',
             }}
           >
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--rb-text-muted)', textTransform: 'uppercase' }}>
-              Synonyms: <strong style={{ color: 'var(--rb-primary)' }}>{thesaurusModal.word.trim()}</strong>
-            </span>
-            <button
-              onClick={() => setThesaurusModal(null)}
-              style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '13px' }}
+            <div className="modal-drag-handle" />
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottom: '1px solid var(--rb-border)',
+                paddingBottom: '6px',
+                marginBottom: '8px',
+              }}
             >
-              ✕
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            {thesaurusModal.synonyms.map((syn, sIdx) => (
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--rb-text-muted)', textTransform: 'uppercase' }}>
+                Synonyms: <strong style={{ color: 'var(--rb-primary)' }}>{thesaurusModal.word.trim()}</strong>
+              </span>
               <button
-                key={sIdx}
-                onClick={() => handleSwapWord(syn, thesaurusModal.tokenIndex)}
-                style={{
-                  textAlign: 'left',
-                  padding: '6px 8px',
-                  borderRadius: '5px',
-                  border: 'none',
-                  background: 'var(--rb-surface-cream)',
-                  color: 'var(--rb-text)',
-                  fontSize: '12.5px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  transition: 'background 0.12s ease',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = isDark ? '#383032' : '#fef3c7')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
+                onClick={() => setThesaurusModal(null)}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--rb-text-muted)', fontSize: '13px' }}
               >
-                <span>{syn}</span>
-                <span style={{ fontSize: '10px', color: '#2d5a1e', fontWeight: 700 }}>Swap</span>
+                ✕
               </button>
-            ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {thesaurusModal.synonyms.map((syn, sIdx) => (
+                <button
+                  key={sIdx}
+                  onClick={() => handleSwapWord(syn, thesaurusModal.tokenIndex)}
+                  style={{
+                    textAlign: 'left',
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: 'var(--rb-surface-cream)',
+                    color: 'var(--rb-text)',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background 0.12s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = isDark ? '#383032' : '#fef3c7')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--rb-surface-cream)')}
+                >
+                  <span>{syn}</span>
+                  <span style={{ fontSize: '10px', color: '#2d5a1e', fontWeight: 700 }}>Swap</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Footer Banner */}
