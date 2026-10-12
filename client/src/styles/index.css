@@ -836,14 +836,14 @@ html {
   font-weight: 700;
   padding: 3px 9px;
   border-radius: 9999px;
-  background: #f2f8eb;
-  color: #2d5a1e;
-  border: 1px solid rgba(110, 141, 74, 0.4);
+  background: #e2f2d5;
+  color: #1e4513;
+  border: 1px solid #7ea859;
 }
 [data-theme='dark'] .provider-tag-green {
-  background: rgba(186, 215, 151, 0.18);
-  color: #cbe6ac;
-  border: 1px solid rgba(186, 215, 151, 0.4);
+  background: #172a10;
+  color: #a4db78;
+  border: 1px solid #4d7a2d;
 }
 
 .provider-tag-emerald {
@@ -851,14 +851,14 @@ html {
   font-weight: 700;
   padding: 3px 9px;
   border-radius: 9999px;
-  background: #ecfdf5;
-  color: #15803d;
-  border: 1px solid #a7f3d0;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
 }
 [data-theme='dark'] .provider-tag-emerald {
-  background: rgba(34, 197, 94, 0.18);
-  color: #86efac;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: #06372b;
+  color: #6ee7b7;
+  border: 1px solid #10b981;
 }
 
 .provider-tag-blue {

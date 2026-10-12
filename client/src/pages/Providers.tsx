@@ -1027,7 +1027,7 @@ export function Providers() {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 800, fontSize: '16px', color: 'var(--rb-text)' }}>💻 Local AI: Ollama & In-House ARI-RewriteBot</span>
-                          <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px', background: 'var(--rb-accent)', color: '#251F20', letterSpacing: '0.04em' }}>OUR IN-HOUSE MODEL</span>
+                          <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px', background: 'var(--rb-primary)', color: '#ffffff', letterSpacing: '0.04em' }}>OUR IN-HOUSE MODEL</span>
                           <span className="provider-tag-purple">100% Private Offline</span>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1059,8 +1059,8 @@ export function Providers() {
                               padding: '6px 14px',
                               borderRadius: '6px',
                               border: 'none',
-                              background: 'var(--rb-accent)',
-                              color: '#251F20',
+                              background: 'var(--rb-primary)',
+                              color: '#ffffff',
                               fontSize: '12px',
                               fontWeight: 700,
                               cursor: 'pointer',
@@ -1084,7 +1084,7 @@ export function Providers() {
                             <li>Download & install Ollama from <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rb-primary)', fontWeight: 600 }}>ollama.ai</a></li>
                             <li>
                               Launch our official model in PowerShell / Terminal:
-                              <div style={{ background: 'var(--rb-surface-cream)', padding: '6px 10px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '11.5px', color: 'var(--rb-accent)', margin: '4px 0 6px', border: '1px solid var(--rb-border)' }}>
+                              <div style={{ background: 'var(--rb-surface-cream)', padding: '6px 10px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '12px', fontWeight: 600, color: 'var(--rb-primary)', margin: '4px 0 6px', border: '1px solid var(--rb-border)' }}>
                                 ollama run ari-rewritebot
                               </div>
                             </li>
@@ -1103,13 +1103,13 @@ export function Providers() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <div>
                               <div style={{ fontSize: '11px', color: 'var(--rb-text-secondary)', fontWeight: 600 }}>Windows (winget install):</div>
-                              <div style={{ background: 'var(--rb-surface-cream)', padding: '5px 8px', borderRadius: '5px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--rb-accent)', border: '1px solid var(--rb-border)' }}>
+                              <div style={{ background: 'var(--rb-surface-cream)', padding: '5px 8px', borderRadius: '5px', fontFamily: 'monospace', fontSize: '11.5px', fontWeight: 600, color: 'var(--rb-primary)', border: '1px solid var(--rb-border)' }}>
                                 winget install --id Cloudflare.cloudflared
                               </div>
                             </div>
                             <div>
                               <div style={{ fontSize: '11px', color: 'var(--rb-text-secondary)', fontWeight: 600 }}>Start Tunnel to local Ollama:</div>
-                              <div style={{ background: 'var(--rb-surface-cream)', padding: '5px 8px', borderRadius: '5px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--rb-accent)', border: '1px solid var(--rb-border)' }}>
+                              <div style={{ background: 'var(--rb-surface-cream)', padding: '5px 8px', borderRadius: '5px', fontFamily: 'monospace', fontSize: '11.5px', fontWeight: 600, color: 'var(--rb-primary)', border: '1px solid var(--rb-border)' }}>
                                 cloudflared tunnel --url http://localhost:11434
                               </div>
                             </div>
