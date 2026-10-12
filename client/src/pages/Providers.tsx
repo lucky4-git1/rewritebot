@@ -512,7 +512,7 @@ export function Providers() {
                       type="text"
                       value={formData.baseUrl}
                       onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                      placeholder="e.g. https://api.groq.com/openai/v1"
+                      placeholder={formData.type === 'ollama' ? 'http://localhost:11434/v1' : 'e.g. https://api.groq.com/openai/v1'}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -523,6 +523,12 @@ export function Providers() {
                         color: 'var(--rb-text)',
                       }}
                     />
+                    {formData.type === 'ollama' && (
+                      <div style={{ fontSize: '11px', color: 'var(--rb-text-muted)', marginTop: '5px', lineHeight: 1.4 }}>
+                        💡 <strong>Local App:</strong> Use <code>http://localhost:11434/v1</code>.<br />
+                        🌐 <strong>Cloud / Production App:</strong> Cloud servers cannot reach your computer's <code>localhost</code>. Use a free tunnel (e.g. run <code>ngrok http 11434</code> or Cloudflare Tunnel) and paste the HTTPS tunnel URL with <code>/v1</code>.
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -973,8 +979,9 @@ export function Providers() {
                       </p>
                       <ol style={{ fontSize: '12px', color: 'var(--rb-text-muted)', paddingLeft: '18px', margin: '0 0 14px', lineHeight: 1.6 }}>
                         <li>Download Ollama from <strong>ollama.ai</strong></li>
-                        <li>Run in terminal: <code>ollama run llama3</code></li>
-                        <li>Base URL: <code>http://localhost:11434/v1</code> (No API key needed)</li>
+                        <li>Run in terminal: <code>ollama run ari-rewritebot</code> or <code>ollama run llama3</code></li>
+                        <li><strong>Local dev:</strong> Base URL is <code>http://localhost:11434/v1</code> (No API key needed)</li>
+                        <li><strong>Cloud / Production:</strong> Run <code>ngrok http 11434</code> and paste your HTTPS tunnel URL + <code>/v1</code></li>
                       </ol>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
