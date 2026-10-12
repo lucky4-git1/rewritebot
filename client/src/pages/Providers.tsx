@@ -1007,100 +1007,143 @@ export function Providers() {
                     </div>
                   </div>
 
-                  {/* Local Ollama & In-House ARI Card */}
+                  {/* Local Ollama & In-House ARI Card - Full Width Spotlight */}
                   <div
                     style={{
+                      gridColumn: '1 / -1',
                       background: 'var(--rb-surface-cream)',
-                      border: '2px solid rgba(103, 6, 38, 0.25)',
-                      borderRadius: '12px',
-                      padding: '18px',
+                      border: '2px solid rgba(103, 6, 38, 0.3)',
+                      borderRadius: '14px',
+                      padding: '22px 24px',
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'space-between',
+                      gap: '16px',
                       position: 'relative',
                       overflow: 'hidden',
+                      boxShadow: '0 4px 16px rgba(103, 6, 38, 0.06)',
                     }}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
-                        <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>💻 Ollama & ARI RewriteBot</span>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <span className="provider-tag-purple">100% Offline</span>
-                          <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: 'var(--rb-accent)', color: '#251F20' }}>OUR OWN MODEL</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 800, fontSize: '16px', color: 'var(--rb-text)' }}>💻 Local AI: Ollama & In-House ARI-RewriteBot</span>
+                          <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px', background: 'var(--rb-accent)', color: '#251F20', letterSpacing: '0.04em' }}>OUR IN-HOUSE MODEL</span>
+                          <span className="provider-tag-purple">100% Private Offline</span>
                         </div>
-                      </div>
-                      <p style={{ fontSize: '12.5px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 10px' }}>
-                        Run our official custom fine-tuned model <strong>ARI-RewriteBot (135M DPO)</strong> or standard models (Llama 3, Mistral) on your machine with 0 external API calls.
-                      </p>
-                      <div style={{ background: 'var(--rb-surface)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--rb-border)', marginBottom: '12px' }}>
-                        <div style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--rb-accent)', marginBottom: '4px' }}>
-                          ⭐ Official Model: ARI-RewriteBot (135M DPO)
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--rb-text-muted)', lineHeight: 1.5 }}>
-                          Ultralight (~270 MB), instant sub-second rewrites. Fine-tuned specifically for RewriteBot with DPO preference alignment.
-                        </div>
-                        <div style={{ marginTop: '6px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <a
                             href="https://huggingface.co/sriyuth/ari-rewritebot-135m-dpo"
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              fontSize: '11px',
+                              fontSize: '12px',
                               fontWeight: 600,
                               color: 'var(--rb-primary)',
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: 'rgba(103, 6, 38, 0.08)',
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                            }}
+                          >
+                            🤗 Hugging Face Model <ExternalLink size={12} />
+                          </a>
+                          <button
+                            onClick={() => {
+                              handleTypeSelect('ollama');
+                              setShowAddForm(true);
+                            }}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              background: 'var(--rb-accent)',
+                              color: '#251F20',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Connect Ollama
+                          </button>
+                        </div>
+                      </div>
+                      <p style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 16px', maxWidth: '880px' }}>
+                        Run RewriteBot completely offline with zero subscription fees, zero rate limits, and 100% air-gapped data privacy. Run our official custom-trained <strong>ARI-RewriteBot (135M DPO)</strong> or general models like Llama 3.2.
+                      </p>
+
+                      <div className="responsive-grid-2" style={{ gap: '16px', marginBottom: '14px' }}>
+                        {/* Step 1: Run Ollama & ARI */}
+                        <div style={{ background: 'var(--rb-surface)', padding: '14px 16px', borderRadius: '10px', border: '1px solid var(--rb-border)' }}>
+                          <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--rb-text)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>1️⃣ Install & Run Local Model</span>
+                          </div>
+                          <ol style={{ fontSize: '12px', color: 'var(--rb-text-muted)', paddingLeft: '16px', margin: 0, lineHeight: 1.6 }}>
+                            <li>Download & install Ollama from <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rb-primary)', fontWeight: 600 }}>ollama.ai</a></li>
+                            <li>
+                              Launch our official model in PowerShell / Terminal:
+                              <div style={{ background: 'var(--rb-surface-cream)', padding: '6px 10px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '11.5px', color: 'var(--rb-accent)', margin: '4px 0 6px', border: '1px solid var(--rb-border)' }}>
+                                ollama run ari-rewritebot
+                              </div>
+                            </li>
+                            <li><strong>Local Web App:</strong> Set Base URL to <code>http://localhost:11434/v1</code> (No API key needed).</li>
+                          </ol>
+                        </div>
+
+                        {/* Step 2: Cloudflare Tunnel for Cloud / Production App */}
+                        <div style={{ background: 'var(--rb-surface)', padding: '14px 16px', borderRadius: '10px', border: '1px solid var(--rb-border)' }}>
+                          <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--rb-text)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>🌐 Cloud / Production Access (Cloudflare Tunnel)</span>
+                          </div>
+                          <p style={{ fontSize: '11.5px', color: 'var(--rb-text-muted)', margin: '0 0 6px', lineHeight: 1.4 }}>
+                            If using RewriteBot on the web / cloud, cloud servers cannot reach your computer's <code>localhost</code>. Expose Ollama with a secure, free Cloudflare Tunnel:
+                          </p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div>
+                              <div style={{ fontSize: '11px', color: 'var(--rb-text-secondary)', fontWeight: 600 }}>Windows (winget install):</div>
+                              <div style={{ background: 'var(--rb-surface-cream)', padding: '5px 8px', borderRadius: '5px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--rb-accent)', border: '1px solid var(--rb-border)' }}>
+                                winget install --id Cloudflare.cloudflared
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '11px', color: 'var(--rb-text-secondary)', fontWeight: 600 }}>Start Tunnel to local Ollama:</div>
+                              <div style={{ background: 'var(--rb-surface-cream)', padding: '5px 8px', borderRadius: '5px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--rb-accent)', border: '1px solid var(--rb-border)' }}>
+                                cloudflared tunnel --url http://localhost:11434
+                              </div>
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--rb-text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                              📋 Copy the generated <code>https://&lt;random-id&gt;.trycloudflare.com</code> URL and paste it in Base URL with <code>/v1</code> (e.g. <code>https://xyz.trycloudflare.com/v1</code>).
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Model Card Quick Info */}
+                      <div style={{ background: 'var(--rb-surface)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--rb-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)', lineHeight: 1.4 }}>
+                          ⚡ <strong>ARI-RewriteBot (135M DPO) Specs:</strong> ~270 MB VRAM/RAM footprint • Sub-second ~350ms CPU inference • ChatML template • Direct Preference Optimized for rewriting.
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <a
+                            href="https://ollama.ai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              fontSize: '11.5px',
+                              fontWeight: 600,
+                              color: 'var(--rb-text-secondary)',
                               textDecoration: 'none',
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '3px',
                             }}
                           >
-                            🤗 Model on Hugging Face <ExternalLink size={11} />
+                            Ollama Docs <ExternalLink size={11} />
                           </a>
                         </div>
                       </div>
-                      <ol style={{ fontSize: '12px', color: 'var(--rb-text-muted)', paddingLeft: '18px', margin: '0 0 14px', lineHeight: 1.6 }}>
-                        <li>Download Ollama from <strong>ollama.ai</strong></li>
-                        <li>Run in terminal: <code>ollama run ari-rewritebot</code></li>
-                        <li><strong>Local App:</strong> Base URL <code>http://localhost:11434/v1</code> (Model: <code>ari-rewritebot</code>)</li>
-                        <li><strong>Cloud App:</strong> Run <code>ngrok http 11434</code> or Cloudflare Tunnel and paste HTTPS URL + <code>/v1</code></li>
-                      </ol>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <a
-                        href="https://ollama.ai"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: 'var(--rb-text-secondary)',
-                          textDecoration: 'none',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                        }}
-                      >
-                        Get Ollama <ExternalLink size={12} />
-                      </a>
-                      <button
-                        onClick={() => {
-                          handleTypeSelect('ollama');
-                          setShowAddForm(true);
-                        }}
-                        style={{
-                          marginLeft: 'auto',
-                          padding: '5px 12px',
-                          borderRadius: '6px',
-                          border: '1px solid var(--rb-border)',
-                          background: 'var(--rb-surface)',
-                          color: 'var(--rb-text)',
-                          fontSize: '11.5px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Connect Ollama
-                      </button>
                     </div>
                   </div>
                 </div>
