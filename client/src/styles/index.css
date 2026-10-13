@@ -35,10 +35,10 @@ body {
   --rb-primary-light: #fbebf0;
   --rb-primary-border: #f3cbd7;
   
-  --rb-accent: #2e6618;
-  --rb-accent-hover: #224d12;
-  --rb-accent-light: #eaf5e3;
-  --rb-accent-dark: #1b3d0e;
+  --rb-accent: #4d7c28;
+  --rb-accent-hover: #3d6320;
+  --rb-accent-light: #f0f7eb;
+  --rb-accent-dark: #36591c;
   
   --rb-background: #F7F3EB;
   --rb-surface: #FFFFFF;
@@ -830,65 +830,69 @@ html {
   box-shadow: 2px 2px 0px #e27293;
 }
 
-/* Provider Guide Badge Pill Tokens */
+/* Provider Guide Badge Pill Tokens - Modern Subtle Status Chips */
 .provider-tag-green {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   padding: 3px 9px;
-  border-radius: 9999px;
-  background: #e2f2d5;
-  color: #1e4513;
-  border: 1px solid #7ea859;
+  border-radius: 6px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.25);
 }
 [data-theme='dark'] .provider-tag-green {
-  background: #172a10;
-  color: #a4db78;
-  border: 1px solid #4d7a2d;
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
 .provider-tag-emerald {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   padding: 3px 9px;
-  border-radius: 9999px;
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 [data-theme='dark'] .provider-tag-emerald {
-  background: #06372b;
-  color: #6ee7b7;
-  border: 1px solid #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .provider-tag-blue {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   padding: 3px 9px;
-  border-radius: 9999px;
-  background: #eff6ff;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.12);
   color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  border: 1px solid rgba(59, 130, 246, 0.25);
 }
 [data-theme='dark'] .provider-tag-blue {
-  background: rgba(59, 130, 246, 0.18);
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.14);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
 }
 
 .provider-tag-purple {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   padding: 3px 9px;
-  border-radius: 9999px;
-  background: #faf5ff;
+  border-radius: 6px;
+  background: rgba(168, 85, 247, 0.12);
   color: #7e22ce;
-  border: 1px solid #e9d5ff;
+  border: 1px solid rgba(168, 85, 247, 0.25);
 }
 [data-theme='dark'] .provider-tag-purple {
-  background: rgba(168, 85, 247, 0.18);
-  color: #d8b4fe;
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
 }
 
 /* Caret blinking */
