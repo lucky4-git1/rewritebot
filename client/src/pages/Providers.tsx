@@ -1209,7 +1209,7 @@ export function Providers() {
                         </span>
                         {p.baseUrl && (
                           <span style={{ wordBreak: 'break-all' }}>
-                            URL: <code style={{ background: 'var(--rb-surface-cream)', color: 'var(--rb-accent)', padding: '2px 6px', borderRadius: '4px' }}>{p.baseUrl}</code>
+                            URL: <code style={{ background: 'var(--rb-surface-cream)', color: 'var(--rb-accent)', border: '1px solid var(--rb-border)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>{p.baseUrl}</code>
                           </span>
                         )}
                       </div>
