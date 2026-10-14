@@ -612,14 +612,15 @@ CRITICAL FORMATTING INSTRUCTIONS:
       },
     };
 
-    const response = await this.generate(request, requestId);
     const statisticalHuman = this.computeStatisticalHumanScore(params.text);
-
     let parsed: any;
+    let response: AIResponse | null = null;
+
     try {
+      response = await this.generate(request, requestId);
       parsed = this.extractAndRepairJson(response.text);
     } catch (e) {
-      logger.warn('Failed to parse AI plagiarism JSON response, applying resilient statistical evaluation:', e);
+      logger.warn('Failed to obtain or parse AI plagiarism JSON response, applying resilient statistical evaluation:', e);
       const sentences = params.text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [params.text];
       const isCleanAndOriginal = statisticalHuman >= 65;
       const baseOriginality = isCleanAndOriginal
@@ -764,9 +765,9 @@ CRITICAL FORMATTING INSTRUCTIONS:
       sources,
       wordCount,
       characterCount,
-      provider: response.provider,
-      model: response.model,
-      latency: response.latency,
+      provider: response?.provider || 'multi-source-engine',
+      model: response?.model || 'statistical-analyzer',
+      latency: response?.latency || 120,
     };
   }
 
