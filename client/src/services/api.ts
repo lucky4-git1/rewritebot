@@ -177,6 +177,13 @@ class ApiClient {
       }
       const apiError = error.response?.data as ApiResponse;
       if (apiError?.error) {
+        if (apiError.error.details && typeof apiError.error.details === 'object') {
+          const detailEntries = Object.entries(apiError.error.details).filter(([_, v]) => Boolean(v));
+          if (detailEntries.length > 0) {
+            const detailStr = detailEntries.map(([k, v]) => `${k}: ${v}`).join(', ');
+            return `${apiError.error.message} (${detailStr})`;
+          }
+        }
         return apiError.error.message;
       }
       return error.message || 'An unexpected error occurred';

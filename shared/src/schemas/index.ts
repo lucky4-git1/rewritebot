@@ -22,7 +22,16 @@ export const addProviderSchema = z.object({
   name: z.string().min(1, 'Provider name is required'),
   type: z.enum([...Object.values(PROVIDER_TYPES)] as [string, ...string[]]),
   protocol: z.enum(['openai', 'anthropic', 'gemini', 'custom']),
-  baseUrl: z.string().url().optional(),
+  baseUrl: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        const trimmed = val.trim().replace(/\s+/g, '');
+        return trimmed === '' ? undefined : trimmed;
+      }
+      return val;
+    },
+    z.string().url('Base URL must be a valid http:// or https:// URL').optional()
+  ) as z.ZodType<string | undefined>,
   authenticationType: z.enum(['bearer', 'api-key', 'none']),
   apiKey: z.string().optional(),
   modelId: z.string().optional(),
@@ -39,7 +48,16 @@ export const addProviderSchema = z.object({
 
 export const updateProviderSchema = z.object({
   name: z.string().min(1).optional(),
-  baseUrl: z.string().url().optional().or(z.literal('')),
+  baseUrl: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        const trimmed = val.trim().replace(/\s+/g, '');
+        return trimmed === '' ? undefined : trimmed;
+      }
+      return val;
+    },
+    z.string().url('Base URL must be a valid http:// or https:// URL').optional().or(z.literal(''))
+  ) as z.ZodType<string | undefined>,
   authenticationType: z.enum(['bearer', 'api-key', 'none']).optional(),
   apiKey: z.string().optional(),
   modelId: z.string().optional(),

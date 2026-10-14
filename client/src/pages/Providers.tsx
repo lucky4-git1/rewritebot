@@ -136,15 +136,23 @@ export function Providers() {
     setError('');
 
     try {
+      // Auto-sanitize Base URL (strip accidental spaces, auto-prefix http/https if missing)
+      let cleanBaseUrl = formData.baseUrl ? formData.baseUrl.trim().replace(/\s+/g, '') : undefined;
+      if (cleanBaseUrl && !cleanBaseUrl.startsWith('http://') && !cleanBaseUrl.startsWith('https://')) {
+        cleanBaseUrl = cleanBaseUrl.startsWith('localhost') || cleanBaseUrl.startsWith('127.0.0.1')
+          ? `http://${cleanBaseUrl}`
+          : `https://${cleanBaseUrl}`;
+      }
+
       if (editingProviderId) {
         // Update existing provider
         const updatePayload: any = {
-          name: formData.name,
-          modelId: formData.modelId,
-          baseUrl: formData.baseUrl || undefined,
+          name: formData.name.trim(),
+          modelId: formData.modelId.trim(),
+          baseUrl: cleanBaseUrl,
         };
         if (formData.apiKey) {
-          updatePayload.apiKey = formData.apiKey;
+          updatePayload.apiKey = formData.apiKey.trim();
         }
 
         const updated = await apiClient.patch<Provider>(`/providers/${editingProviderId}`, updatePayload);
@@ -172,13 +180,13 @@ export function Providers() {
         const needsApiKey = !['ollama', 'lmstudio'].includes(formData.type);
 
         const newProvider = await apiClient.post<Provider>('/providers', {
-          name: formData.name,
+          name: formData.name.trim(),
           type: formData.type,
           protocol: protocolMap[formData.type] || 'openai',
           authenticationType: needsApiKey ? 'bearer' : 'none',
-          apiKey: formData.apiKey || undefined,
-          baseUrl: formData.baseUrl || undefined,
-          modelId: formData.modelId,
+          apiKey: formData.apiKey ? formData.apiKey.trim() : undefined,
+          baseUrl: cleanBaseUrl,
+          modelId: formData.modelId.trim(),
           options: { streamingEnabled: true },
         });
 
@@ -416,7 +424,7 @@ export function Providers() {
                 boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
                   {editingProviderId ? 'Edit Provider Configuration' : 'Connect New AI Provider'}
                 </h3>
@@ -512,6 +520,17 @@ export function Providers() {
                       type="text"
                       value={formData.baseUrl}
                       onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+                      onBlur={() => {
+                        if (formData.baseUrl) {
+                          let clean = formData.baseUrl.trim().replace(/\s+/g, '');
+                          if (clean && !clean.startsWith('http://') && !clean.startsWith('https://')) {
+                            clean = clean.startsWith('localhost') || clean.startsWith('127.0.0.1')
+                              ? `http://${clean}`
+                              : `https://${clean}`;
+                          }
+                          setFormData({ ...formData, baseUrl: clean });
+                        }
+                      }}
                       placeholder={formData.type === 'ollama' ? 'http://localhost:11434/v1' : 'e.g. https://api.groq.com/openai/v1'}
                       style={{
                         width: '100%',
@@ -568,13 +587,13 @@ export function Providers() {
                             type="button"
                             onClick={() => setFormData({ ...formData, modelId: m.id })}
                             style={{
-                              border: formData.modelId === m.id ? '1.5px solid var(--rb-accent)' : '1px solid var(--rb-border)',
-                              background: formData.modelId === m.id ? 'var(--rb-primary-light)' : 'var(--rb-surface-cream)',
-                              color: formData.modelId === m.id ? 'var(--rb-accent)' : 'var(--rb-text)',
+                              border: formData.modelId === m.id ? '1.5px solid var(--rb-primary)' : '1px solid var(--rb-border)',
+                              background: formData.modelId === m.id ? 'rgba(103, 6, 38, 0.08)' : 'var(--rb-surface-cream)',
+                              color: formData.modelId === m.id ? 'var(--rb-primary)' : 'var(--rb-text)',
                               borderRadius: '14px',
                               padding: '4px 12px',
                               fontSize: '12px',
-                              fontWeight: formData.modelId === m.id ? 600 : 500,
+                              fontWeight: formData.modelId === m.id ? 700 : 500,
                               cursor: 'pointer',
                               transition: 'all 0.15s ease',
                             }}
@@ -604,13 +623,13 @@ export function Providers() {
                             type="button"
                             onClick={() => setFormData({ ...formData, modelId: m.id })}
                             style={{
-                              border: formData.modelId === m.id ? '1.5px solid var(--rb-accent)' : '1px solid var(--rb-border)',
-                              background: formData.modelId === m.id ? 'var(--rb-primary-light)' : 'var(--rb-surface-cream)',
-                              color: formData.modelId === m.id ? 'var(--rb-accent)' : 'var(--rb-text)',
+                              border: formData.modelId === m.id ? '1.5px solid var(--rb-primary)' : '1px solid var(--rb-border)',
+                              background: formData.modelId === m.id ? 'rgba(103, 6, 38, 0.08)' : 'var(--rb-surface-cream)',
+                              color: formData.modelId === m.id ? 'var(--rb-primary)' : 'var(--rb-text)',
                               borderRadius: '14px',
                               padding: '3px 10px',
                               fontSize: '11px',
-                              fontWeight: formData.modelId === m.id ? 600 : 500,
+                              fontWeight: formData.modelId === m.id ? 700 : 500,
                               cursor: 'pointer',
                               transition: 'all 0.15s ease',
                             }}
@@ -637,13 +656,13 @@ export function Providers() {
                             type="button"
                             onClick={() => setFormData({ ...formData, modelId: m.id })}
                             style={{
-                              border: formData.modelId === m.id ? '1.5px solid var(--rb-accent)' : '1px solid var(--rb-border)',
-                              background: formData.modelId === m.id ? 'var(--rb-primary-light)' : 'var(--rb-surface-cream)',
-                              color: formData.modelId === m.id ? 'var(--rb-accent)' : 'var(--rb-text)',
+                              border: formData.modelId === m.id ? '1.5px solid var(--rb-primary)' : '1px solid var(--rb-border)',
+                              background: formData.modelId === m.id ? 'rgba(103, 6, 38, 0.08)' : 'var(--rb-surface-cream)',
+                              color: formData.modelId === m.id ? 'var(--rb-primary)' : 'var(--rb-text)',
                               borderRadius: '14px',
                               padding: '3px 10px',
                               fontSize: '11px',
-                              fontWeight: formData.modelId === m.id ? 600 : 500,
+                              fontWeight: formData.modelId === m.id ? 700 : 500,
                               cursor: 'pointer',
                               transition: 'all 0.15s ease',
                             }}
@@ -673,24 +692,22 @@ export function Providers() {
                             onClick={() => setFormData({ ...formData, modelId: m.id })}
                             style={{
                               border: formData.modelId === m.id 
-                                ? '1.5px solid var(--rb-accent)' 
+                                ? '1.5px solid var(--rb-primary)' 
                                 : m.highlight 
-                                ? '1.5px solid rgba(103, 6, 38, 0.4)' 
+                                ? '1.5px solid rgba(103, 6, 38, 0.35)' 
                                 : '1px solid var(--rb-border)',
                               background: formData.modelId === m.id 
-                                ? 'var(--rb-primary-light)' 
+                                ? 'rgba(103, 6, 38, 0.08)' 
                                 : m.highlight
-                                ? 'rgba(103, 6, 38, 0.08)'
+                                ? 'rgba(103, 6, 38, 0.04)'
                                 : 'var(--rb-surface-cream)',
-                              color: formData.modelId === m.id 
-                                ? 'var(--rb-accent)' 
-                                : m.highlight
-                                ? 'var(--rb-primary)'
+                              color: formData.modelId === m.id || m.highlight
+                                ? 'var(--rb-primary)' 
                                 : 'var(--rb-text)',
                               borderRadius: '14px',
                               padding: '3px 10px',
                               fontSize: '11px',
-                              fontWeight: formData.modelId === m.id || m.highlight ? 600 : 500,
+                              fontWeight: formData.modelId === m.id || m.highlight ? 700 : 500,
                               cursor: 'pointer',
                               transition: 'all 0.15s ease',
                             }}
@@ -808,7 +825,7 @@ export function Providers() {
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
                     gap: '16px',
                   }}
                 >
@@ -825,7 +842,7 @@ export function Providers() {
                     }}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                         <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>⚡ Groq (Recommended)</span>
                         <span className="provider-tag-green">100% Free & Fastest</span>
                       </div>
@@ -838,7 +855,7 @@ export function Providers() {
                         <li>Recommended Model: <code>llama-3.3-70b-versatile</code></li>
                       </ol>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <a
                         href="https://console.groq.com/keys"
                         target="_blank"
@@ -890,7 +907,7 @@ export function Providers() {
                     }}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                         <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>🟢 NVIDIA NIM</span>
                         <span className="provider-tag-emerald">1,000 Free Credits</span>
                       </div>
@@ -903,7 +920,7 @@ export function Providers() {
                         <li>Model: <code>meta/llama-3.2-11b-vision-instruct</code></li>
                       </ol>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <a
                         href="https://build.nvidia.com"
                         target="_blank"
@@ -955,7 +972,7 @@ export function Providers() {
                     }}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                         <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--rb-text)' }}>🌐 OpenRouter / OpenAI</span>
                         <span className="provider-tag-blue">Multi-Model</span>
                       </div>
@@ -968,7 +985,7 @@ export function Providers() {
                         <li>Paste your key into RewriteBot</li>
                       </ol>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <a
                         href="https://openrouter.ai/keys"
                         target="_blank"
