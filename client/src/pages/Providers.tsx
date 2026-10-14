@@ -113,7 +113,7 @@ export function Providers() {
       groq: 'qwen/qwen3.8-27b',
       openai: 'gpt-3.5-turbo',
       nvidia: 'meta/llama-3.2-11b-vision-instruct',
-      ollama: 'ari-rewritebot',
+      ollama: 'ari-paraphraser-1.5b',
       anthropic: 'claude-3-haiku-20240307',
     };
 
@@ -661,11 +661,11 @@ export function Providers() {
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                         {[
-                          { id: 'ari-rewritebot', label: '⭐ ARI RewriteBot (135M DPO - Official)', highlight: true },
+                          { id: 'ari-paraphraser-1.5b', label: '⭐ ARI Paraphraser (1.5B - Official)', highlight: true },
+                          { id: 'ari-rewritebot', label: 'ARI 135M (Ultra-Lite)' },
                           { id: 'llama3.2', label: 'Llama 3.2 (3B)' },
                           { id: 'llama3.1:8b', label: 'Llama 3.1 (8B)' },
                           { id: 'qwen2.5:3b', label: 'Qwen 2.5 (3B)' },
-                          { id: 'mistral', label: 'Mistral (7B)' },
                         ].map((m) => (
                           <button
                             key={m.id}
@@ -700,7 +700,7 @@ export function Providers() {
                         ))}
                       </div>
                       <div style={{ fontSize: '11px', color: 'var(--rb-text-muted)', marginTop: '6px', lineHeight: 1.4 }}>
-                        * <strong>ARI RewriteBot</strong> is our custom-trained 135M DPO model tailored for instant sub-second paraphrasing. Pull it via <code>ollama run ari-rewritebot</code> or grab it from <a href="https://huggingface.co/sriyuth/ari-rewritebot-135m-dpo" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rb-primary)', textDecoration: 'underline' }}>Hugging Face</a>.
+                        * <strong>ARI Paraphraser (1.5B)</strong> is our new custom fine-tuned model with deep multi-paragraph coherence and long-context fluency. Pull it via <code>ollama run ari-paraphraser-1.5b</code> or get it from <a href="https://huggingface.co/sriyuth/ari-paraphraser-1.5b" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rb-primary)', textDecoration: 'underline' }}>Hugging Face</a>.
                       </div>
                     </div>
                   )}
@@ -1026,13 +1026,13 @@ export function Providers() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 800, fontSize: '16px', color: 'var(--rb-text)' }}>💻 Local AI: Ollama & In-House ARI-RewriteBot</span>
+                          <span style={{ fontWeight: 800, fontSize: '16px', color: 'var(--rb-text)' }}>💻 Local AI: Ollama & In-House ARI Paraphraser</span>
                           <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px', background: 'var(--rb-primary)', color: '#ffffff', letterSpacing: '0.04em' }}>OUR IN-HOUSE MODEL</span>
                           <span className="provider-tag-purple">100% Private Offline</span>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <a
-                            href="https://huggingface.co/sriyuth/ari-rewritebot-135m-dpo"
+                            href="https://huggingface.co/sriyuth/ari-paraphraser-1.5b"
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
@@ -1048,7 +1048,7 @@ export function Providers() {
                               borderRadius: '6px',
                             }}
                           >
-                            🤗 Hugging Face Model <ExternalLink size={12} />
+                            🤗 Hugging Face (1.5B) <ExternalLink size={12} />
                           </a>
                           <button
                             onClick={() => {
@@ -1071,7 +1071,7 @@ export function Providers() {
                         </div>
                       </div>
                       <p style={{ fontSize: '13px', color: 'var(--rb-text-secondary)', lineHeight: 1.5, margin: '0 0 16px', maxWidth: '880px' }}>
-                        Run RewriteBot completely offline with zero subscription fees, zero rate limits, and 100% air-gapped data privacy. Run our official custom-trained <strong>ARI-RewriteBot (135M DPO)</strong> or general models like Llama 3.2.
+                        Run RewriteBot completely offline with zero subscription fees, zero rate limits, and 100% air-gapped data privacy. Run our official custom-trained <strong>ARI Paraphraser (1.5B)</strong> for rich long-context multi-paragraph rewriting, or the ultra-lite 135M version.
                       </p>
 
                       <div className="responsive-grid-2" style={{ gap: '16px', marginBottom: '14px' }}>
@@ -1083,12 +1083,12 @@ export function Providers() {
                           <ol style={{ fontSize: '12px', color: 'var(--rb-text-muted)', paddingLeft: '16px', margin: 0, lineHeight: 1.6 }}>
                             <li>Download & install Ollama from <a href="https://ollama.ai" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rb-primary)', fontWeight: 600 }}>ollama.ai</a></li>
                             <li>
-                              Launch our official model in PowerShell / Terminal:
+                              Launch our official 1.5B model in PowerShell / Terminal:
                               <div style={{ background: 'var(--rb-surface-cream)', padding: '6px 10px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '12px', fontWeight: 600, color: 'var(--rb-primary)', margin: '4px 0 6px', border: '1px solid var(--rb-border)' }}>
-                                ollama run ari-rewritebot
+                                ollama run ari-paraphraser-1.5b
                               </div>
                             </li>
-                            <li><strong>Local Web App:</strong> Set Base URL to <code>http://localhost:11434/v1</code> (No API key needed).</li>
+                            <li><strong>Local Web App:</strong> Set Base URL to <code>http://localhost:11434/v1</code> (Model: <code>ari-paraphraser-1.5b</code>).</li>
                           </ol>
                         </div>
 
@@ -1123,7 +1123,7 @@ export function Providers() {
                       {/* Model Card Quick Info */}
                       <div style={{ background: 'var(--rb-surface)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--rb-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
                         <div style={{ fontSize: '12px', color: 'var(--rb-text-secondary)', lineHeight: 1.4 }}>
-                          ⚡ <strong>ARI-RewriteBot (135M DPO) Specs:</strong> ~270 MB VRAM/RAM footprint • Sub-second ~350ms CPU inference • ChatML template • Direct Preference Optimized for rewriting.
+                          ⚡ <strong>ARI Paraphraser (1.5B) Specs:</strong> ~1.8 GB RAM footprint • Solves multi-paragraph attention drift • Deep sentence & clause restructure • <a href="https://huggingface.co/sriyuth/ari-paraphraser-1.5b" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rb-primary)', fontWeight: 600 }}>Hugging Face Model</a>.
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <a
