@@ -60,6 +60,21 @@ const PROMPT_TEMPLATES: Record<ParaphraseMode, string> = {
  */
 export class PromptEngine {
   /**
+   * Compact, native system prompt for Ari-1.5B (matching its fine-tuned ChatML training data)
+   */
+  buildAriSystemPrompt(): string {
+    return 'You are RewriteBot (ARI-1.5B), an expert editorial paraphrasing engine. Paraphrase the entire input text with complete coverage, authentic sentence variety, and strict factual preservation. Never swap, mix, or reassign subjects, genders, or medical procedures across clauses. Output ONLY the rewritten text.';
+  }
+
+  /**
+   * Compact, native user prompt for Ari-1.5B (Mode: [Mode]\nText: [text])
+   */
+  buildAriUserPrompt(request: AIRequest): string {
+    const modeName = request.mode ? request.mode.charAt(0).toUpperCase() + request.mode.slice(1) : 'Standard';
+    return `Mode: ${modeName}\nText: ${request.text}`;
+  }
+
+  /**
    * Build an authoritative system prompt that enforces:
    * 1. Output constraints & paragraph integrity
    * 2. Calibrated transformation depth based on level (1 to 4)

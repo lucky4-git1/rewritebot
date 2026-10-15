@@ -158,12 +158,17 @@ export class GenericOpenAIProvider extends BaseProvider {
     const temperature = this.resolveTemperature(request);
     const messages = this.buildMessages(request);
 
+    const isLocal = this.type === 'ollama' || (this.baseUrl && (this.baseUrl.includes('localhost') || this.baseUrl.includes('trycloudflare.com')));
+    const inputWords = request.text ? request.text.trim().split(/\s+/).filter(Boolean).length : 50;
+    const dynamicLocalMaxTokens = Math.min(1024, Math.max(128, Math.round(inputWords * 2.5)));
+    const maxTokens = request.options?.maxTokens ?? this.options.maxTokens ?? (isLocal ? dynamicLocalMaxTokens : 2048);
+
     try {
       const completion = await this.openai.chat.completions.create({
         model: modelId,
         messages,
         temperature,
-        max_tokens: request.options?.maxTokens ?? this.options.maxTokens ?? 2048,
+        max_tokens: maxTokens,
         top_p: request.options?.topP ?? (this.options.topP !== undefined ? this.options.topP : 0.95),
         frequency_penalty: request.options?.frequencyPenalty ?? 0.35,
         presence_penalty: request.options?.presencePenalty ?? 0.20,

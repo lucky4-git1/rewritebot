@@ -68,20 +68,27 @@ export class AIOrchestrator {
       );
     }
 
+    const providerBaseUrl = (provider as any).baseUrl as string | undefined;
+    const isLocalOrAri = provider.type === 'ollama' || 
+                         provider.name.toLowerCase().includes('ollama') || 
+                         (request.modelId && request.modelId.toLowerCase().includes('ari')) ||
+                         (providerBaseUrl && (providerBaseUrl.includes('localhost') || providerBaseUrl.includes('trycloudflare.com')));
+
     // Build authoritative system prompt and clean user prompt
-    // If request.systemPrompt is already provided, use it directly; otherwise construct via PromptEngine
-    const systemPrompt = request.systemPrompt || this.promptEngine.buildSystemPrompt(request);
+    // For local/Ari models, use the specialized compact prompt format they were fine-tuned on (saves 15-20s of prompt evaluation on CPU)
+    const systemPrompt = request.systemPrompt || (isLocalOrAri ? this.promptEngine.buildAriSystemPrompt() : this.promptEngine.buildSystemPrompt(request));
     // If the request already has systemPrompt specified, request.text contains the clean user input
-    const userPrompt = request.systemPrompt ? request.text : this.promptEngine.buildUserPrompt(request);
+    const userPrompt = request.systemPrompt ? request.text : (isLocalOrAri ? this.promptEngine.buildAriUserPrompt(request) : this.promptEngine.buildUserPrompt(request));
     
     diag?.log('PROMPT_BUILT', {
       systemPromptLength: systemPrompt.length,
       userPromptLength: userPrompt.length,
       mode: request.mode,
       synonymLevel: request.synonymLevel,
+      isLocalOrAri,
     });
 
-    logger.info(`Generating with provider: ${provider.name}, model: ${request.modelId}`);
+    logger.info(`Generating with provider: ${provider.name}, model: ${request.modelId} (localOrAri: ${isLocalOrAri})`);
 
     try {
       // Measure latency
@@ -133,7 +140,8 @@ export class AIOrchestrator {
           issues: [...eval1.issues, ...factGate1.issues],
         });
 
-        const isHighConfidence = eval1.passed && factGate1.passed && eval1.totalScore >= 75 && eval1.breakdown.semanticScore >= 75;
+        // For local models running on CPU, skip multi-candidate exploration to keep latency fast & prevent 504 timeouts
+        const isHighConfidence = isLocalOrAri || (eval1.passed && factGate1.passed && eval1.totalScore >= 75 && eval1.breakdown.semanticScore >= 75);
 
         // Step 2: Adaptive Best-of-N Candidate Generation
         // If Candidate 1 is below threshold (semantic drift, low score, or factual gate failure)
