@@ -240,6 +240,17 @@ export class AIOrchestrator {
         }
       }
 
+      // Step 4: Sanitize foreign token leaks, control tags, and synthetic artifacts
+      if (!isToolOperation && (!request.language || request.language === 'en' || request.language === 'auto')) {
+        postSanitizedText = postSanitizedText
+          .replace(/<Task[^>]*>.*?$/gis, '')
+          .replace(/<\/?(?:unk|none|response|im_end|endoftext)>.*?$/gis, '')
+          .replace(/[\u0E00-\u0E7F]+/g, '')
+          .replace(/(?:à¸[^\s]+|à¹[^\s]+)+/g, '')
+          .replace(/[^\x00-\x7F\u00C0-\u024F\u1E00-\u1EFF\u2010-\u2027\u2030-\u205E\u20A0-\u20CF\u2100-\u214F\s]+$/g, '')
+          .trim();
+      }
+
       diag?.log('RESPONSE_VALIDATED', {
         outputLength: postSanitizedText.length,
       });
