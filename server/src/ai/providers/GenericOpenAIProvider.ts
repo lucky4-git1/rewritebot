@@ -160,7 +160,9 @@ export class GenericOpenAIProvider extends BaseProvider {
 
     const isLocal = this.type === 'ollama' || (this.baseUrl && (this.baseUrl.includes('localhost') || this.baseUrl.includes('trycloudflare.com')));
     const inputWords = request.text ? request.text.trim().split(/\s+/).filter(Boolean).length : 50;
-    const dynamicLocalMaxTokens = Math.min(1024, Math.max(128, Math.round(inputWords * 2.5)));
+    // For local CPU models: cap tokens tightly at 1.5x input words (the rewrite should be roughly same length)
+    // This prevents the model from wasting 60%+ of CPU time generating garbage after the rewrite finishes
+    const dynamicLocalMaxTokens = Math.min(512, Math.max(64, Math.round(inputWords * 1.5)));
     const maxTokens = request.options?.maxTokens ?? this.options.maxTokens ?? (isLocal ? dynamicLocalMaxTokens : 2048);
 
     try {
